@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.service;
+package io.github.tomaszziola.javabuildautomaton;
 
 import org.springframework.stereotype.Service;
 
