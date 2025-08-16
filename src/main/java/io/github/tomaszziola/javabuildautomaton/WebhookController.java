@@ -1,6 +1,5 @@
-package io.github.tomaszziola.javabuildautomaton.controller;
+package io.github.tomaszziola.javabuildautomaton;
 
-import io.github.tomaszziola.javabuildautomaton.service.BuildService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
