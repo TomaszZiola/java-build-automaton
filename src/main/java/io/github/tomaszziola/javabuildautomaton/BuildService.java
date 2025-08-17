@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 @Service
 public class BuildService {
 
@@ -43,7 +45,7 @@ public class BuildService {
             }
         }
 
-        if (!process.waitFor(5, TimeUnit.MINUTES)) {
+        if (!process.waitFor(5, MINUTES)) {
             process.destroy();
             throw new RuntimeException("Process exceeded time limit");
         }
