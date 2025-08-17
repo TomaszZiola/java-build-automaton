@@ -11,11 +11,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Project{
-    @Id
-    @GeneratedValue
-    Long id;
-    String name;
-    String repositoryFullName;
-    String localPath;
+public class Project {
+  @Id @GeneratedValue private Long id;
+  private String name;
+  private String repositoryName;
+  private String localPath;
 }
