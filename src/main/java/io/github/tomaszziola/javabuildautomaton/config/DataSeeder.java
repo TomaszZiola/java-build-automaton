@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton;
+package io.github.tomaszziola.javabuildautomaton.config;
 
 import io.github.tomaszziola.javabuildautomaton.project.Project;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
