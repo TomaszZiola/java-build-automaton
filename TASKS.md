@@ -109,3 +109,75 @@ How to Start Locally:
 4) Send a request with a header:
    - `curl -H 'X-Correlation-Id: demo-123' http://localhost:8080/actuator/health`
 5) Observe console logs contain JSON with `correlationId":"demo-123"`.
+
+---
+
+# Third Task from Roadmap (M0)
+
+Title: Build Entity and Persistence for Build Records (+ Minimal REST Listing)
+
+Context: From ROADMAP.md → M0 — Foundation hardening. We need to persist build executions triggered by webhooks so we can track outcomes, durations, and logs. ROADMAP deliverables call out a Build entity and profile-based persistence (H2 for dev). Acceptance criteria for M0 include listing recent builds via REST.
+
+Why: Persisting builds is essential for visibility and future features (UI, notifications, statuses). It enables operators and developers to see what happened, when, and why, and it unlocks metrics and history.
+
+Scope:
+- Define a JPA entity Build with fields aligned to Roadmap Data Model:
+  - id (UUID or Long), projectId (FK) or @ManyToOne Project, commitSha, ref (branch/tag),
+    status [PENDING|RUNNING|SUCCESS|FAILED|CANCELLED|TIMED_OUT],
+    createdAt, startedAt, finishedAt, durationMs,
+    logUrl (nullable, placeholder), errorMessage (nullable, short reason on failure).
+- Create BuildRepository (Spring Data JPA) with methods to find latest builds by project id (e.g., top 20 by createdAt desc).
+- Integrate BuildService with persistence lifecycle:
+  - On build trigger, create Build with PENDING → set RUNNING at start.
+  - Update SUCCESS or FAILED at the end; set timestamps and durationMs; set errorMessage on failures.
+  - Log buildId in key events (start/end) to correlate.
+- Minimal REST API to list builds per project (to satisfy M0 acceptance):
+  - GET /api/projects/{projectId}/builds?limit=20 (default 20 if not provided).
+  - Return recent builds in descending order by createdAt.
+- Dev profile uses H2 (already present). Allow JPA auto DDL for now.
+- Tests: unit tests for BuildService lifecycle transitions and controller listing endpoint.
+
+Deliverables:
+- New class: io.github.tomaszziola.javabuildautomaton.build.Build (JPA @Entity).
+- New interface: io.github.tomaszziola.javabuildautomaton.build.BuildRepository.
+- BuildService updates to create/update Build records around the external process execution.
+- New controller (or extend existing API layer) for listing builds per project: GET /api/projects/{id}/builds.
+- Tests covering: repository ordering, service status transitions, and API response shape.
+
+Acceptance Criteria:
+- When a webhook triggers a build for a known project, a Build record is created with status RUNNING shortly after trigger, then transitions to SUCCESS if the build process exits with 0, or FAILED otherwise with errorMessage set.
+- GET /api/projects/{id}/builds returns the last 20 builds by default with fields: id, status, commitSha, ref, createdAt, startedAt, finishedAt, durationMs.
+- All existing tests pass (`./gradlew test`).
+- No PII or secrets are logged; error logs do not include repo secrets.
+
+Out of Scope (for this task):
+- Web UI for builds.
+- GitHub commit statuses or notifications.
+- Dockerized/external runners; use current local process execution.
+- Log storage/streaming; use console logs and placeholder logUrl.
+
+Proposed Branch Name:
+- feat/build-entity-and-persistence
+
+Proposed First Commit Message (Conventional Commits):
+- feat(build): introduce Build entity, persistence, and REST listing endpoint
+
+Implementation Notes:
+- Use @Enumerated(EnumType.STRING) for BuildStatus enum to avoid ordinal issues.
+- Relationship: Build has ManyToOne Project or store projectId as a column if you prefer loose coupling for now; choose the simplest consistent with current Project model.
+- Timestamps: use Instant and @PrePersist for createdAt; set startedAt when process begins; finishedAt at completion; compute durationMs safely (null-safe if not finished).
+- In BuildService.startBuildProcess(project):
+  - Create and save Build(PENDING), then update to RUNNING prior to executing commands.
+  - On success: SUCCESS; on exception/exitCode != 0: FAILED with errorMessage.
+  - Ensure InterruptedException handling does not mask the original cause; if interrupted, set thread interrupt flag and mark build FAILED with appropriate message before rethrowing.
+- REST: New controller under package api (e.g., io.github...api.BuildController) with ProjectRepository existence checks and optional limit param (default 20, max 100).
+- Tests: Use H2 and @DataJpaTest for repository; @WebMvcTest for controller; service unit tests can mock repository interactions.
+
+How to Start Locally:
+1) Create branch: git checkout -b feat/build-entity-and-persistence
+2) Implement Build entity, repository, and service/controller changes as described.
+3) Run: ./gradlew test
+4) Start app: ./gradlew bootRun
+5) Trigger a webhook or call existing endpoints to start a build, then verify:
+   - GET http://localhost:8080/api/projects/{id}/builds
+6) Commit with the provided message and push branch.
