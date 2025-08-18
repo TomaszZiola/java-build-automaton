@@ -1,0 +1,35 @@
+package io.github.tomaszziola.javabuildautomaton.utils;
+
+import static org.mockito.Mockito.when;
+
+import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
+import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
+import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
+import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
+import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public abstract class BaseUnitTest {
+
+  @Mock protected ProjectService projectService;
+
+  protected WebhookController webhookControllerImpl;
+
+  protected ApiResponse apiResponse;
+  protected GitHubWebhookPayload payload;
+
+  @BeforeEach
+  void mockResponses() {
+    webhookControllerImpl = new WebhookController(projectService);
+
+    apiResponse = ApiResponseModel.basic();
+    payload = GitHubWebhookPayloadModel.basic();
+
+    when(projectService.handleProjectLookup(payload)).thenReturn(apiResponse);
+  }
+}
