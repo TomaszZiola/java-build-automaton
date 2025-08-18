@@ -28,6 +28,7 @@ public class BaseUnit {
   @Mock protected ProjectRepository projectRepository;
   @Mock protected ProjectService projectService;
 
+  protected BuildService buildServiceImpl;
   protected ProjectService projectServiceImpl;
   protected WebhookController webhookControllerImpl;
 
@@ -39,6 +40,7 @@ public class BaseUnit {
 
   @BeforeEach
   void mockResponses() {
+    buildServiceImpl = new BuildService();
     projectServiceImpl = new ProjectService(projectRepository, buildService);
     webhookControllerImpl = new WebhookController(projectService);
 

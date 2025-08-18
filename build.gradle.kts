@@ -60,3 +60,8 @@ pmd {
     rulesMinimumPriority = 5
     ruleSetFiles = files("config/pmd/ruleset.xml")
 }
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-javaagent:${classpath.find { it.name.contains("byte-buddy-agent") }?.absolutePath}")
+}
