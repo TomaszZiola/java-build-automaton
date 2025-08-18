@@ -19,11 +19,11 @@ public class DataSeeder {
       final Project testProject = new Project();
       testProject.setName("test-project-from-db");
       testProject.setRepositoryName("TomaszZiola/test");
-      testProject.setLocalPath("/Users/Tomasz/Documents/test");
+      testProject.setLocalPath("/Users/Tomasz/Documents/IdeaProjects/test");
 
       repository.save(testProject);
 
-      LOGGER.info(">>> Dodano testowy projekt do bazy danych");
+      LOGGER.info(">>> Test project added to database");
     };
   }
 }

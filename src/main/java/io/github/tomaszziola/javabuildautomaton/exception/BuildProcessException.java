@@ -7,7 +7,7 @@ public class BuildProcessException extends RuntimeException implements Serializa
 
   @Serial private static final long serialVersionUID = 1L;
 
-  public BuildProcessException(final String message) {
-    super(message);
+  public BuildProcessException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 }
