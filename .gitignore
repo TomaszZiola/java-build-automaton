@@ -31,7 +31,7 @@ gradle-app.setting
 # Windows system files
 Thumbs.db
 ehthumbs.db
-Desktop.ini
+Desktop.iniŌ
 
 ### Log and Temp Files ###
 *.log
@@ -43,3 +43,5 @@ Desktop.ini
 *.jar
 *.war
 *.ear
+
+tasks.md
