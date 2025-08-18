@@ -88,11 +88,90 @@ To run the project locally, follow the steps below.
 
 This project is actively under development. Here are the planned features:
 
+See the full, living plan in [ROADMAP.md](./ROADMAP.md).
+
 -   [ ] **Configuration Module:** Manage projects from a database instead of a hardcoded path.
 -   [ ] **Build History Module:** Save every build (status, logs, commit hash) to a database.
 -   [ ] **User Interface:** A simple frontend with Thymeleaf to display the list of projects and their build histories.
 -   [ ] **Notification System:** Send email or Discord/Slack notifications about the build outcome.
 -   [ ] **Docker Support:** Run builds in isolated Docker containers.
+
+---
+
+## ⚙️ Configuration
+
+This project currently seeds a demo Project at startup for convenience (see `DataSeeder`). To make it work on your machine:
+
+- Adjust the seeded project's fields in `src/main/java/io/github/tomaszziola/javabuildautomaton/config/DataSeeder.java`:
+  - name: Friendly display name
+  - repositoryName: GitHub repo in the form `owner/repo` (e.g., `TomaszZiola/test`)
+  - localPath: Absolute path on your machine where the repo exists. The app will run commands in this directory.
+- Ensure that directory is a valid git working copy of the specified repository and that you have the appropriate access.
+
+Important:
+- The build process uses the system `gradle` command (not the wrapper). Make sure Gradle is installed and on your PATH. Alternatively, modify `BuildService` to use `./gradlew` in your repo.
+- No webhook secret validation is implemented yet; see Security notes below.
+
+---
+
+## 🧪 Local Testing Without GitHub
+
+You can simulate a GitHub webhook locally with curl:
+
+```bash
+curl -X POST http://localhost:8080/webhook \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "repository": { "full_name": "TomaszZiola/test" }
+      }'
+```
+
+Expected response format:
+
+```json
+{
+  "status": "success | not_found",
+  "message": "..."
+}
+```
+
+- status="success" means the project was found and a build was started.
+- status="not_found" means the repository name didn’t match any project in the database.
+
+---
+
+## 📡 API Endpoints (Current)
+
+- POST `/webhook`
+  - Request: `{ "repository": { "full_name": "owner/repo" } }`
+  - Response: `{ "status": string, "message": string }`
+
+---
+
+## ✅ Requirements
+
+- Java 21+
+- Git installed and available in PATH
+- Gradle CLI installed and available in PATH (unless you adapt to use the project wrapper)
+
+---
+
+## ⚠️ Security and Limitations
+
+- Secrets: There is currently no verification of the GitHub webhook signature/secret. Do not expose this endpoint publicly without adding signature validation.
+- Execution: Builds run on the host using your local Gradle and Git, in the configured working directory. There is no sandboxing or container isolation yet. Use only with trusted repositories.
+- Logging: Logs are printed to application stdout; no retention/capping is implemented.
+
+See the living roadmap for planned improvements: [ROADMAP.md](./ROADMAP.md).
+
+---
+
+## 👩‍💻 Development & Testing
+
+- Build: `./gradlew build`
+- Run: `./gradlew bootRun`
+- Tests: `./gradlew test`
+- Code Quality: PMD is configured (see `config/pmd/ruleset.xml`).
 
 ---
 
