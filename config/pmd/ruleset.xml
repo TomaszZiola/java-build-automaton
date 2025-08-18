@@ -21,7 +21,10 @@
     <exclude name="OnlyOneReturn"/>
     <exclude name="CallSuperInConstructor"/>
     <exclude name="TooManyStaticImports"/>
+    <exclude name="MethodNamingConventions"/>
     <exclude name="ShortVariable"/>
+    <exclude name="LongVariable"/>
+    <exclude name="UseExplicitTypes"/>
   </rule>
 
   <rule ref="category/java/codestyle.xml/ShortVariable">
@@ -35,7 +38,6 @@
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
   </rule>
-
   <rule ref="category/java/design.xml">
     <exclude name="ExcessivePublicCount"/>
     <exclude name="LawOfDemeter"/>

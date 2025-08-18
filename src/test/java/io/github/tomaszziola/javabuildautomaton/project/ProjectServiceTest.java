@@ -1,16 +1,16 @@
-package io.github.tomaszziola.javabuildautomaton.webhook;
+package io.github.tomaszziola.javabuildautomaton.project;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.Test;
 
-class WebhookControllerTest extends BaseUnit {
+class ProjectServiceTest extends BaseUnit {
 
   @Test
-  void givenValidPayload_whenHandleWebhook_thenReturnOkResponse() {
+  void givenValidPayload_whenHandleProjectLookup_thenReturnApiResponse() {
     // when
-    final var result = webhookControllerImpl.handleWebhook(payload);
+    final var result = projectServiceImpl.handleProjectLookup(payload);
 
     // then
     assertThat(result).isEqualTo(apiResponse);
