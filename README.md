@@ -175,6 +175,20 @@ See the living roadmap for planned improvements: [ROADMAP.md](./ROADMAP.md).
 
 ---
 
+## Health Check
+
+The application exposes two Actuator endpoints for operational visibility:
+
+-   **Health Status:** Check if the application is running.
+    ```sh
+    curl http://localhost:8080/actuator/health
+    ```
+
+-   **Application Info:** Get basic build information.
+    ```sh
+    curl http://localhost:8080/actuator/info
+    ```
+
 ## 📄 License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more details.

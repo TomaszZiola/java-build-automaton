@@ -23,6 +23,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     annotationProcessor("org.projectlombok:lombok")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("com.h2database:h2")
@@ -36,6 +37,10 @@ tasks.withType<Test> {
 
 tasks.named("check") {
     dependsOn("pmdMain", "pmdTest", "spotlessApply")
+}
+
+springBoot {
+    buildInfo()
 }
 
 spotless {
