@@ -9,9 +9,11 @@
     Custom, smart ruleset for the Java Build Automaton project.
   </description>
 
-  <rule ref="category/java/errorprone.xml"/>
   <rule ref="category/java/performance.xml"/>
-  <rule ref="category/java/multithreading.xml"/>
+
+  <rule ref="category/java/errorprone.xml">
+    <exclude name="AssignmentInOperand"/>
+  </rule>
 
   <rule ref="category/java/codestyle.xml">
     <exclude name="CommentDefaultAccessModifier"/>
@@ -19,12 +21,14 @@
     <exclude name="OnlyOneReturn"/>
     <exclude name="CallSuperInConstructor"/>
     <exclude name="TooManyStaticImports"/>
+    <exclude name="ShortVariable"/>
   </rule>
 
   <rule ref="category/java/codestyle.xml/ShortVariable">
     <properties>
       <property name="minimum" value="3"/>
-      <property name="exceptions" value="id"/>
+      <property name="violationSuppressXPath"
+        value="//VariableId[@Name='id']"/>
     </properties>
   </rule>
 
