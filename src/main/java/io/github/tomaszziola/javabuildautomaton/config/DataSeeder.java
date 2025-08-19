@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.config;
 
-import static io.github.tomaszziola.javabuildautomaton.build.BuildTool.GRADLE;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
 
 import io.github.tomaszziola.javabuildautomaton.project.Project;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;

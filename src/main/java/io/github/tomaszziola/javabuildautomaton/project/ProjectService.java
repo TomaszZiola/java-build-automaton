@@ -1,7 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
-import io.github.tomaszziola.javabuildautomaton.build.BuildService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import java.util.Optional;
 import org.slf4j.Logger;

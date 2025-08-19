@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.build;
+package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import io.github.tomaszziola.javabuildautomaton.exception.BuildProcessException;
 import io.github.tomaszziola.javabuildautomaton.project.Project;

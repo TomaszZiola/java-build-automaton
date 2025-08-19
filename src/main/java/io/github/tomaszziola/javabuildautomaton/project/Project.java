@@ -2,7 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.project;
 
 import static jakarta.persistence.EnumType.STRING;
 
-import io.github.tomaszziola.javabuildautomaton.build.BuildTool;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;

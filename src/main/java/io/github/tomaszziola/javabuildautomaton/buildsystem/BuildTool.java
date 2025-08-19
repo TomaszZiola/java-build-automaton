@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.build;
+package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 public enum BuildTool {
   MAVEN,

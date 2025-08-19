@@ -1,7 +1,7 @@
-package io.github.tomaszziola.javabuildautomaton.build;
+package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-import static io.github.tomaszziola.javabuildautomaton.build.BuildTool.GRADLE;
-import static io.github.tomaszziola.javabuildautomaton.build.BuildTool.MAVEN;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.MAVEN;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
