@@ -22,14 +22,7 @@ public class BuildService {
 
       executeCommand(workingDir, "git", "pull");
 
-      switch (project.getBuildTool()) {
-        case MAVEN:
-          executeCommand(workingDir, "mvn", "clean", "install");
-          break;
-        case GRADLE:
-          executeCommand(workingDir, "gradle", "clean", "build");
-          break;
-      }
+      buildWithTool(project.getBuildTool(), workingDir);
 
       LOGGER.info("Build process finished successfully for project: {}", project.getName());
 
@@ -43,7 +36,19 @@ public class BuildService {
     }
   }
 
-  protected void executeCommand(final File workingDir, final String... command)
+  private void buildWithTool(final BuildTool buildTool, final File workingDir)
+      throws IOException, InterruptedException {
+    switch (buildTool) {
+      case MAVEN:
+        executeCommand(workingDir, "mvn", "clean", "install");
+        break;
+      case GRADLE:
+        executeCommand(workingDir, "gradle", "clean", "build");
+        break;
+    }
+  }
+
+  private void executeCommand(final File workingDir, final String... command)
       throws IOException, InterruptedException {
     LOGGER.info("Executing command in '{}': {}", workingDir, String.join(" ", command));
 
