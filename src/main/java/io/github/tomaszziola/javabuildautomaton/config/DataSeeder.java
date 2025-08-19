@@ -18,7 +18,7 @@ public class DataSeeder {
   @Bean
   public CommandLineRunner commandLineRunner(final ProjectRepository repository) {
     return args -> {
-      final Project testProject = new Project();
+      final var testProject = new Project();
       testProject.setName("test-project-from-db");
       testProject.setRepositoryName("TomaszZiola/test");
       testProject.setLocalPath("/Users/Tomasz/Documents/IdeaProjects/test");
