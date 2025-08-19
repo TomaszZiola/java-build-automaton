@@ -138,8 +138,8 @@ Scope:
 - Tests: unit tests for BuildService lifecycle transitions and controller listing endpoint.
 
 Deliverables:
-- New class: io.github.tomaszziola.javabuildautomaton.build.Build (JPA @Entity).
-- New interface: io.github.tomaszziola.javabuildautomaton.build.BuildRepository.
+- New class: io.github.tomaszziola.javabuildautomaton.buildsystem.Build (JPA @Entity).
+- New interface: io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository.
 - BuildService updates to create/update Build records around the external process execution.
 - New controller (or extend existing API layer) for listing builds per project: GET /api/projects/{id}/builds.
 - Tests covering: repository ordering, service status transitions, and API response shape.

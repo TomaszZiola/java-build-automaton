@@ -4,7 +4,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
-import io.github.tomaszziola.javabuildautomaton.build.BuildService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
@@ -14,9 +14,11 @@ import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
+import java.io.File;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -25,7 +27,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
+@SuppressWarnings("PMD.TooManyFields")
 public class BaseUnit {
+
+  @TempDir protected File tempDir;
 
   @Mock protected BuildService buildService;
   @Mock protected ProjectRepository projectRepository;
@@ -42,8 +47,9 @@ public class BaseUnit {
   protected GitHubWebhookPayload payload;
   protected Project project;
 
-  protected String repositoryName = "TomaszZiola/test";
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
+  protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
+  protected String repositoryName = "TomaszZiola/test";
 
   @BeforeEach
   void mockResponses() {
