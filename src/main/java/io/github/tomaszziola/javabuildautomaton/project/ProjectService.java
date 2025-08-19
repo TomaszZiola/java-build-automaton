@@ -3,7 +3,6 @@ package io.github.tomaszziola.javabuildautomaton.project;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,21 +21,20 @@ public class ProjectService {
   }
 
   public ApiResponse handleProjectLookup(final GitHubWebhookPayload payload) {
-    final String repositoryName = payload.repository().fullName();
+    final var repositoryName = payload.repository().fullName();
 
-    final Optional<Project> projectOptional =
-        projectRepository.findByRepositoryName(repositoryName);
+    final var projectOptional = projectRepository.findByRepositoryName(repositoryName);
 
     if (projectOptional.isPresent()) {
-      final Project foundProject = projectOptional.get();
-      final String message = "Project found in the database: " + foundProject.getName();
+      final var foundProject = projectOptional.get();
+      final var message = "Project found in the database: " + foundProject.getName();
       LOGGER.info(message);
 
       buildService.startBuildProcess(foundProject);
 
       return new ApiResponse("success", message + ". Build process started.");
     } else {
-      final String message = "Project not found for repository: " + repositoryName;
+      final var message = "Project not found for repository: " + repositoryName;
       LOGGER.warn(message);
       return new ApiResponse("not_found", message);
     }

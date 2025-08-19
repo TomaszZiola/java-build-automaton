@@ -18,7 +18,7 @@ public class BuildService {
   public void startBuildProcess(final Project project) {
     LOGGER.info("Starting build process for project: {}", project.getName());
     try {
-      final File workingDir = new File(project.getLocalPath());
+      final var workingDir = new File(project.getLocalPath());
 
       executeCommand(workingDir, "git", "pull");
 
@@ -56,7 +56,7 @@ public class BuildService {
     processBuilder.directory(workingDir);
     processBuilder.redirectErrorStream(true);
 
-    final Process process = processBuilder.start();
+    final var process = processBuilder.start();
 
     try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
       String line;
@@ -65,7 +65,7 @@ public class BuildService {
       }
     }
 
-    final int exitCode = process.waitFor();
+    final var exitCode = process.waitFor();
     if (exitCode != 0) {
       throw new BuildProcessException("Command execution failed with exit code: " + exitCode, null);
     }
