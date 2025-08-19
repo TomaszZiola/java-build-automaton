@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,34 +17,43 @@ public class BuildService {
 
   public void startBuildProcess(final Project project) {
     LOGGER.info("Starting build process for project: {}", project.getName());
-
     try {
       final File workingDir = new File(project.getLocalPath());
 
       executeCommand(workingDir, "git", "pull");
 
-      executeCommand(workingDir, "gradle", "clean", "build");
+      switch (project.getBuildTool()) {
+        case MAVEN:
+          executeCommand(workingDir, "mvn", "clean", "install");
+          break;
+        case GRADLE:
+          executeCommand(workingDir, "gradle", "clean", "build");
+          break;
+      }
 
       LOGGER.info("Build process finished successfully for project: {}", project.getName());
-    } catch (IOException | InterruptedException e) {
-      LOGGER.error("Error during command execution", e);
+
+    } catch (final IOException e) {
+      LOGGER.error("Build process failed for project: {}", project.getName(), e);
+      throw new BuildProcessException("Failed to execute build command", e);
+    } catch (final InterruptedException e) {
+      LOGGER.error("Build process failed for project: {}", project.getName(), e);
       Thread.currentThread().interrupt();
       throw new BuildProcessException("Failed to execute build command", e);
     }
   }
 
-  private void executeCommand(final File workingDir, final String... command)
+  protected void executeCommand(final File workingDir, final String... command)
       throws IOException, InterruptedException {
-    LOGGER.info("Executing command: {}", Arrays.toString(command));
+    LOGGER.info("Executing command in '{}': {}", workingDir, String.join(" ", command));
 
-    final ProcessBuilder processBuilder = new ProcessBuilder(command);
+    final var processBuilder = new ProcessBuilder(command);
     processBuilder.directory(workingDir);
     processBuilder.redirectErrorStream(true);
 
     final Process process = processBuilder.start();
 
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
       String line;
       while ((line = reader.readLine()) != null) {
         LOGGER.info(line);

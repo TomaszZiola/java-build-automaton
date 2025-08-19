@@ -1,5 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.config;
 
+import static io.github.tomaszziola.javabuildautomaton.build.BuildTool.GRADLE;
+
 import io.github.tomaszziola.javabuildautomaton.project.Project;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ public class DataSeeder {
       testProject.setName("test-project-from-db");
       testProject.setRepositoryName("TomaszZiola/test");
       testProject.setLocalPath("/Users/Tomasz/Documents/IdeaProjects/test");
+      testProject.setBuildTool(GRADLE);
 
       repository.save(testProject);
 

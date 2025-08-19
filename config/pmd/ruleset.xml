@@ -37,7 +37,9 @@
 
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
+    <exclude name="UnitTestContainsTooManyAsserts"/>
   </rule>
+
   <rule ref="category/java/design.xml">
     <exclude name="ExcessivePublicCount"/>
     <exclude name="LawOfDemeter"/>
