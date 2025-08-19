@@ -5,6 +5,7 @@ import static org.mockito.quality.Strictness.LENIENT;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.build.BuildService;
+import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
@@ -29,6 +32,9 @@ public class BaseUnit {
   @Mock protected ProjectService projectService;
 
   protected BuildService buildServiceImpl;
+  protected CorrelationIdFilter filterImpl;
+  protected MockHttpServletRequest request;
+  protected MockHttpServletResponse response;
   protected ProjectService projectServiceImpl;
   protected WebhookController webhookControllerImpl;
 
@@ -37,10 +43,14 @@ public class BaseUnit {
   protected Project project;
 
   protected String repositoryName = "TomaszZiola/test";
+  protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
 
   @BeforeEach
   void mockResponses() {
     buildServiceImpl = new BuildService();
+    filterImpl = new CorrelationIdFilter();
+    request = new MockHttpServletRequest();
+    response = new MockHttpServletResponse();
     projectServiceImpl = new ProjectService(projectRepository, buildService);
     webhookControllerImpl = new WebhookController(projectService);
 

@@ -1,6 +1,10 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
+import static jakarta.persistence.EnumType.STRING;
+
+import io.github.tomaszziola.javabuildautomaton.build.BuildTool;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -16,4 +20,7 @@ public class Project {
   private String name;
   private String repositoryName;
   private String localPath;
+
+  @Enumerated(STRING)
+  private BuildTool buildTool;
 }
