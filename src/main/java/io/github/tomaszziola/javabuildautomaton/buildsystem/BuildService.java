@@ -4,12 +4,9 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.F
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 
-import io.github.tomaszziola.javabuildautomaton.exception.BuildProcessException;
 import io.github.tomaszziola.javabuildautomaton.project.Project;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +19,8 @@ public class BuildService {
   private final BuildRepository buildRepository;
   private final ProcessExecutor processExecutor;
 
-  public BuildService(BuildRepository buildRepository, ProcessExecutor processExecutor) {
+  public BuildService(
+      final BuildRepository buildRepository, final ProcessExecutor processExecutor) {
     this.buildRepository = buildRepository;
     this.processExecutor = processExecutor;
   }
@@ -36,23 +34,26 @@ public class BuildService {
     build.setStatus(IN_PROGRESS);
     buildRepository.save(build);
 
-    final var logBuilder = new StringBuilder();
+    final var logBuilder = new StringBuilder(256);
 
     try {
       final var workingDir = new File(project.getLocalPath());
 
-      logBuilder.append(processExecutor.execute(workingDir, "git", "pull"));
-      logBuilder.append(buildWithTool(project.getBuildTool(), workingDir));
+      logBuilder
+          .append(processExecutor.execute(workingDir, "git", "pull"))
+          .append(buildWithTool(project.getBuildTool(), workingDir));
 
       build.setStatus(SUCCESS);
       LOGGER.info("Build process finished successfully for project: {}", project.getName());
-    } catch (final IOException | InterruptedException e) {
+    } catch (final InterruptedException e) {
       build.setStatus(FAILED);
       logBuilder.append("\nBUILD FAILED:\n").append(e.getMessage());
       LOGGER.error("Build process failed for project: {}", project.getName(), e);
-      if (e instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-      }
+      Thread.currentThread().interrupt();
+    } catch (final IOException e) {
+      build.setStatus(FAILED);
+      logBuilder.append("\nBUILD FAILED:\n").append(e.getMessage());
+      LOGGER.error("Build process failed for project: {}", project.getName(), e);
     } finally {
       build.setEndTime(LocalDateTime.now());
       build.setLogs(logBuilder.toString());
@@ -66,28 +67,5 @@ public class BuildService {
       case MAVEN -> processExecutor.execute(workingDir, "mvn", "clean", "install");
       case GRADLE -> processExecutor.execute(workingDir, "gradle", "clean", "build");
     };
-  }
-
-  private void executeCommand(final File workingDir, final String... command)
-      throws IOException, InterruptedException {
-    LOGGER.info("Executing command in '{}': {}", workingDir, String.join(" ", command));
-
-    final var processBuilder = new ProcessBuilder(command);
-    processBuilder.directory(workingDir);
-    processBuilder.redirectErrorStream(true);
-
-    final var process = processBuilder.start();
-
-    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        LOGGER.info(line);
-      }
-    }
-
-    final var exitCode = process.waitFor();
-    if (exitCode != 0) {
-      throw new BuildProcessException("Command execution failed with exit code: " + exitCode, null);
-    }
   }
 }

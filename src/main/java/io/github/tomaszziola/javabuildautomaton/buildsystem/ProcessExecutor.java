@@ -1,5 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
+import static java.lang.Math.max;
+import static java.lang.String.join;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +18,10 @@ public class ProcessExecutor {
 
   public String execute(final File workingDir, final String... command)
       throws IOException, InterruptedException {
-    LOGGER.info("Executing command in '{}': {}", workingDir, String.join(" ", command));
+    LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));
 
-    final var logOutput = new StringBuilder();
+    final int initialCapacity = max(256, join(" ", command).length() + 128);
+    final var logOutput = new StringBuilder(initialCapacity);
 
     final var processBuilder = new ProcessBuilder(command);
     processBuilder.directory(workingDir);
@@ -25,7 +29,7 @@ public class ProcessExecutor {
 
     final var process = processBuilder.start();
 
-    try (final var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
       String line;
       while ((line = reader.readLine()) != null) {
         logOutput.append(line).append(System.lineSeparator());

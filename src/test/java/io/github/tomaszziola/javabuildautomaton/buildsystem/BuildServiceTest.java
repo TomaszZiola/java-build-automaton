@@ -1,50 +1,56 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
-import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.MAVEN;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import io.github.tomaszziola.javabuildautomaton.exception.BuildProcessException;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import java.io.File;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class BuildServiceTest extends BaseUnit {
   @Test
-  void givenExistingWorkingDirectory_whenStartBuildProcess_thenDoesNotThrow() {
-    // when / then
-    assertDoesNotThrow(() -> buildService.startBuildProcess(project));
+  void givenExistingWorkingDirectory_whenStartBuildProcess_thenSavesSuccessfulBuildAndLogs()
+      throws IOException, InterruptedException {
+    // given
+    when(processExecutor.execute(any(File.class), any(String[].class)))
+        .thenReturn("git pulled\n", "build ok\n");
+
+    // when
+    assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
+
+    // then
+    final ArgumentCaptor<Build> captor = ArgumentCaptor.forClass(Build.class);
+    verify(buildRepository, times(2)).save(captor.capture());
+    final Build finalBuild = captor.getAllValues().getLast();
+    assertThat(finalBuild.getStatus()).isEqualTo(SUCCESS);
+    assertThat(finalBuild.getLogs()).isEqualTo("git pulled\nbuild ok\n");
   }
 
   @Test
-  void
-      givenNonExistingWorkingDirectory_whenStartBuildProcessWithMaven_thenThrowBuildProcessException() {
+  void givenNonExistingWorkingDirectory_whenStartBuildProcess_thenSavesFailedBuildAndLogs()
+      throws IOException, InterruptedException {
     // given
-    project = ProjectModel.basic(MAVEN, nonExistentPath);
+    project = ProjectModel.basic(nonExistentPath);
+    when(processExecutor.execute(any(File.class), any(String[].class)))
+        .thenThrow(new IOException("No such file or directory"));
 
     // when
-    final BuildProcessException exception =
-        assertThrows(
-            BuildProcessException.class, () -> buildServiceImpl.startBuildProcess(project));
+    assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
 
     // then
-    assertThat(exception.getMessage()).contains("Failed to execute build command");
-  }
-
-  @Test
-  void
-      givenNonExistingWorkingDirectory_whenStartBuildProcessWithGradle_thenThrowBuildProcessException() {
-    // given
-    project = ProjectModel.basic(GRADLE, nonExistentPath);
-
-    // when
-    final BuildProcessException exception =
-        assertThrows(
-            BuildProcessException.class, () -> buildServiceImpl.startBuildProcess(project));
-
-    // then
-    assertThat(exception.getMessage()).contains("Failed to execute build command");
+    final ArgumentCaptor<Build> captor = ArgumentCaptor.forClass(Build.class);
+    verify(buildRepository, times(2)).save(captor.capture());
+    final Build finalBuild = captor.getAllValues().get(captor.getAllValues().size() - 1);
+    assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
+    assertThat(finalBuild.getLogs()).isEqualTo("\nBUILD FAILED:\nNo such file or directory");
   }
 }
