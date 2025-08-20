@@ -22,7 +22,7 @@ class BuildServiceTest extends BaseUnit {
       throws IOException, InterruptedException {
     // given
     when(processExecutor.execute(any(File.class), any(String[].class)))
-        .thenReturn("git pulled\n", "build ok\n");
+        .thenReturn(new ExecutionResult(true, "git pulled\nbuild ok\n"));
 
     // when
     assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));

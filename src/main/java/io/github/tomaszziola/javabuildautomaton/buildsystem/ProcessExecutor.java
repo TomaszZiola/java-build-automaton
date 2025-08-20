@@ -2,6 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static java.lang.Math.max;
 import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,7 +17,7 @@ public class ProcessExecutor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
 
-  public String execute(final File workingDir, final String... command)
+  public ExecutionResult execute(final File workingDir, final String... command)
       throws IOException, InterruptedException {
     LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));
 
@@ -29,17 +30,18 @@ public class ProcessExecutor {
 
     final var process = processBuilder.start();
 
-    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         logOutput.append(line).append(System.lineSeparator());
       }
     }
     final int exitCode = process.waitFor();
-    if (exitCode != 0) {
+    final boolean isSuccess = exitCode == 0;
+
+    if (!isSuccess) {
       logOutput.append("\nCommand failed with exit code: ").append(exitCode);
-      throw new IOException("Command execution failed with exit code: " + exitCode);
     }
-    return logOutput.toString();
+    return new ExecutionResult(isSuccess, logOutput.toString());
   }
 }

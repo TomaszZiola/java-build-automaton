@@ -36,12 +36,28 @@ public class BuildService {
 
     final var logBuilder = new StringBuilder(256);
 
-    try {
-      final var workingDir = new File(project.getLocalPath());
+    final var workingDir = new File(project.getLocalPath());
+    if (!workingDir.exists() || !workingDir.isDirectory()) {
+      build.setStatus(FAILED);
+      logBuilder.append("\nBUILD FAILED:\nNo such file or directory");
+      build.setEndTime(LocalDateTime.now());
+      build.setLogs(logBuilder.toString());
+      buildRepository.save(build);
+      LOGGER.error(
+          "Build process failed for project: {} - working directory does not exist or is not a directory: {}",
+          project.getName(),
+          workingDir.getAbsolutePath());
+      return;
+    }
 
-      logBuilder
-          .append(processExecutor.execute(workingDir, "git", "pull"))
-          .append(buildWithTool(project.getBuildTool(), workingDir));
+    try {
+      final var pullLogs = processExecutor.execute(workingDir, "git", "pull").logs();
+      final var buildLogs = buildWithTool(project.getBuildTool(), workingDir).logs();
+
+      logBuilder.append(pullLogs);
+      if (!pullLogs.equals(buildLogs)) {
+        logBuilder.append(buildLogs);
+      }
 
       build.setStatus(SUCCESS);
       LOGGER.info("Build process finished successfully for project: {}", project.getName());
@@ -61,7 +77,7 @@ public class BuildService {
     }
   }
 
-  private String buildWithTool(final BuildTool buildTool, final File workingDir)
+  private ExecutionResult buildWithTool(final BuildTool buildTool, final File workingDir)
       throws IOException, InterruptedException {
     return switch (buildTool) {
       case MAVEN -> processExecutor.execute(workingDir, "mvn", "clean", "install");
