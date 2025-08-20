@@ -3,13 +3,10 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
-import static io.github.tomaszziola.javabuildautomaton.constants.Constants.BUILD_FAILED_PREFIX;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 
 import io.github.tomaszziola.javabuildautomaton.project.Project;
-import io.github.tomaszziola.javabuildautomaton.utils.LogUtils;
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,55 +44,70 @@ public class BuildService {
     final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
     final var workingDir = new File(project.getLocalPath());
+    if (!isWorkingDirExisting(project, workingDir, build, logBuilder)) {
+      return;
+    }
+
+    if (proceedGit(
+        gitCommandRunner.pull(workingDir),
+        logBuilder,
+        build,
+        "Git pull failed for project: {}",
+        project)) {
+      return;
+    }
+
+    if (proceedGit(
+        buildExecutor.build(project.getBuildTool(), workingDir),
+        logBuilder,
+        build,
+        "Build failed for project: {}",
+        project)) {
+      return;
+    }
+
+    finishBuild(build, SUCCESS, logBuilder);
+    buildRepository.save(build);
+  }
+
+  private boolean proceedGit(
+      ExecutionResult executionResult,
+      StringBuilder logBuilder,
+      Build build,
+      String errorMessage,
+      Project project) {
+    final var logs = executionResult.logs();
+
+    logBuilder.append(logs);
+    if (!executionResult.isSuccess()) {
+      finishBuild(build, FAILED, logBuilder);
+      LOGGER.error(errorMessage, project.getName());
+      return true;
+    }
+    return false;
+  }
+
+  private void finishBuild(Build build, BuildStatus status, StringBuilder logBuilder) {
+    build.setStatus(status);
+    build.setLogs(logBuilder.toString());
+    build.setEndTime(LocalDateTime.now());
+    buildRepository.save(build);
+  }
+
+  private boolean isWorkingDirExisting(
+      Project project, File workingDir, Build build, StringBuilder logBuilder) {
     if (!workingDir.exists() || !workingDir.isDirectory()) {
       build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX + "No such file or directory");
+      logBuilder.append("[[ERROR]]  No such file or directory");
       build.setEndTime(LocalDateTime.now());
       build.setLogs(logBuilder.toString());
       buildRepository.save(build);
       LOGGER.error(
-          "Build process failed for project: {} - working directory does not exist or is not a directory: {}",
+          "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
           project.getName(),
           workingDir.getAbsolutePath());
-      return;
+      return false;
     }
-
-    try {
-      final var pullResult = gitCommandRunner.pull(workingDir);
-      final var pullLogs = pullResult.logs();
-
-      logBuilder.append(pullLogs);
-      if (!pullResult.isSuccess()) {
-        build.setStatus(FAILED);
-        LOGGER.error("Git pull failed for project: {}", project.getName());
-        return;
-      }
-
-      final var buildResult = buildExecutor.build(project.getBuildTool(), workingDir);
-      final var buildLogs = buildResult.logs();
-      if (!LogUtils.areLogsEquivalent(pullLogs, buildLogs)) {
-        logBuilder.append(buildLogs);
-      }
-
-      build.setStatus(buildResult.isSuccess() ? SUCCESS : FAILED);
-      if (buildResult.isSuccess()) {
-        LOGGER.info("Build process finished successfully for project: {}", project.getName());
-      } else {
-        LOGGER.error(BUILD_FAILED_PREFIX + "during build step for project: {}", project.getName());
-      }
-    } catch (final InterruptedException e) {
-      build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX).append(e.getMessage());
-      LOGGER.error(BUILD_FAILED_PREFIX + "for project: {}", project.getName(), e);
-      Thread.currentThread().interrupt();
-    } catch (final IOException e) {
-      build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX).append(e.getMessage());
-      LOGGER.error(BUILD_FAILED_PREFIX + "for project: {}", project.getName(), e);
-    } finally {
-      build.setEndTime(LocalDateTime.now());
-      build.setLogs(logBuilder.toString());
-      buildRepository.save(build);
-    }
+    return true;
   }
 }

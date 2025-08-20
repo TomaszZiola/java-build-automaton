@@ -1,7 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import java.io.File;
-import java.io.IOException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,8 +12,7 @@ public class BuildExecutor {
     this.processExecutor = processExecutor;
   }
 
-  public ExecutionResult build(final BuildTool buildTool, final File workingDir)
-      throws IOException, InterruptedException {
+  public ExecutionResult build(final BuildTool buildTool, final File workingDir) {
     return switch (buildTool) {
       case MAVEN -> processExecutor.execute(workingDir, "mvn", "clean", "install");
       case GRADLE -> processExecutor.execute(workingDir, "gradle", "clean", "build");
