@@ -14,9 +14,6 @@ import org.junit.jupiter.api.Test;
 class BuildServiceTest extends BaseUnit {
   @Test
   void givenExistingWorkingDirectory_whenStartBuildProcess_thenDoesNotThrow() {
-    // given
-    project = ProjectModel.basic(MAVEN, tempDir.getAbsolutePath());
-
     // when / then
     assertDoesNotThrow(() -> buildService.startBuildProcess(project));
   }

@@ -1,4 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-public class BuildStatus {
+public enum BuildStatus {
+  IN_PROGRESS,
+  SUCCESS,
+  FAILED
 }
