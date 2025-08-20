@@ -41,71 +41,73 @@ public class BuildService {
     build.setStatus(IN_PROGRESS);
     buildRepository.save(build);
 
-    final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
+    final var buildLog = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var workingDir = new File(project.getLocalPath());
-    if (!isWorkingDirExisting(project, workingDir, build, logBuilder)) {
+    final var workingDirectory = new File(project.getLocalPath());
+    if (!validateWorkingDirectoryExists(project, workingDirectory, build, buildLog)) {
       return;
     }
 
-    if (proceedGit(
-        gitCommandRunner.pull(workingDir),
-        logBuilder,
+    if (failIfUnsuccessful(
+        gitCommandRunner.pull(workingDirectory),
+        buildLog,
         build,
         "Git pull failed for project: {}",
         project)) {
       return;
     }
 
-    if (proceedGit(
-        buildExecutor.build(project.getBuildTool(), workingDir),
-        logBuilder,
+    if (failIfUnsuccessful(
+        buildExecutor.build(project.getBuildTool(), workingDirectory),
+        buildLog,
         build,
         "Build failed for project: {}",
         project)) {
       return;
     }
 
-    finishBuild(build, SUCCESS, logBuilder);
-    buildRepository.save(build);
+    completeBuild(build, SUCCESS, buildLog);
   }
 
-  private boolean proceedGit(
-      ExecutionResult executionResult,
-      StringBuilder logBuilder,
-      Build build,
-      String errorMessage,
-      Project project) {
-    final var logs = executionResult.logs();
+  private boolean failIfUnsuccessful(
+      final ExecutionResult result,
+      final StringBuilder buildLog,
+      final Build build,
+      final String failureMessage,
+      final Project project) {
+    final var logs = result.logs();
 
-    logBuilder.append(logs);
-    if (!executionResult.isSuccess()) {
-      finishBuild(build, FAILED, logBuilder);
-      LOGGER.error(errorMessage, project.getName());
+    buildLog.setLength(0);
+    buildLog.append(logs);
+    if (!result.isSuccess()) {
+      completeBuild(build, FAILED, buildLog);
+      LOGGER.error(failureMessage, project.getName());
       return true;
     }
     return false;
   }
 
-  private void finishBuild(Build build, BuildStatus status, StringBuilder logBuilder) {
+  private void completeBuild(
+      final Build build, final BuildStatus status, final StringBuilder buildLog) {
     build.setStatus(status);
-    build.setLogs(logBuilder.toString());
+    build.setLogs(buildLog.toString());
     build.setEndTime(LocalDateTime.now());
     buildRepository.save(build);
   }
 
-  private boolean isWorkingDirExisting(
-      Project project, File workingDir, Build build, StringBuilder logBuilder) {
-    if (!workingDir.exists() || !workingDir.isDirectory()) {
-      build.setStatus(FAILED);
-      logBuilder.append("[[ERROR]]  No such file or directory");
-      build.setEndTime(LocalDateTime.now());
-      build.setLogs(logBuilder.toString());
-      buildRepository.save(build);
+  private boolean validateWorkingDirectoryExists(
+      final Project project,
+      final File workingDirectory,
+      final Build build,
+      final StringBuilder buildLog) {
+    if (!workingDirectory.exists() || !workingDirectory.isDirectory()) {
+      buildLog.setLength(0);
+      buildLog.append("\nBUILD FAILED:\nNo such file or directory");
+      completeBuild(build, FAILED, buildLog);
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
           project.getName(),
-          workingDir.getAbsolutePath());
+          workingDirectory.getAbsolutePath());
       return false;
     }
     return true;

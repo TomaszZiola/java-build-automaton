@@ -43,7 +43,7 @@ public class ProcessExecutor {
         logOutput
             .append("[[ERROR]] Command failed: ")
             .append(join(" ", command))
-            .append(System.lineSeparator());
+            .append(lineSeparator());
       }
       return new ExecutionResult(isSuccess, logOutput.toString());
     } catch (IOException e) {
