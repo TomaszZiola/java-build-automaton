@@ -4,7 +4,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
@@ -32,7 +34,9 @@ public class BaseUnit {
 
   @TempDir protected File tempDir;
 
+  @Mock protected BuildRepository buildRepository;
   @Mock protected BuildService buildService;
+  @Mock protected ProcessExecutor processExecutor;
   @Mock protected ProjectRepository projectRepository;
   @Mock protected ProjectService projectService;
 
@@ -53,7 +57,7 @@ public class BaseUnit {
 
   @BeforeEach
   void mockResponses() {
-    buildServiceImpl = new BuildService();
+    buildServiceImpl = new BuildService(buildRepository, processExecutor);
     filterImpl = new CorrelationIdFilter();
     request = new MockHttpServletRequest();
     response = new MockHttpServletResponse();

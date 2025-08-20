@@ -63,7 +63,8 @@ class CorrelationIdFilterTest extends BaseUnit {
   }
 
   @Test
-  void givenHeaderBlank_whenDoFilter_thenGeneratesUuid() throws ServletException, IOException {
+  void givenHeaderBlank_whenDoFilter_thenGeneratesUuidAndCleansUpMdc()
+      throws ServletException, IOException {
     // given
     request.addHeader(CORRELATION_ID_HEADER, "   ");
 

@@ -1,11 +1,13 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-import io.github.tomaszziola.javabuildautomaton.exception.BuildProcessException;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
+
 import io.github.tomaszziola.javabuildautomaton.project.Project;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,60 +16,72 @@ import org.springframework.stereotype.Service;
 public class BuildService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildService.class);
+  private final BuildRepository buildRepository;
+  private final ProcessExecutor processExecutor;
+
+  public BuildService(
+      final BuildRepository buildRepository, final ProcessExecutor processExecutor) {
+    this.buildRepository = buildRepository;
+    this.processExecutor = processExecutor;
+  }
 
   public void startBuildProcess(final Project project) {
     LOGGER.info("Starting build process for project: {}", project.getName());
+
+    final var build = new Build();
+    build.setProject(project);
+    build.setStartTime(LocalDateTime.now());
+    build.setStatus(IN_PROGRESS);
+    buildRepository.save(build);
+
+    final var logBuilder = new StringBuilder(256);
+
+    final var workingDir = new File(project.getLocalPath());
+    if (!workingDir.exists() || !workingDir.isDirectory()) {
+      build.setStatus(FAILED);
+      logBuilder.append("\nBUILD FAILED:\nNo such file or directory");
+      build.setEndTime(LocalDateTime.now());
+      build.setLogs(logBuilder.toString());
+      buildRepository.save(build);
+      LOGGER.error(
+          "Build process failed for project: {} - working directory does not exist or is not a directory: {}",
+          project.getName(),
+          workingDir.getAbsolutePath());
+      return;
+    }
+
     try {
-      final var workingDir = new File(project.getLocalPath());
+      final var pullLogs = processExecutor.execute(workingDir, "git", "pull").logs();
+      final var buildLogs = buildWithTool(project.getBuildTool(), workingDir).logs();
 
-      executeCommand(workingDir, "git", "pull");
+      logBuilder.append(pullLogs);
+      if (!pullLogs.equals(buildLogs)) {
+        logBuilder.append(buildLogs);
+      }
 
-      buildWithTool(project.getBuildTool(), workingDir);
-
+      build.setStatus(SUCCESS);
       LOGGER.info("Build process finished successfully for project: {}", project.getName());
-
-    } catch (final IOException e) {
-      LOGGER.error("Build process failed for project: {}", project.getName(), e);
-      throw new BuildProcessException("Failed to execute build command", e);
     } catch (final InterruptedException e) {
+      build.setStatus(FAILED);
+      logBuilder.append("\nBUILD FAILED:\n").append(e.getMessage());
       LOGGER.error("Build process failed for project: {}", project.getName(), e);
       Thread.currentThread().interrupt();
-      throw new BuildProcessException("Failed to execute build command", e);
+    } catch (final IOException e) {
+      build.setStatus(FAILED);
+      logBuilder.append("\nBUILD FAILED:\n").append(e.getMessage());
+      LOGGER.error("Build process failed for project: {}", project.getName(), e);
+    } finally {
+      build.setEndTime(LocalDateTime.now());
+      build.setLogs(logBuilder.toString());
+      buildRepository.save(build);
     }
   }
 
-  private void buildWithTool(final BuildTool buildTool, final File workingDir)
+  private ExecutionResult buildWithTool(final BuildTool buildTool, final File workingDir)
       throws IOException, InterruptedException {
-    switch (buildTool) {
-      case MAVEN:
-        executeCommand(workingDir, "mvn", "clean", "install");
-        break;
-      case GRADLE:
-        executeCommand(workingDir, "gradle", "clean", "build");
-        break;
-    }
-  }
-
-  private void executeCommand(final File workingDir, final String... command)
-      throws IOException, InterruptedException {
-    LOGGER.info("Executing command in '{}': {}", workingDir, String.join(" ", command));
-
-    final var processBuilder = new ProcessBuilder(command);
-    processBuilder.directory(workingDir);
-    processBuilder.redirectErrorStream(true);
-
-    final var process = processBuilder.start();
-
-    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        LOGGER.info(line);
-      }
-    }
-
-    final var exitCode = process.waitFor();
-    if (exitCode != 0) {
-      throw new BuildProcessException("Command execution failed with exit code: " + exitCode, null);
-    }
+    return switch (buildTool) {
+      case MAVEN -> processExecutor.execute(workingDir, "mvn", "clean", "install");
+      case GRADLE -> processExecutor.execute(workingDir, "gradle", "clean", "build");
+    };
   }
 }
