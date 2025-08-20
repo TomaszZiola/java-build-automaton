@@ -14,25 +14,18 @@ import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.File;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 class BuildServiceTest extends BaseUnit {
   @Test
-  void givenExistingWorkingDirectory_whenStartBuildProcess_thenSavesSuccessfulBuildAndLogs()
-      throws IOException, InterruptedException {
-    // given
-    when(processExecutor.execute(any(File.class), any(String[].class)))
-        .thenReturn(new ExecutionResult(true, "git pulled\nbuild ok\n"));
-
+  void givenExistingWorkingDirectory_whenStartBuildProcess_thenSavesSuccessfulBuildAndLogs() {
     // when
     assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
 
     // then
-    final ArgumentCaptor<Build> captor = ArgumentCaptor.forClass(Build.class);
-    verify(buildRepository, times(2)).save(captor.capture());
-    final Build finalBuild = captor.getAllValues().getLast();
+    verify(buildRepository, times(2)).save(buildCaptor.capture());
+    final Build finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(SUCCESS);
-    assertThat(finalBuild.getLogs()).isEqualTo("git pulled\nbuild ok\n");
+    assertThat(finalBuild.getLogs()).isEqualTo(successExecutionResult.logs());
   }
 
   @Test
@@ -40,17 +33,34 @@ class BuildServiceTest extends BaseUnit {
       throws IOException, InterruptedException {
     // given
     project = ProjectModel.basic(nonExistentPath);
-    when(processExecutor.execute(any(File.class), any(String[].class)))
-        .thenThrow(new IOException("No such file or directory"));
 
     // when
     assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
 
     // then
-    final ArgumentCaptor<Build> captor = ArgumentCaptor.forClass(Build.class);
-    verify(buildRepository, times(2)).save(captor.capture());
-    final Build finalBuild = captor.getAllValues().get(captor.getAllValues().size() - 1);
+    verify(buildRepository, times(2)).save(buildCaptor.capture());
+    final Build finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
     assertThat(finalBuild.getLogs()).isEqualTo("\nBUILD FAILED:\nNo such file or directory");
+  }
+
+  @Test
+  void givenGitPullFails_whenStartBuildProcess_thenSavesFailedBuildAndDoesNotRunBuildTool()
+      throws IOException, InterruptedException {
+    // given
+    when(gitCommandRunner.pull(any(File.class)))
+        .thenReturn(new ExecutionResult(false, "pull failed"));
+
+    // when
+    assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
+
+    // then
+    verify(gitCommandRunner, times(1)).pull(any(File.class));
+    verify(buildExecutor, times(0)).build(any(BuildTool.class), any(File.class));
+
+    verify(buildRepository, times(2)).save(buildCaptor.capture());
+    final Build finalBuild = buildCaptor.getAllValues().getLast();
+    assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
+    assertThat(finalBuild.getLogs()).isEqualTo("pull failed");
   }
 }
