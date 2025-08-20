@@ -44,5 +44,6 @@
     <exclude name="ExcessivePublicCount"/>
     <exclude name="LawOfDemeter"/>
     <exclude name="UseUtilityClass"/>
+    <exclude name="ExcessiveImports"/>
   </rule>
 </ruleset>

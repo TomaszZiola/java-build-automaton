@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class DataSeeder {
@@ -19,6 +18,12 @@ public class DataSeeder {
   @Bean
   public CommandLineRunner commandLineRunner(final ProjectRepository repository) {
     return args -> {
+      final var existing = repository.findByRepositoryName("TomaszZiola/test");
+      if (existing.isPresent()) {
+        LOGGER.info(">>> Test project already exists in database");
+        return;
+      }
+
       final var testProject = new Project();
       testProject.setName("test-project-from-db");
       testProject.setRepositoryName("TomaszZiola/test");
