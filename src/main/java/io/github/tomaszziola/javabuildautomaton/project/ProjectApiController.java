@@ -2,9 +2,10 @@ package io.github.tomaszziola.javabuildautomaton.project;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;

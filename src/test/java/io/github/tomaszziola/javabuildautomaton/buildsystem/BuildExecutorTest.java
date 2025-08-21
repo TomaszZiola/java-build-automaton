@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
-import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,24 +14,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class BuildExecutorTest extends BaseUnit {
 
   @Test
-  void givenMaven_whenBuild_thenExecutesMvnCleanInstallAndPropagatesResult()
-      throws IOException, InterruptedException {
+  void givenMaven_whenBuild_thenExecutesMvnCleanInstallAndPropagatesResult() {
     // when
     final var result = buildExecutorImpl.build(MAVEN, tempDir);
 
     // then
     verify(processExecutor).execute(tempDir, "mvn", "clean", "install");
-    assertThat(result).isSameAs(successExecutionResult);
+    assertThat(result).isSameAs(pullExecutionResult);
   }
 
   @Test
-  void givenGradle_whenBuild_thenExecutesGradleCleanBuildAndPropagatesResult()
-      throws IOException, InterruptedException {
+  void givenGradle_whenBuild_thenExecutesGradleCleanBuildAndPropagatesResult() {
     // when
     final var result = buildExecutorImpl.build(GRADLE, tempDir);
 
     // then
     verify(processExecutor).execute(tempDir, "gradle", "clean", "build");
-    assertThat(result).isSameAs(successExecutionResult);
+    assertThat(result).isSameAs(pullExecutionResult);
   }
 }

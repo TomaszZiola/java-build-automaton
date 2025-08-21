@@ -1,5 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
+import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.FOUND;
+import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
+
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
@@ -32,11 +35,11 @@ public class ProjectService {
 
       buildService.startBuildProcess(foundProject);
 
-      return new ApiResponse("success", message + ". Build process started.");
+      return new ApiResponse(FOUND, message + ". Build process started.");
     } else {
       final var message = "Project not found for repository: " + repositoryName;
       LOGGER.warn(message);
-      return new ApiResponse("not_found", message);
+      return new ApiResponse(NOT_FOUND, message);
     }
   }
 }

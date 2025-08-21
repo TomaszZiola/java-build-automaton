@@ -4,11 +4,16 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("com.diffplug.spotless") version "7.2.1"
     pmd
+    jacoco
 }
 
 group = "io.github.tomaszziola"
 version = "0.0.1-SNAPSHOT"
 description = "A simple CI/CD server in Spring Boot that listens for GitHub webhooks"
+
+jacoco {
+    toolVersion = "0.8.13"
+}
 
 java {
     toolchain {
@@ -34,10 +39,12 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+
 }
 
 tasks.named("check") {
-    dependsOn("pmdMain", "pmdTest", "spotlessApply")
+    dependsOn("pmdMain", "pmdTest", "spotlessApply", "jacocoTestCoverageVerification")
 }
 
 springBoot {
@@ -65,3 +72,43 @@ tasks.test {
     useJUnitPlatform()
     jvmArgs("-javaagent:${classpath.find { it.name.contains("byte-buddy-agent") }?.absolutePath}")
 }
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+        csv.required.set(false)
+        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+    }
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/dto/**",
+                    "**/config/**",
+                    "**/generated/**",
+                    "**/*Application*",
+                    "**/*Config*",
+                    "**/repository/**",
+                    "**/exception/**",
+                    "**/entity/**"
+                    )
+            }
+        })
+    )
+}
+
+tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.99".toBigDecimal()
+            }
+        }
+    }
+    classDirectories.setFrom(tasks.jacocoTestReport.get().classDirectories)
+    executionData.setFrom(tasks.jacocoTestReport.get().executionData)
+}
+

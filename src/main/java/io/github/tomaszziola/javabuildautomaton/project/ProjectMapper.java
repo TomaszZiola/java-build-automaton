@@ -1,6 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import org.springframework.stereotype.Component;
 
 @Component

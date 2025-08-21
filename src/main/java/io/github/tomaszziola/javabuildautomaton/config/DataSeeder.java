@@ -2,8 +2,8 @@ package io.github.tomaszziola.javabuildautomaton.config;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
 
-import io.github.tomaszziola.javabuildautomaton.project.Project;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
