@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,9 +30,9 @@ public class Build {
   @Enumerated(STRING)
   private BuildStatus status;
 
-  private LocalDateTime startTime;
+  private Instant startTime;
 
-  private LocalDateTime endTime;
+  private Instant endTime;
 
   @Lob
   @Column(columnDefinition = "TEXT")

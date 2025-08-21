@@ -4,10 +4,10 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.F
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
+import static java.time.Instant.now;
 
 import io.github.tomaszziola.javabuildautomaton.project.Project;
 import java.io.File;
-import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class BuildService {
 
     final var build = new Build();
     build.setProject(project);
-    build.setStartTime(LocalDateTime.now());
+    build.setStartTime(now());
     build.setStatus(IN_PROGRESS);
     buildRepository.save(build);
 
@@ -71,7 +71,7 @@ public class BuildService {
       final Build build, final BuildStatus status, final StringBuilder buildLog) {
     build.setStatus(status);
     build.setLogs(buildLog.toString());
-    build.setEndTime(LocalDateTime.now());
+    build.setEndTime(now());
     buildRepository.save(build);
   }
 
