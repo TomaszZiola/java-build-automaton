@@ -6,7 +6,8 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.S
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 import static java.time.Instant.now;
 
-import io.github.tomaszziola.javabuildautomaton.project.Project;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

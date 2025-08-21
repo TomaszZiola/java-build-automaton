@@ -4,7 +4,7 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.I
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static java.time.Instant.parse;
 
-import io.github.tomaszziola.javabuildautomaton.buildsystem.Build;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 
 public final class BuildModel {
 

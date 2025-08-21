@@ -2,7 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.models;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
 
-import io.github.tomaszziola.javabuildautomaton.project.Project;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 
 public final class ProjectModel {
 

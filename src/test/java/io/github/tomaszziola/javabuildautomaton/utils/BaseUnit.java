@@ -9,7 +9,6 @@ import static org.mockito.quality.Strictness.LENIENT;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
@@ -17,7 +16,10 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ExecutionResult;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.GitCommandRunner;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildModel;
@@ -26,14 +28,15 @@ import io.github.tomaszziola.javabuildautomaton.models.ExecutionResultModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
-import io.github.tomaszziola.javabuildautomaton.project.Project;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectApiController;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +60,9 @@ public class BaseUnit {
   @Mock protected BuildRepository buildRepository;
   @Mock protected BuildService buildService;
   @Mock protected GitCommandRunner gitCommandRunner;
+  @Mock protected Process process;
   @Mock protected ProcessExecutor processExecutor;
+  @Mock protected ProcessRunner processRunner;
   @Mock protected ProjectMapper projectMapper;
   @Mock protected ProjectRepository projectRepository;
   @Mock protected ProjectService projectService;
@@ -70,6 +75,7 @@ public class BaseUnit {
   protected GitCommandRunner gitCommandRunnerImpl;
   protected MockHttpServletRequest request;
   protected MockHttpServletResponse response;
+  protected ProcessExecutor processExecutorImpl;
   protected ProjectApiController projectApiControllerImpl;
   protected ProjectMapper projectMapperImpl;
   protected ProjectService projectServiceImpl;
@@ -78,24 +84,27 @@ public class BaseUnit {
   protected ApiResponse apiResponse;
   protected Build build;
   protected BuildSummaryDto buildSummaryDto;
-  protected ExecutionResult successExecutionResult;
+  protected ExecutionResult buildExecutionResult;
+  protected ExecutionResult pullExecutionResult;
+  protected File workingDir;
   protected GitHubWebhookPayload payload;
   protected Project project;
   protected ProjectDetailsDto projectDetailsDto;
 
+  protected String[] cmd = {"git", "pull"};
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
-  protected String input = " \r\nHello\rWorld\n \n";
   protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
   protected String repositoryName = "TomaszZiola/test";
 
   @BeforeEach
-  void mockResponses() {
+  void mockResponses() throws IOException {
     buildCaptor = ArgumentCaptor.forClass(Build.class);
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildMapperImpl = new BuildMapper();
     buildServiceImpl = new BuildService(buildRepository, gitCommandRunner, buildExecutor);
     filterImpl = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
+    processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
     projectApiControllerImpl =
         new ProjectApiController(buildMapper, projectMapper, projectRepository, buildRepository);
     projectMapperImpl = new ProjectMapper();
@@ -106,22 +115,25 @@ public class BaseUnit {
 
     apiResponse = ApiResponseModel.basic();
     build = BuildModel.basic();
+    buildExecutionResult = ExecutionResultModel.basic("build");
     buildSummaryDto = BuildSummaryDtoModel.basic();
-    successExecutionResult = ExecutionResultModel.basic();
+    pullExecutionResult = ExecutionResultModel.basic();
     payload = GitHubWebhookPayloadModel.basic();
     project = ProjectModel.basic();
     projectDetailsDto = ProjectDetailsDtoModel.basic();
+    workingDir = new File(project.getLocalPath());
 
     when(buildExecutor.build(any(BuildTool.class), any(File.class)))
-        .thenReturn(successExecutionResult);
+        .thenReturn(buildExecutionResult);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
     when(buildRepository.findByProject(project)).thenReturn(of(build));
-    when(gitCommandRunner.pull(any(File.class))).thenReturn(successExecutionResult);
+    when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
-        .thenReturn(successExecutionResult);
+        .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
-        .thenReturn(successExecutionResult);
-    when(processExecutor.execute(tempDir, "git", "pull")).thenReturn(successExecutionResult);
+        .thenReturn(pullExecutionResult);
+    when(processExecutor.execute(tempDir, "git", "pull")).thenReturn(pullExecutionResult);
+    when(processRunner.start(workingDir, cmd)).thenReturn(process);
     when(projectMapper.toDetailsDto(project)).thenReturn(projectDetailsDto);
     when(projectRepository.findAll()).thenReturn(of(project));
     when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
