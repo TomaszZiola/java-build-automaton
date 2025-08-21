@@ -24,7 +24,6 @@ import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +71,7 @@ public class BaseUnit {
   protected String repositoryName = "TomaszZiola/test";
 
   @BeforeEach
-  void mockResponses() throws IOException, InterruptedException {
+  void mockResponses() {
     buildCaptor = ArgumentCaptor.forClass(Build.class);
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildServiceImpl = new BuildService(buildRepository, gitCommandRunner, buildExecutor);

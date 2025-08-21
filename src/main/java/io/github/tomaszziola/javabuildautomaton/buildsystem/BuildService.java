@@ -3,13 +3,10 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
-import static io.github.tomaszziola.javabuildautomaton.constants.Constants.BUILD_FAILED_PREFIX;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 
 import io.github.tomaszziola.javabuildautomaton.project.Project;
-import io.github.tomaszziola.javabuildautomaton.utils.LogUtils;
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,56 +43,52 @@ public class BuildService {
 
     final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var workingDir = new File(project.getLocalPath());
-    if (!workingDir.exists() || !workingDir.isDirectory()) {
-      build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX + "No such file or directory");
-      build.setEndTime(LocalDateTime.now());
-      build.setLogs(logBuilder.toString());
-      buildRepository.save(build);
-      LOGGER.error(
-          "Build process failed for project: {} - working directory does not exist or is not a directory: {}",
-          project.getName(),
-          workingDir.getAbsolutePath());
+    final var workingDirectory = new File(project.getLocalPath());
+    if (!validateWorkingDirectoryExists(project, workingDirectory, build, logBuilder)) {
       return;
     }
 
-    try {
-      final var pullResult = gitCommandRunner.pull(workingDir);
-      final var pullLogs = pullResult.logs();
-
-      logBuilder.append(pullLogs);
-      if (!pullResult.isSuccess()) {
-        build.setStatus(FAILED);
-        LOGGER.error("Git pull failed for project: {}", project.getName());
-        return;
-      }
-
-      final var buildResult = buildExecutor.build(project.getBuildTool(), workingDir);
-      final var buildLogs = buildResult.logs();
-      if (!LogUtils.areLogsEquivalent(pullLogs, buildLogs)) {
-        logBuilder.append(buildLogs);
-      }
-
-      build.setStatus(buildResult.isSuccess() ? SUCCESS : FAILED);
-      if (buildResult.isSuccess()) {
-        LOGGER.info("Build process finished successfully for project: {}", project.getName());
-      } else {
-        LOGGER.error(BUILD_FAILED_PREFIX + "during build step for project: {}", project.getName());
-      }
-    } catch (final InterruptedException e) {
-      build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX).append(e.getMessage());
-      LOGGER.error(BUILD_FAILED_PREFIX + "for project: {}", project.getName(), e);
-      Thread.currentThread().interrupt();
-    } catch (final IOException e) {
-      build.setStatus(FAILED);
-      logBuilder.append(BUILD_FAILED_PREFIX).append(e.getMessage());
-      LOGGER.error(BUILD_FAILED_PREFIX + "for project: {}", project.getName(), e);
-    } finally {
-      build.setEndTime(LocalDateTime.now());
-      build.setLogs(logBuilder.toString());
-      buildRepository.save(build);
+    final var pullResult = gitCommandRunner.pull(workingDirectory);
+    logBuilder.append(pullResult.logs());
+    if (!pullResult.isSuccess()) {
+      completeBuild(build, FAILED, logBuilder);
+      LOGGER.error("Git pull failed for project: {}", project.getName());
+      return;
     }
+
+    final var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory);
+    logBuilder.append(buildResult.logs());
+    if (!buildResult.isSuccess()) {
+      completeBuild(build, FAILED, logBuilder);
+      LOGGER.error("Build failed for project: {}", project.getName());
+      return;
+    }
+
+    completeBuild(build, SUCCESS, logBuilder);
+  }
+
+  private void completeBuild(
+      final Build build, final BuildStatus status, final StringBuilder buildLog) {
+    build.setStatus(status);
+    build.setLogs(buildLog.toString());
+    build.setEndTime(LocalDateTime.now());
+    buildRepository.save(build);
+  }
+
+  private boolean validateWorkingDirectoryExists(
+      final Project project,
+      final File workingDirectory,
+      final Build build,
+      final StringBuilder buildLog) {
+    if (!workingDirectory.exists() || !workingDirectory.isDirectory()) {
+      buildLog.append("\nBUILD FAILED:\nNo such file or directory");
+      completeBuild(build, FAILED, buildLog);
+      LOGGER.error(
+          "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
+          project.getName(),
+          workingDirectory.getAbsolutePath());
+      return false;
+    }
+    return true;
   }
 }

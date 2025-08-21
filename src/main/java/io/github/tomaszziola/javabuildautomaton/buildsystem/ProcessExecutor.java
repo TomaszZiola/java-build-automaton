@@ -1,7 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-import static java.lang.Math.max;
+import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 import static java.lang.String.join;
+import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
@@ -17,31 +18,43 @@ public class ProcessExecutor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
 
-  public ExecutionResult execute(final File workingDir, final String... command)
-      throws IOException, InterruptedException {
+  public ExecutionResult execute(final File workingDir, final String... command) {
     LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));
 
-    final int initialCapacity = max(256, join(" ", command).length() + 128);
-    final var logOutput = new StringBuilder(initialCapacity);
+    final var logOutput = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var processBuilder = new ProcessBuilder(command);
-    processBuilder.directory(workingDir);
-    processBuilder.redirectErrorStream(true);
+    try {
+      final var processBuilder = new ProcessBuilder(command);
+      processBuilder.directory(workingDir);
+      processBuilder.redirectErrorStream(true);
 
-    final var process = processBuilder.start();
+      final var process = processBuilder.start();
 
-    try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        logOutput.append(line).append(System.lineSeparator());
+      try (var reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          logOutput.append(line).append(lineSeparator());
+        }
       }
+      final int exitCode = process.waitFor();
+      final boolean isSuccess = exitCode == 0;
+      if (!isSuccess) {
+        logOutput
+            .append("[[ERROR]] Command failed: ")
+            .append(join(" ", command))
+            .append(lineSeparator());
+      }
+      return new ExecutionResult(isSuccess, logOutput.toString());
+    } catch (IOException e) {
+      LOGGER.error("Process execution failed with IOException", e);
+      logOutput.append("[[ERROR]] IO failure: ").append(e.getMessage()).append(lineSeparator());
+      return new ExecutionResult(false, logOutput.toString());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOGGER.error("Process execution interrupted", e);
+      logOutput.append("[[ERROR]] Interrupted: ").append(e.getMessage()).append(lineSeparator());
+      return new ExecutionResult(false, logOutput.toString());
     }
-    final int exitCode = process.waitFor();
-    final boolean isSuccess = exitCode == 0;
-
-    if (!isSuccess) {
-      logOutput.append("\nCommand failed with exit code: ").append(exitCode);
-    }
-    return new ExecutionResult(isSuccess, logOutput.toString());
   }
 }
