@@ -41,50 +41,30 @@ public class BuildService {
     build.setStatus(IN_PROGRESS);
     buildRepository.save(build);
 
-    final var buildLog = new StringBuilder(LOG_INITIAL_CAPACITY);
+    final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
     final var workingDirectory = new File(project.getLocalPath());
-    if (!validateWorkingDirectoryExists(project, workingDirectory, build, buildLog)) {
+    if (!validateWorkingDirectoryExists(project, workingDirectory, build, logBuilder)) {
       return;
     }
 
-    if (failIfUnsuccessful(
-        gitCommandRunner.pull(workingDirectory),
-        buildLog,
-        build,
-        "Git pull failed for project: {}",
-        project)) {
+    final var pullResult = gitCommandRunner.pull(workingDirectory);
+    logBuilder.append(pullResult.logs());
+    if (!pullResult.isSuccess()) {
+      completeBuild(build, FAILED, logBuilder);
+      LOGGER.error("Git pull failed for project: {}", project.getName());
       return;
     }
 
-    if (failIfUnsuccessful(
-        buildExecutor.build(project.getBuildTool(), workingDirectory),
-        buildLog,
-        build,
-        "Build failed for project: {}",
-        project)) {
+    final var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory);
+    logBuilder.append(buildResult.logs());
+    if (!buildResult.isSuccess()) {
+      completeBuild(build, FAILED, logBuilder);
+      LOGGER.error("Build failed for project: {}", project.getName());
       return;
     }
 
-    completeBuild(build, SUCCESS, buildLog);
-  }
-
-  private boolean failIfUnsuccessful(
-      final ExecutionResult result,
-      final StringBuilder buildLog,
-      final Build build,
-      final String failureMessage,
-      final Project project) {
-    final var logs = result.logs();
-
-    buildLog.setLength(0);
-    buildLog.append(logs);
-    if (!result.isSuccess()) {
-      completeBuild(build, FAILED, buildLog);
-      LOGGER.error(failureMessage, project.getName());
-      return true;
-    }
-    return false;
+    completeBuild(build, SUCCESS, logBuilder);
   }
 
   private void completeBuild(
@@ -101,7 +81,6 @@ public class BuildService {
       final Build build,
       final StringBuilder buildLog) {
     if (!workingDirectory.exists() || !workingDirectory.isDirectory()) {
-      buildLog.setLength(0);
       buildLog.append("\nBUILD FAILED:\nNo such file or directory");
       completeBuild(build, FAILED, buildLog);
       LOGGER.error(

@@ -25,7 +25,7 @@ class BuildServiceTest extends BaseUnit {
     verify(buildRepository, times(2)).save(buildCaptor.capture());
     final Build finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(SUCCESS);
-    assertThat(finalBuild.getLogs()).isEqualTo(successExecutionResult.logs());
+    assertThat(finalBuild.getLogs()).isEqualTo("everything's ok\neverything's ok\n");
   }
 
   @Test
