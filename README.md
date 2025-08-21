@@ -9,7 +9,7 @@ A simple, lightweight CI/CD server written in Spring Boot that automates the pro
 
 ## 🎯 Project Description
 
-The goal of this project is to build a miniature Continuous Integration server from scratch to explore the fundamental principles of DevOps tools. The application listens for `push` events sent by GitHub webhooks, then clones or updates the repository, runs the build process (e.g., using Gradle/Maven), and reports on the outcome.
+The goal of this project is to build a miniature Continuous Integration server from scratch to explore the fundamental principles of DevOps tools. The application listens for `push` events sent by GitHub webhooks, then updates an existing local clone of the repository via `git pull`, runs the build process (e.g., using Gradle/Maven), and reports on the outcome.
 
 This is not just another CRUD application—it's a practical tool that solves a real-world automation problem in the software development lifecycle.
 
@@ -20,7 +20,7 @@ This is not just another CRUD application—it's a practical tool that solves a 
 * **Webhook Reception:** Fully integrated with the GitHub API to listen for `push` events.
 * **Dynamic Process Execution:** Securely runs system commands (`git`, `gradle`, `mvn`) from within the Java application using `ProcessBuilder`.
 * **Workspace Isolation:** Each project is built in its own dedicated working directory.
-* **Real-time Logging:** Captures and displays logs from the build process live in the application console.
+* **Real-time Logging:** Captures logs from the build process into memory and stores them with the build; streaming to console/UI is not yet implemented.
 * **Error Handling:** Detects build failures based on the process exit code.
 
 ---
@@ -80,7 +80,7 @@ To run the project locally, follow the steps below.
     * **Content type:** Change to `application/json`.
     * Save the webhook.
 
-6.  **Push a commit to your test repository and watch the logs in your application's console!**
+6.  **Push a commit to your test repository and check the application logs; build output is captured and stored.**
 
 ---
 
@@ -108,8 +108,12 @@ This project currently seeds a demo Project at startup for convenience (see `Dat
   - localPath: Absolute path on your machine where the repo exists. The app will run commands in this directory.
 - Ensure that directory is a valid git working copy of the specified repository and that you have the appropriate access.
 
+Database:
+- Uses in-memory H2 by default; data (including seeded project and build history) resets on restart.
+- H2 console is enabled at `/h2-console` (username `sa`, empty password).
+
 Important:
-- The build process uses the system `gradle` command (not the wrapper). Make sure Gradle is installed and on your PATH. Alternatively, modify `BuildService` to use `./gradlew` in your repo.
+- The build process uses the system `gradle` command (not the wrapper). Make sure Gradle is installed and on your PATH. Alternatively, modify `BuildExecutor` to use `./gradlew` in your repo.
 - No webhook secret validation is implemented yet; see Security notes below.
 
 ---
@@ -130,13 +134,13 @@ Expected response format:
 
 ```json
 {
-  "status": "success | not_found",
+  "status": "FOUND | NOT_FOUND",
   "message": "..."
 }
 ```
 
-- status="success" means the project was found and a build was started.
-- status="not_found" means the repository name didn’t match any project in the database.
+- status="FOUND" means the project was found and a build was started.
+- status="NOT_FOUND" means the repository name didn’t match any project in the database.
 
 ---
 
@@ -145,6 +149,12 @@ Expected response format:
 - POST `/webhook`
   - Request: `{ "repository": { "full_name": "owner/repo" } }`
   - Response: `{ "status": string, "message": string }`
+
+- GET `/api/projects`
+  - Response: `[{ id, name, repositoryName, localPath, buildTool }]`
+
+- GET `/api/projects/{projectId}/builds`
+  - Response: `[{ id, status, startTime, endTime }]`
 
 ---
 
@@ -160,7 +170,7 @@ Expected response format:
 
 - Secrets: There is currently no verification of the GitHub webhook signature/secret. Do not expose this endpoint publicly without adding signature validation.
 - Execution: Builds run on the host using your local Gradle and Git, in the configured working directory. There is no sandboxing or container isolation yet. Use only with trusted repositories.
-- Logging: Logs are printed to application stdout; no retention/capping is implemented.
+- Logging: Build logs are captured and stored with each build; general application logs go to stdout. No retention/capping policies are implemented yet.
 
 See the living roadmap for planned improvements: [ROADMAP.md](./ROADMAP.md).
 
@@ -191,4 +201,4 @@ The application exposes two Actuator endpoints for operational visibility:
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+No license file is currently included in this repository. Until a license is added, all rights are reserved. If you intend to use this code, please contact the author or add a LICENSE file (e.g., MIT).
