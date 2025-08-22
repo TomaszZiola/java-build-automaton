@@ -36,4 +36,16 @@ public class WebUiController {
 
     return "project-details";
   }
+
+  @GetMapping("/projects/{projectId}/builds/{buildId}")
+  public String showBuildDetails(
+      @PathVariable final Long projectId, @PathVariable final Long buildId, final Model model) {
+    final var project = projectService.findDetailsById(projectId);
+    final var build = projectService.findBuildDetailsById(buildId);
+
+    model.addAttribute("project", project);
+    model.addAttribute("build", build);
+
+    return "build-details";
+  }
 }

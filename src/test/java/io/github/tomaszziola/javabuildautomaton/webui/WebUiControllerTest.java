@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,29 @@ class WebUiControllerTest extends BaseUnit {
     assertThrows(
         ProjectNotFoundException.class,
         () -> webUiControllerImpl.showProjectDetails(nonExistentProjectId, modelImpl));
+    verify(projectService, never()).findProjectBuilds(nonExistentProjectId);
+  }
+
+  @Test
+  void givenExistingProject_whenShowBuildDetails_thenReturnViewAndModelAttributes() {
+    // when
+    final var view = webUiControllerImpl.showBuildDetails(projectId, buildId, modelImpl);
+
+    // then
+    assertThat(view).isEqualTo("build-details");
+    assertThat(modelImpl.asMap())
+        .containsEntry("project", projectDetailsDto)
+        .containsEntry("build", buildDetailsDto);
+    verify(projectService).findDetailsById(projectId);
+    verify(projectService).findBuildDetailsById(buildId);
+  }
+
+  @Test
+  void givenNonExistingBuild_whenShowBuildDetails_thenThrowBuildNotFoundException() {
+    // when / then
+    assertThrows(
+        BuildNotFoundException.class,
+        () -> webUiControllerImpl.showBuildDetails(projectId, nonExistentBuildId, modelImpl));
     verify(projectService, never()).findProjectBuilds(nonExistentProjectId);
   }
 }

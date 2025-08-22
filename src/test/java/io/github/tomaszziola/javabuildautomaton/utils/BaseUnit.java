@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
+import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
@@ -20,8 +21,10 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
+import io.github.tomaszziola.javabuildautomaton.models.BuildDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildSummaryDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ExecutionResultModel;
@@ -89,6 +92,7 @@ public class BaseUnit {
 
   protected ApiResponse apiResponse;
   protected Build build;
+  protected BuildDetailsDto buildDetailsDto;
   protected BuildSummaryDto buildSummaryDto;
   protected ExecutionResult buildExecutionResult;
   protected ExecutionResult pullExecutionResult;
@@ -101,7 +105,9 @@ public class BaseUnit {
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
   protected Long projectId = 1L;
+  protected Long buildId = 1L;
   protected Long nonExistentProjectId = 9L;
+  protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
 
   @BeforeEach
@@ -126,6 +132,7 @@ public class BaseUnit {
 
     apiResponse = ApiResponseModel.basic();
     build = BuildModel.basic();
+    buildDetailsDto = BuildDetailsDtoModel.basic();
     buildExecutionResult = ExecutionResultModel.basic("build");
     buildSummaryDto = BuildSummaryDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic();
@@ -137,6 +144,9 @@ public class BaseUnit {
     when(buildExecutor.build(any(BuildTool.class), any(File.class)))
         .thenReturn(buildExecutionResult);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
+    when(buildMapper.toDetailsDto(build)).thenReturn(buildDetailsDto);
+    when(buildRepository.findById(buildId)).thenReturn(Optional.of(build));
+    when(buildRepository.findById(nonExistentBuildId)).thenReturn(empty());
     when(buildRepository.findByProject(project)).thenReturn(of(build));
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
@@ -151,6 +161,9 @@ public class BaseUnit {
     when(projectRepository.findById(nonExistentProjectId)).thenReturn(empty());
     when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
     when(projectService.findAll()).thenReturn(of(projectDetailsDto));
+    when(projectService.findBuildDetailsById(buildId)).thenReturn(buildDetailsDto);
+    when(projectService.findBuildDetailsById(nonExistentBuildId))
+        .thenThrow(new BuildNotFoundException(nonExistentBuildId));
     when(projectService.findDetailsById(projectId)).thenReturn(projectDetailsDto);
     when(projectService.findDetailsById(nonExistentProjectId))
         .thenThrow(new ProjectNotFoundException(nonExistentProjectId));

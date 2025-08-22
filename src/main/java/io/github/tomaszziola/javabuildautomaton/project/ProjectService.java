@@ -4,11 +4,13 @@ import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.FOUND;
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
+import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
@@ -80,5 +82,12 @@ public class ProjectService {
 
     final var builds = buildRepository.findByProject(project);
     return builds.stream().map(buildMapper::toSummaryDto).toList();
+  }
+
+  public BuildDetailsDto findBuildDetailsById(final Long buildId) {
+    return buildRepository
+        .findById(buildId)
+        .map(buildMapper::toDetailsDto)
+        .orElseThrow(() -> new BuildNotFoundException(buildId));
   }
 }

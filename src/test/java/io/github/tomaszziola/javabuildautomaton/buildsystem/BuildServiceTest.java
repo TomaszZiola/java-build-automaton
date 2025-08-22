@@ -10,10 +10,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.File;
+import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 
 class BuildServiceTest extends BaseUnit {
@@ -24,7 +24,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(buildRepository, times(2)).save(buildCaptor.capture());
-    final Build finalBuild = buildCaptor.getAllValues().getLast();
+    final var finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(SUCCESS);
     assertThat(finalBuild.getLogs()).isEqualTo("pull's ok\nbuild's ok\n");
   }
@@ -39,7 +39,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(buildRepository, times(2)).save(buildCaptor.capture());
-    final Build finalBuild = buildCaptor.getAllValues().getLast();
+    final var finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
     assertThat(finalBuild.getLogs()).isEqualTo("\nBUILD FAILED:\nNo such file or directory");
   }
@@ -58,7 +58,7 @@ class BuildServiceTest extends BaseUnit {
     verify(buildExecutor, times(0)).build(any(BuildTool.class), any(File.class));
 
     verify(buildRepository, times(2)).save(buildCaptor.capture());
-    final Build finalBuild = buildCaptor.getAllValues().getLast();
+    final var finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
     assertThat(finalBuild.getLogs()).isEqualTo("pull failed");
   }
@@ -77,8 +77,27 @@ class BuildServiceTest extends BaseUnit {
     verify(buildExecutor, times(1)).build(GRADLE, workingDir);
 
     verify(buildRepository, times(2)).save(buildCaptor.capture());
-    final Build finalBuild = buildCaptor.getAllValues().getLast();
+    final var finalBuild = buildCaptor.getAllValues().getLast();
     assertThat(finalBuild.getStatus()).isEqualTo(FAILED);
     assertThat(finalBuild.getLogs()).isEqualTo("pull's ok\nbuild failed");
+  }
+
+  @Test
+  void givenExistingPathButNotDirectory_whenStartBuildProcess_thenValidationFailsAndExitsEarly()
+      throws Exception {
+    final var notADir = Files.createFile(tempDir.toPath().resolve("not-a-directory.txt")).toFile();
+    project = ProjectModel.basic(notADir.getAbsolutePath());
+
+    // when
+    assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
+
+    // then
+    verify(gitCommandRunner, times(0)).pull(workingDir);
+    verify(buildExecutor, times(0)).build(GRADLE, workingDir);
+
+    verify(buildRepository, times(2)).save(buildCaptor.capture());
+    final var finalBuild2 = buildCaptor.getAllValues().getLast();
+    assertThat(finalBuild2.getStatus()).isEqualTo(FAILED);
+    assertThat(finalBuild2.getLogs()).isEqualTo("\nBUILD FAILED:\nNo such file or directory");
   }
 }
