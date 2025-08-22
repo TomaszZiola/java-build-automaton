@@ -29,11 +29,12 @@ This is not just another CRUD application—it's a practical tool that solves a 
 
 * **Backend:** Java 21, Spring Boot 3.5.4
 * **Build Tool:** Gradle (Kotlin DSL)
-* **API:** Spring Web (REST)
+* **API:** Spring Web (REST), Spring Boot Actuator
+* **Frontend:** Thymeleaf (dashboard and project details)
+* **Data:** Spring Data JPA with in-memory H2 (dev/demo)
 * **Integration:** GitHub Webhooks
 * **Coming Soon:**
-    * **Database:** PostgreSQL (for storing build history)
-    * **Frontend:** Thymeleaf (for visualizing results)
+    * **Database:** PostgreSQL (persistent build history)
     * **Containerization:** Docker
 
 ---
@@ -66,7 +67,7 @@ To run the project locally, follow the steps below.
     ```bash
     ./gradlew bootRun
     ```
-    The application will start on port `8080`.
+    The application will start on port `8080`. Open http://localhost:8080/ to view the dashboard.
 
 4.  **Expose your local server with Ngrok:**
     ```bash
@@ -92,7 +93,7 @@ See the full, living plan in [ROADMAP.md](./ROADMAP.md).
 
 -   [ ] **Configuration Module:** Manage projects from a database instead of a hardcoded path.
 -   [ ] **Build History Module:** Save every build (status, logs, commit hash) to a database.
--   [ ] **User Interface:** A simple frontend with Thymeleaf to display the list of projects and their build histories.
+-   [ ] **Enhance User Interface:** Expand existing Thymeleaf views to display detailed build logs and statuses.
 -   [ ] **Notification System:** Send email or Discord/Slack notifications about the build outcome.
 -   [ ] **Docker Support:** Run builds in isolated Docker containers.
 
@@ -144,6 +145,17 @@ Expected response format:
 
 ---
 
+## 🖥️ Web UI
+
+- GET `/` — Dashboard listing all projects with basic info.
+- GET `/projects/{projectId}` — Project details including recent builds.
+
+Templates:
+- `src/main/resources/templates/dashboard.html`
+- `src/main/resources/templates/project-details.html`
+
+---
+
 ## 📡 API Endpoints (Current)
 
 - POST `/webhook`
@@ -181,7 +193,11 @@ See the living roadmap for planned improvements: [ROADMAP.md](./ROADMAP.md).
 - Build: `./gradlew build`
 - Run: `./gradlew bootRun`
 - Tests: `./gradlew test`
-- Code Quality: PMD is configured (see `config/pmd/ruleset.xml`).
+- Coverage report: `./gradlew jacocoTestReport` (open `build/jacocoHtml/index.html`)
+- Coverage gate: `./gradlew jacocoTestCoverageVerification` (min coverage 99%)
+- All-in-one check: `./gradlew check` (depends on PMD, Spotless, and coverage verification)
+- Code Quality: PMD is configured (see `config/pmd/ruleset.xml`). You can run `./gradlew pmdMain pmdTest`.
+- Code Style: Spotless is configured; run `./gradlew spotlessApply` to auto-format and remove unused imports.
 
 ---
 

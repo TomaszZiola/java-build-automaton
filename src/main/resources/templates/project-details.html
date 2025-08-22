@@ -115,7 +115,8 @@
         2025-08-21 15:01
       </td>
       <td>
-        <a href="#">View Logs</a>
+        <a th:href="@{/projects/{projectId}/builds/{buildId}(projectId=${project.id()}, buildId=${build.id()})}">View
+          Logs</a>
       </td>
     </tr>
     </tbody>

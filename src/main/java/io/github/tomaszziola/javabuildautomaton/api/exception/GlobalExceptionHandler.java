@@ -1,11 +1,12 @@
 package io.github.tomaszziola.javabuildautomaton.api.exception;
 
+import static java.time.Instant.now;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ErrorResponse;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,11 +19,16 @@ public class GlobalExceptionHandler {
       final ProjectNotFoundException exception, final HttpServletRequest request) {
     final var errorResponse =
         new ErrorResponse(
-            LocalDateTime.now(),
-            NOT_FOUND.value(),
-            "Not Found",
-            exception.getMessage(),
-            request.getRequestURI());
+            now(), NOT_FOUND.value(), "Not Found", exception.getMessage(), request.getRequestURI());
+    return new ResponseEntity<>(errorResponse, NOT_FOUND);
+  }
+
+  @ExceptionHandler(BuildNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleBuildNotFound(
+      final BuildNotFoundException exception, final HttpServletRequest request) {
+    final var errorResponse =
+        new ErrorResponse(
+            now(), NOT_FOUND.value(), "Not Found", exception.getMessage(), request.getRequestURI());
     return new ResponseEntity<>(errorResponse, NOT_FOUND);
   }
 }
