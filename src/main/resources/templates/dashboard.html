@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Java Build Automaton - Dashboard</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 2em;
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+
+    h1 {
+      color: #343a40;
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 0.5em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5em;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #dee2e6;
+      text-align: left;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #e9ecef;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .no-projects {
+      text-align: center;
+      color: #6c757d;
+      padding: 2em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Project Dashboard</h1>
+
+  <!-- Ten blok zostanie wyświetlony, jeśli lista projektów jest pusta -->
+  <div th:if="${projects.isEmpty()}" class="no-projects">
+    <p>No projects have been configured yet.</p>
+  </div>
+
+  <!-- Tabela zostanie wyświetlona tylko, jeśli lista projektów NIE jest pusta -->
+  <table th:unless="${projects.isEmpty()}">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Project Name</th>
+      <th>Repository</th>
+      <th>Build Tool</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Magia Thymeleaf: pętla po liście 'projects' z modelu -->
+    <tr th:each="project : ${projects}">
+      <td th:text="${project.id()}">1</td>
+      <td th:text="${project.name()}">My Awesome Project</td>
+      <td th:text="${project.repositoryName()}">user/repo</td>
+      <td th:text="${project.buildTool()}">MAVEN</td>
+      <td>
+        <!-- Ten link prowadzi teraz do strony ze szczegółami projektu -->
+        <a th:href="@{/projects/{id}(id=${project.id()})}">View Builds</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

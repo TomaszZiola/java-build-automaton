@@ -36,6 +36,7 @@ import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
+import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -48,6 +49,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.ui.Model;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
@@ -74,6 +77,7 @@ public class BaseUnit {
   protected BuildService buildServiceImpl;
   protected CorrelationIdFilter filterImpl;
   protected GitCommandRunner gitCommandRunnerImpl;
+  protected Model modelImpl;
   protected MockHttpServletRequest request;
   protected MockHttpServletResponse response;
   protected ProcessExecutor processExecutorImpl;
@@ -81,6 +85,7 @@ public class BaseUnit {
   protected ProjectMapper projectMapperImpl;
   protected ProjectService projectServiceImpl;
   protected WebhookController webhookControllerImpl;
+  protected WebUiController webUiControllerImpl;
 
   protected ApiResponse apiResponse;
   protected Build build;
@@ -107,6 +112,7 @@ public class BaseUnit {
     buildServiceImpl = new BuildService(buildRepository, gitCommandRunner, buildExecutor);
     filterImpl = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
+    modelImpl = new ExtendedModelMap();
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
     projectApiControllerImpl = new ProjectApiController(projectService);
     projectMapperImpl = new ProjectMapper();
@@ -116,6 +122,7 @@ public class BaseUnit {
     request = new MockHttpServletRequest();
     response = new MockHttpServletResponse();
     webhookControllerImpl = new WebhookController(projectService);
+    webUiControllerImpl = new WebUiController(projectService);
 
     apiResponse = ApiResponseModel.basic();
     build = BuildModel.basic();
@@ -144,6 +151,9 @@ public class BaseUnit {
     when(projectRepository.findById(nonExistentProjectId)).thenReturn(empty());
     when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
     when(projectService.findAll()).thenReturn(of(projectDetailsDto));
+    when(projectService.findDetailsById(projectId)).thenReturn(projectDetailsDto);
+    when(projectService.findDetailsById(nonExistentProjectId))
+        .thenThrow(new ProjectNotFoundException(nonExistentProjectId));
     when(projectService.findProjectBuilds(projectId)).thenReturn(of(buildSummaryDto));
     when(projectService.findProjectBuilds(nonExistentProjectId))
         .thenThrow(ProjectNotFoundException.class);
