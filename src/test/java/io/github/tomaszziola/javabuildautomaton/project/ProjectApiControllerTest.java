@@ -1,6 +1,5 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,11 +18,7 @@ class ProjectApiControllerTest extends BaseUnit {
     // then
     assertThat(result.size()).isEqualTo(1);
     final ProjectDetailsDto first = result.getFirst();
-    assertThat(first.id()).isEqualTo(project.getId());
-    assertThat(first.name()).isEqualTo(project.getName());
-    assertThat(first.repositoryName()).isEqualTo(project.getRepositoryName());
-    assertThat(first.localPath()).isEqualTo(project.getLocalPath());
-    assertThat(first.buildTool()).isEqualTo(project.getBuildTool());
+    assertThat(first).isEqualTo(projectDetailsDto);
   }
 
   @Test
@@ -33,10 +28,7 @@ class ProjectApiControllerTest extends BaseUnit {
 
     // then
     assertThat(result.size()).isEqualTo(1);
-    assertThat(result.getFirst().id()).isEqualTo(1L);
-    assertThat(result.getFirst().startTime()).isEqualTo(build.getStartTime());
-    assertThat(result.getFirst().endTime()).isEqualTo(build.getEndTime());
-    assertThat(result.getFirst().status()).isEqualTo(SUCCESS);
+    assertThat(result.getFirst()).isEqualTo(buildSummaryDto);
   }
 
   @Test
