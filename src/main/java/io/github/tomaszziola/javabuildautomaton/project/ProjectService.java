@@ -4,8 +4,15 @@ import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.FOUND;
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
+import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
+import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,14 +20,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProjectService {
 
-  private final ProjectRepository projectRepository;
-  private final BuildService buildService;
   private static final Logger LOGGER = LoggerFactory.getLogger(ProjectService.class);
 
+  private final BuildMapper buildMapper;
+  private final BuildRepository buildRepository;
+  private final BuildService buildService;
+  private final ProjectMapper projectMapper;
+  private final ProjectRepository projectRepository;
+
   public ProjectService(
-      final ProjectRepository projectRepository, final BuildService buildService) {
-    this.projectRepository = projectRepository;
+      final BuildMapper buildMapper,
+      final BuildRepository buildRepository,
+      final BuildService buildService,
+      final ProjectMapper projectMapper,
+      final ProjectRepository projectRepository) {
+    this.buildMapper = buildMapper;
+    this.buildRepository = buildRepository;
     this.buildService = buildService;
+    this.projectMapper = projectMapper;
+    this.projectRepository = projectRepository;
   }
 
   public ApiResponse handleProjectLookup(final GitHubWebhookPayload payload) {
@@ -41,5 +59,19 @@ public class ProjectService {
       LOGGER.warn(message);
       return new ApiResponse(NOT_FOUND, message);
     }
+  }
+
+  public List<ProjectDetailsDto> findAll() {
+    return projectRepository.findAll().stream().map(projectMapper::toDetailsDto).toList();
+  }
+
+  public List<BuildSummaryDto> findProjectBuilds(final Long projectId) {
+    final Project project =
+        projectRepository
+            .findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException(projectId));
+
+    final var builds = buildRepository.findByProject(project);
+    return builds.stream().map(buildMapper::toSummaryDto).toList();
   }
 }

@@ -2,8 +2,10 @@ package io.github.tomaszziola.javabuildautomaton.project;
 
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -32,5 +34,31 @@ class ProjectServiceTest extends BaseUnit {
     assertThat(result.status()).isEqualTo(NOT_FOUND);
     assertThat(result.message())
         .isEqualTo("Project not found for repository: " + payload.repository().fullName());
+  }
+
+  @Test
+  void givenGetRequest_whenFindAll_thenReturnListOfProjectDetailsDto() {
+    // when
+    final var result = projectServiceImpl.findAll();
+
+    // then
+    assertThat(result.getFirst()).isEqualTo(projectDetailsDto);
+  }
+
+  @Test
+  void givenExistingProjectId_whenFindProjectBuilds_thenReturnListOfBuildSummaryDto() {
+    // when
+    final var result = projectServiceImpl.findProjectBuilds(projectId);
+
+    // then
+    assertThat(result.getFirst()).isEqualTo(buildSummaryDto);
+  }
+
+  @Test
+  void givenNotExistingProject_whenFindProjectBuilds_thenThrowProjectNotFoundException() {
+    // when / then
+    assertThrows(
+        ProjectNotFoundException.class,
+        () -> projectServiceImpl.findProjectBuilds(nonExistentProjectId));
   }
 }

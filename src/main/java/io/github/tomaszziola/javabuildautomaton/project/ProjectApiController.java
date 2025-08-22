@@ -2,11 +2,6 @@ package io.github.tomaszziola.javabuildautomaton.project;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
-import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
-import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,35 +12,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/projects")
 public class ProjectApiController {
 
-  private final BuildMapper buildMapper;
-  private final ProjectMapper projectMapper;
-  private final ProjectRepository projectRepository;
-  private final BuildRepository buildRepository;
+  private final ProjectService projectService;
 
-  public ProjectApiController(
-      final BuildMapper buildMapper,
-      final ProjectMapper mapper,
-      final ProjectRepository projectRepository,
-      final BuildRepository buildRepository) {
-    this.buildMapper = buildMapper;
-    this.projectMapper = mapper;
-    this.projectRepository = projectRepository;
-    this.buildRepository = buildRepository;
+  public ProjectApiController(final ProjectService projectService) {
+    this.projectService = projectService;
   }
 
   @GetMapping
   public List<ProjectDetailsDto> getAllProjects() {
-    return projectRepository.findAll().stream().map(projectMapper::toDetailsDto).toList();
+    return projectService.findAll();
   }
 
   @GetMapping("/{projectId}/builds")
   public List<BuildSummaryDto> getProjectBuilds(@PathVariable final Long projectId) {
-    final Project project =
-        projectRepository
-            .findById(projectId)
-            .orElseThrow(() -> new ProjectNotFoundException(projectId));
-
-    final List<Build> builds = buildRepository.findByProject(project);
-    return builds.stream().map(buildMapper::toSummaryDto).toList();
+    return projectService.findProjectBuilds(projectId);
   }
 }

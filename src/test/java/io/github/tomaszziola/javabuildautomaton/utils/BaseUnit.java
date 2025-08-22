@@ -33,6 +33,7 @@ import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import java.io.File;
@@ -94,6 +95,8 @@ public class BaseUnit {
   protected String[] cmd = {"git", "pull"};
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
+  protected Long projectId = 1L;
+  protected Long nonExistentProjectId = 9L;
   protected String repositoryName = "TomaszZiola/test";
 
   @BeforeEach
@@ -105,10 +108,11 @@ public class BaseUnit {
     filterImpl = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
-    projectApiControllerImpl =
-        new ProjectApiController(buildMapper, projectMapper, projectRepository, buildRepository);
+    projectApiControllerImpl = new ProjectApiController(projectService);
     projectMapperImpl = new ProjectMapper();
-    projectServiceImpl = new ProjectService(projectRepository, buildService);
+    projectServiceImpl =
+        new ProjectService(
+            buildMapper, buildRepository, buildService, projectMapper, projectRepository);
     request = new MockHttpServletRequest();
     response = new MockHttpServletResponse();
     webhookControllerImpl = new WebhookController(projectService);
@@ -136,9 +140,13 @@ public class BaseUnit {
     when(processRunner.start(workingDir, cmd)).thenReturn(process);
     when(projectMapper.toDetailsDto(project)).thenReturn(projectDetailsDto);
     when(projectRepository.findAll()).thenReturn(of(project));
-    when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-    when(projectRepository.findById(9L)).thenReturn(empty());
+    when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+    when(projectRepository.findById(nonExistentProjectId)).thenReturn(empty());
     when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
+    when(projectService.findAll()).thenReturn(of(projectDetailsDto));
+    when(projectService.findProjectBuilds(projectId)).thenReturn(of(buildSummaryDto));
+    when(projectService.findProjectBuilds(nonExistentProjectId))
+        .thenThrow(ProjectNotFoundException.class);
     when(projectService.handleProjectLookup(payload)).thenReturn(apiResponse);
   }
 }
