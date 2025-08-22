@@ -46,6 +46,23 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
+  void givenExistingProjectId_whenFindDetailsById_thenReturnProjectDetailsDto() {
+    // when
+    final var result = projectServiceImpl.findDetailsById(projectId);
+
+    // then
+    assertThat(result).isEqualTo(projectDetailsDto);
+  }
+
+  @Test
+  void givenNotExistingProject_whenFindDetailsById_thenReturnProjectDetailsDto() {
+    // when / then
+    assertThrows(
+        ProjectNotFoundException.class,
+        () -> projectServiceImpl.findDetailsById(nonExistentProjectId));
+  }
+
+  @Test
   void givenExistingProjectId_whenFindProjectBuilds_thenReturnListOfBuildSummaryDto() {
     // when
     final var result = projectServiceImpl.findProjectBuilds(projectId);

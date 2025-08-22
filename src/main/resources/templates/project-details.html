@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="|Build History for ${project.name()}|">Build History</title>
+  <!-- Używamy tych samych stylów co w dashboardzie dla spójności -->
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 2em;
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+
+    h1, h2 {
+      color: #343a40;
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 0.5em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5em;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #dee2e6;
+      text-align: left;
+    }
+
+    th {
+      background-color: #6c757d;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #e9ecef;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.5em;
+      font-size: 1.1em;
+    }
+
+    .status-SUCCESS {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .status-FAILED {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .status-IN_PROGRESS {
+      color: #ffc107;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="/" class="back-link">&larr; Back to Dashboard</a>
+  <h1 th:text="|Project: ${project.name()}|">Project Details</h1>
+  <h2>Build History</h2>
+
+  <table th:unless="${builds.isEmpty()}">
+    <thead>
+    <tr>
+      <th>Build ID</th>
+      <th>Status</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="build : ${builds}">
+      <td th:text="${build.id()}">101</td>
+      <td>
+        <span th:text="${build.status()}" th:classappend="|status-${build.status()}|">SUCCESS</span>
+      </td>
+      <td th:text="${#temporals.format(build.startTime(), 'yyyy-MM-dd HH:mm:ss')}">2025-08-21
+        15:00
+      </td>
+      <td th:text="${build.endTime() != null ? #temporals.format(build.endTime(), 'yyyy-MM-dd HH:mm:ss') : 'In Progress'}">
+        2025-08-21 15:01
+      </td>
+      <td>
+        <a href="#">View Logs</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <div th:if="${builds.isEmpty()}" class="no-projects">
+    <p>No builds have been run for this project yet.</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -65,6 +65,13 @@ public class ProjectService {
     return projectRepository.findAll().stream().map(projectMapper::toDetailsDto).toList();
   }
 
+  public ProjectDetailsDto findDetailsById(final Long projectId) {
+    return projectRepository
+        .findById(projectId)
+        .map(projectMapper::toDetailsDto)
+        .orElseThrow(() -> new ProjectNotFoundException(projectId));
+  }
+
   public List<BuildSummaryDto> findProjectBuilds(final Long projectId) {
     final Project project =
         projectRepository
