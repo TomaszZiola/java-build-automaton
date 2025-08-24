@@ -1,6 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem.entity;
 
 import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
@@ -9,10 +11,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,9 +27,12 @@ import org.hibernate.proxy.HibernateProxy;
 @Setter
 public class Build {
 
-  @Id @GeneratedValue private Long id;
+  @Id
+  @SequenceGenerator(name = "build_sq", sequenceName = "build_sq", allocationSize = 1)
+  @GeneratedValue(strategy = SEQUENCE, generator = "build_sq")
+  private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = LAZY)
   @JoinColumn(name = "project_id", nullable = false)
   private Project project;
 
