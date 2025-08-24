@@ -1,12 +1,14 @@
 package io.github.tomaszziola.javabuildautomaton.project.entity;
 
 import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +21,11 @@ import org.hibernate.proxy.HibernateProxy;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Project {
-  @Id @GeneratedValue private Long id;
+
+  @Id
+  @SequenceGenerator(name = "project_sq", sequenceName = "project_sq", allocationSize = 1)
+  @GeneratedValue(strategy = SEQUENCE, generator = "project_sq")
+  private Long id;
   private String name;
   private String repositoryName;
   private String localPath;
