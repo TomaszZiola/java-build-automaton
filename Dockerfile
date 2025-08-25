@@ -4,21 +4,29 @@ WORKDIR /workspace
 
 COPY gradlew .
 COPY gradle gradle
+RUN chmod +x ./gradlew
+ENV GRADLE_USER_HOME=/workspace/.gradle
+
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
 
 COPY src src
 
-RUN chmod +x ./gradlew
-
-RUN ./gradlew bootJar
+RUN ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=builder /workspace/build/libs/*.jar app.jar
+ENV SPRING_PROFILES_ACTIVE=prod
+
+ENV JAVA_OPTS=""
+
+RUN useradd -u 10001 -m appuser
+USER appuser
+
+COPY --from=builder /workspace/build/libs/*.jar /app/app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

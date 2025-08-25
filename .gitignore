@@ -46,3 +46,15 @@ Desktop.iniŌ
 
 TASKS.md
 CODE_REVIEW.md
+
+application-local.properties
+
+
+# Terraform (infra) - ignore local state and caches
+infra/.terraform/
+infra/.terraform/*
+infra/.terraform.lock.hcl
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfstate
+infra/*.tfstate.backup
