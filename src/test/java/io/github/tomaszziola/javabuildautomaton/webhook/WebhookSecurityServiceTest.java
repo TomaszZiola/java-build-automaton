@@ -1,29 +1,31 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.HexFormat.of;
 import static javax.crypto.Mac.getInstance;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
+@SuppressWarnings("PMD.TooManyMethods")
 class WebhookSecurityServiceTest extends BaseUnit {
 
-  private static String hmacSha256Hex(final String secret, final byte[] body) {
-    try {
-      final Mac mac = getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(secret.getBytes(UTF_8), "HmacSHA256"));
-      final byte[] sig = mac.doFinal(body);
-      return of().formatHex(sig);
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new IllegalStateException("Failed to compute HMAC-SHA256 for test data", e);
-    }
+  @Test
+  @DisplayName("Missing secret (null) allowed returns true")
+  void missingSecretNullAllowedReturnsTrue() {
+    // given
+    webhookSecurityServiceImpl = new WebhookSecurityService(null, true);
+    // when && then
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isTrue();
   }
 
   @Test
@@ -44,13 +46,15 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Missing secret allowed returns true")
   void missingSecretAllowedReturnsTrue() {
     // when && then
-    final var webhookSecurityServiceImpl = new WebhookSecurityService("", true);
+    webhookSecurityServiceImpl = new WebhookSecurityService("", true);
     assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isTrue();
   }
 
   @Test
   @DisplayName("Missing secret not allowed returns false")
   void missingSecretNotAllowedReturnsFalse() {
+    // given
+    webhookSecurityServiceImpl = new WebhookSecurityService("", false);
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isFalse();
   }
@@ -60,6 +64,13 @@ class WebhookSecurityServiceTest extends BaseUnit {
   void invalidHeaderFormatReturnsFalse() {
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidHeader, body)).isFalse();
+  }
+
+  @Test
+  @DisplayName("Null header returns false when secret configured")
+  void nullHeaderReturnsFalseWhenSecretConfigured() {
+    // when && then
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isFalse();
   }
 
   @Test
@@ -75,5 +86,29 @@ class WebhookSecurityServiceTest extends BaseUnit {
   void nullPayloadReturnsFalse() {
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, null)).isFalse();
+  }
+
+  @Test
+  @DisplayName("When Mac.getInstance throws NoSuchAlgorithmException then returns false")
+  void returnsFalseWhenNoSuchAlgorithmExceptionCaught() {
+    try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
+      macStatic
+          .when(() -> getInstance(anyString()))
+          .thenThrow(new NoSuchAlgorithmException("forced by test"));
+
+      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
+    }
+  }
+
+  @Test
+  @DisplayName("When mac.init throws InvalidKeyException then returns false")
+  void returnsFalseWhenInvalidKeyExceptionCaught() throws Exception {
+    final Mac macMock = mock(Mac.class);
+    try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
+      macStatic.when(() -> getInstance(anyString())).thenReturn(macMock);
+      doThrow(new InvalidKeyException("forced by test")).when(macMock).init(any());
+
+      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
+    }
   }
 }

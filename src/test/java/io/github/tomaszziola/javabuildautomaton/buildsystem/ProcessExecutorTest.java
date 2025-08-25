@@ -56,7 +56,9 @@ class ProcessExecutorTest extends BaseUnit {
     assertThat(result.logs())
         .isEqualTo(
             "[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\" "
-                + "(in directory \"/Users/Tomasz/Documents/IdeaProjects/test\"): error=2, "
+                + "(in directory \""
+                + tempDir.getAbsolutePath()
+                + "\"): error=2, "
                 + "No such file or directory\n");
   }
 

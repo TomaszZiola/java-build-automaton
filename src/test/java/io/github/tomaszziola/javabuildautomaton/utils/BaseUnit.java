@@ -87,8 +87,8 @@ public class BaseUnit {
   protected CorrelationIdFilter correlationIdFilter;
   protected GitCommandRunner gitCommandRunnerImpl;
   protected Model modelImpl;
-  protected MockHttpServletRequest request;
-  protected MockHttpServletResponse response;
+  protected MockHttpServletRequest httpServletRequest;
+  protected MockHttpServletResponse httpServletResponse;
   protected ProcessExecutor processExecutorImpl;
   protected ProjectApiController projectApiControllerImpl;
   protected ProjectMapper projectMapperImpl;
@@ -139,8 +139,8 @@ public class BaseUnit {
     projectServiceImpl =
         new ProjectService(
             buildMapper, buildRepository, buildService, projectMapper, projectRepository);
-    request = new MockHttpServletRequest();
-    response = new MockHttpServletResponse();
+    httpServletRequest = new MockHttpServletRequest();
+    httpServletResponse = new MockHttpServletResponse();
     webhookControllerImpl = new WebhookController(projectService);
     webUiControllerImpl = new WebUiController(projectService);
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
@@ -153,7 +153,7 @@ public class BaseUnit {
     buildSummaryDto = BuildSummaryDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic();
     payload = GitHubWebhookPayloadModel.basic();
-    project = ProjectModel.basic();
+    project = ProjectModel.basic(tempDir.getAbsolutePath());
     projectDetailsDto = ProjectDetailsDtoModel.basic();
     workingDir = new File(project.getLocalPath());
 
@@ -187,6 +187,6 @@ public class BaseUnit {
     when(projectService.findProjectBuilds(nonExistentProjectId))
         .thenThrow(ProjectNotFoundException.class);
     when(projectService.handleProjectLookup(payload)).thenReturn(apiResponse);
-    when(webhookSecurityService.isSignatureValid(secret, body)).thenReturn(true);
+    when(webhookSecurityService.isSignatureValid(validSha256Header, body)).thenReturn(true);
   }
 }

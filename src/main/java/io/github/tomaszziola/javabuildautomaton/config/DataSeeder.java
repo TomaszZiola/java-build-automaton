@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,9 @@ import org.springframework.context.annotation.Profile;
 public class DataSeeder {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
+
+  @Value("${app.seed.project.local-path}")
+  private String seedProjectLocalPath;
 
   @Bean
   public CommandLineRunner commandLineRunner(
@@ -39,7 +43,7 @@ public class DataSeeder {
       final var testProject = new Project();
       testProject.setName("test-project-from-db");
       testProject.setRepositoryName("TomaszZiola/test");
-      testProject.setLocalPath("/Users/Tomasz/Documents/IdeaProjects/test");
+      testProject.setLocalPath(seedProjectLocalPath);
       testProject.setBuildTool(GRADLE);
       projectRepository.save(testProject);
 

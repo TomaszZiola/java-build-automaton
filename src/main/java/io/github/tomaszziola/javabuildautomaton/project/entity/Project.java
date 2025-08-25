@@ -26,6 +26,7 @@ public class Project {
   @SequenceGenerator(name = "project_sq", sequenceName = "project_sq", allocationSize = 1)
   @GeneratedValue(strategy = SEQUENCE, generator = "project_sq")
   private Long id;
+
   private String name;
   private String repositoryName;
   private String localPath;

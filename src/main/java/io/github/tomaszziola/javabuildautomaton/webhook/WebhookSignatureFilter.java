@@ -69,14 +69,18 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
     public ServletInputStream getInputStream() {
       final ByteArrayInputStream bais = new ByteArrayInputStream(cachedBody);
       return new ServletInputStream() {
+        private boolean isDone;
+
         @Override
         public int read() {
-          return bais.read();
+          final int valueByte = bais.read();
+          isDone = (bais.available() == 0);
+          return valueByte;
         }
 
         @Override
         public boolean isFinished() {
-          return bais.available() == 0;
+          return isDone;
         }
 
         @Override

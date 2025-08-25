@@ -33,7 +33,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.flywaydb:flyway-core:11.11.2")
     implementation("org.flywaydb:flyway-database-postgresql:11.11.2")
-    implementation("commons-codec:commons-codec:1.15")
     runtimeOnly("org.postgresql:postgresql")
     developmentOnly("com.h2database:h2")
     testImplementation("com.h2database:h2")

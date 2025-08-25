@@ -9,12 +9,14 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFo
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProjectServiceTest extends BaseUnit {
 
   @Test
-  void givenValidPayload_whenHandleProjectLookup_thenReturnApiResponse() {
+  @DisplayName("Given valid payload, when handling project lookup, then return ApiResponse")
+  void returnsApiResponseWhenPayloadValid() {
     // when
     final var result = projectServiceImpl.handleProjectLookup(payload);
 
@@ -23,7 +25,9 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenNotExistingProject_whenHandleProjectLookup_thenReturnApiResponse() {
+  @DisplayName(
+      "Given non-existing project, when handling project lookup, then return NOT_FOUND ApiResponse")
+  void returnsNotFoundWhenProjectMissingOnLookup() {
     // given
     when(projectRepository.findByRepositoryName(payload.repository().fullName()))
         .thenReturn(Optional.empty());
@@ -38,7 +42,8 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenGetRequest_whenFindAll_thenReturnListOfProjectDetailsDto() {
+  @DisplayName("Given request, when finding all, then return list of ProjectDetailsDto")
+  void returnsProjectsWhenFindAll() {
     // when
     final var result = projectServiceImpl.findAll();
 
@@ -47,7 +52,8 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingProjectId_whenFindDetailsById_thenReturnProjectDetailsDto() {
+  @DisplayName("Given existing project id, when finding details, then return ProjectDetailsDto")
+  void returnsProjectDetailsWhenFindDetailsById() {
     // when
     final var result = projectServiceImpl.findDetailsById(projectId);
 
@@ -56,7 +62,9 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenNotExistingProject_whenFindDetailsById_thenReturnProjectDetailsDto() {
+  @DisplayName(
+      "Given non-existing project id, when finding details, then throw ProjectNotFoundException")
+  void throwsWhenProjectMissingOnFindDetailsById() {
     // when / then
     assertThrows(
         ProjectNotFoundException.class,
@@ -64,7 +72,9 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingProjectId_whenFindProjectBuilds_thenReturnListOfBuildSummaryDto() {
+  @DisplayName(
+      "Given existing project id, when finding project builds, then return list of BuildSummaryDto")
+  void returnsBuildSummariesWhenFindProjectBuilds() {
     // when
     final var result = projectServiceImpl.findProjectBuilds(projectId);
 
@@ -73,7 +83,9 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenNotExistingProject_whenFindProjectBuilds_thenThrowProjectNotFoundException() {
+  @DisplayName(
+      "Given non-existing project id, when finding project builds, then throw ProjectNotFoundException")
+  void throwsWhenProjectMissingOnFindProjectBuilds() {
     // when / then
     assertThrows(
         ProjectNotFoundException.class,
@@ -81,7 +93,8 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingBuild_whenFindBuildDetailsById_thenReturnBuildDetailsDto() {
+  @DisplayName("Given existing build id, when finding build details, then return BuildDetailsDto")
+  void returnsBuildDetailsWhenFindBuildDetailsById() {
     // when
     final var result = projectServiceImpl.findBuildDetailsById(buildId);
 
@@ -90,7 +103,9 @@ class ProjectServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenNotExistingBuild_whenFindBuildDetailsById_thenThrowBuildNotFoundException() {
+  @DisplayName(
+      "Given non-existing build id, when finding build details, then throw BuildNotFoundException")
+  void throwsWhenBuildMissingOnFindBuildDetailsById() {
     // when / then
     assertThrows(
         BuildNotFoundException.class,
