@@ -137,7 +137,7 @@ public class BaseUnit {
     buildSummaryDto = BuildSummaryDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic();
     payload = GitHubWebhookPayloadModel.basic();
-    project = ProjectModel.basic();
+    project = ProjectModel.basic(tempDir.getAbsolutePath());
     projectDetailsDto = ProjectDetailsDtoModel.basic();
     workingDir = new File(project.getLocalPath());
 
