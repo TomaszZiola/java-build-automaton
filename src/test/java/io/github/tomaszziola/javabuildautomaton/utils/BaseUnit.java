@@ -1,5 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.List.of;
 import static java.util.Optional.empty;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,8 +39,11 @@ import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
+import jakarta.servlet.FilterChain;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -66,6 +70,7 @@ public class BaseUnit {
   @Mock protected BuildMapper buildMapper;
   @Mock protected BuildRepository buildRepository;
   @Mock protected BuildService buildService;
+  @Mock protected FilterChain filterChain;
   @Mock protected GitCommandRunner gitCommandRunner;
   @Mock protected Process process;
   @Mock protected ProcessExecutor processExecutor;
@@ -73,12 +78,13 @@ public class BaseUnit {
   @Mock protected ProjectMapper projectMapper;
   @Mock protected ProjectRepository projectRepository;
   @Mock protected ProjectService projectService;
+  @Mock protected WebhookSecurityService webhookSecurityService;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BuildExecutor buildExecutorImpl;
   protected BuildMapper buildMapperImpl;
   protected BuildService buildServiceImpl;
-  protected CorrelationIdFilter filterImpl;
+  protected CorrelationIdFilter correlationIdFilter;
   protected GitCommandRunner gitCommandRunnerImpl;
   protected Model modelImpl;
   protected MockHttpServletRequest request;
@@ -89,6 +95,8 @@ public class BaseUnit {
   protected ProjectService projectServiceImpl;
   protected WebhookController webhookControllerImpl;
   protected WebUiController webUiControllerImpl;
+  protected WebhookSignatureFilter webhookSignatureFilterImpl;
+  protected WebhookSecurityService webhookSecurityServiceImpl;
 
   protected ApiResponse apiResponse;
   protected Build build;
@@ -101,7 +109,12 @@ public class BaseUnit {
   protected Project project;
   protected ProjectDetailsDto projectDetailsDto;
 
+  protected byte[] body = "{\"msg\":\"hi\"}".getBytes(UTF_8);
   protected String[] cmd = {"git", "pull"};
+  protected String expectedHex = "447455f04bc3e4c84f552ab236138532bece9ec6e47e813d8e1fd42094bb544e";
+  protected String invalidSha256Header = "sha256=xD";
+  protected String invalidHeader = "sha2=zz";
+  protected String validSha256Header = "sha256=" + expectedHex;
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
   protected Long projectId = 1L;
@@ -109,6 +122,7 @@ public class BaseUnit {
   protected Long nonExistentProjectId = 9L;
   protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
+  protected String secret = "top-secret";
 
   @BeforeEach
   void mockResponses() throws IOException {
@@ -116,7 +130,7 @@ public class BaseUnit {
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildMapperImpl = new BuildMapper();
     buildServiceImpl = new BuildService(buildRepository, gitCommandRunner, buildExecutor);
-    filterImpl = new CorrelationIdFilter();
+    correlationIdFilter = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
     modelImpl = new ExtendedModelMap();
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
@@ -129,6 +143,8 @@ public class BaseUnit {
     response = new MockHttpServletResponse();
     webhookControllerImpl = new WebhookController(projectService);
     webUiControllerImpl = new WebUiController(projectService);
+    webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
+    webhookSecurityServiceImpl = new WebhookSecurityService(secret, false);
 
     apiResponse = ApiResponseModel.basic();
     build = BuildModel.basic();
@@ -171,5 +187,6 @@ public class BaseUnit {
     when(projectService.findProjectBuilds(nonExistentProjectId))
         .thenThrow(ProjectNotFoundException.class);
     when(projectService.handleProjectLookup(payload)).thenReturn(apiResponse);
+    when(webhookSecurityService.isSignatureValid(secret, body)).thenReturn(true);
   }
 }

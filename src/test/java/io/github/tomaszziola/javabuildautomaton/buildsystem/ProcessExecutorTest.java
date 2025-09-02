@@ -5,12 +5,14 @@ import static org.mockito.Mockito.when;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.ByteArrayInputStream;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProcessExecutorTest extends BaseUnit {
 
   @Test
-  void givenValidCommand_whenExecute_thenCapturesOutputAndSuccess() throws InterruptedException {
+  @DisplayName("Given valid command, when executing, then capture output and return success")
+  void returnsSuccessAndCapturesOutputWhenCommandSucceeds() throws InterruptedException {
     // given
     when(process.getInputStream())
         .thenReturn(new ByteArrayInputStream("hello\nworld\n".getBytes()));
@@ -25,7 +27,8 @@ class ProcessExecutorTest extends BaseUnit {
   }
 
   @Test
-  void givenNonZeroExitCommand_whenExecute_thenAppendsErrorAndFailure() throws Exception {
+  @DisplayName("Given non-zero exit status, when executing, then append error and return failure")
+  void returnsFailureAndErrorMessageWhenExitNonZero() throws Exception {
     // given
     when(process.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
     when(process.waitFor()).thenReturn(2);
@@ -39,7 +42,8 @@ class ProcessExecutorTest extends BaseUnit {
   }
 
   @Test
-  void givenNonExistingCommand_whenExecute_thenReturnsFailureWithMessage() {
+  @DisplayName("Given non-existing command, when executing, then return failure with message")
+  void returnsFailureWithMessageWhenCommandNotFound() {
     // given
     processExecutorImpl = new ProcessExecutor(new ProcessRunner(), new OutputCollector());
 
@@ -57,7 +61,8 @@ class ProcessExecutorTest extends BaseUnit {
   }
 
   @Test
-  void givenInterruptedProcess_whenExecute_thenReturnsFailureWithMessage() throws Exception {
+  @DisplayName("Given interrupted process, when executing, then return failure with message")
+  void returnsFailureWithMessageWhenInterrupted() throws Exception {
     // given
     when(process.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
     when(process.waitFor()).thenThrow(new InterruptedException("stop"));
