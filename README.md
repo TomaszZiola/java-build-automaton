@@ -27,15 +27,14 @@ This is not just another CRUD application—it's a practical tool that solves a 
 
 ## 🛠️ Tech Stack
 
-* **Backend:** Java 21, Spring Boot 3.5.4
-* **Build Tool:** Gradle (Kotlin DSL)
-* **API:** Spring Web (REST), Spring Boot Actuator
-* **Frontend:** Thymeleaf (dashboard and project details)
-* **Data:** Spring Data JPA with in-memory H2 (dev/demo)
-* **Integration:** GitHub Webhooks
-* **Coming Soon:**
-    * **Database:** PostgreSQL (persistent build history)
-    * **Containerization:** Docker
+* Backend: Java 21, Spring Boot 3.5.4
+* Build Tool: Gradle (Kotlin DSL)
+* API: Spring Web (REST), Spring Boot Actuator
+* Frontend: Thymeleaf (dashboard and project details)
+* Data: Spring Data JPA; H2 in dev, PostgreSQL in prod (Flyway migrations)
+* Integration: GitHub Webhooks with HMAC SHA-256 signature validation
+* Observability: CorrelationId filter, structured logging (logstash encoder)
+* Containerization: Docker (multi-stage Dockerfile)
 
 ---
 
@@ -79,6 +78,7 @@ To run the project locally, follow the steps below.
     * In your test repository, go to `Settings` > `Webhooks` > `Add webhook`.
     * **Payload URL:** Paste the URL from Ngrok, adding `/webhook` at the end.
     * **Content type:** Change to `application/json`.
+    * **Secret:** Set a strong secret. Use the same value in the app via `app.github.webhook-secret` (or env `APP_GITHUB_WEBHOOK_SECRET`).
     * Save the webhook.
 
 6.  **Push a commit to your test repository and check the application logs; build output is captured and stored.**
@@ -115,7 +115,7 @@ Database:
 
 Important:
 - The build process uses the system `gradle` command (not the wrapper). Make sure Gradle is installed and on your PATH. Alternatively, modify `BuildExecutor` to use `./gradlew` in your repo.
-- No webhook secret validation is implemented yet; see Security notes below.
+- Webhook signature validation is implemented (HMAC SHA-256 via X-Hub-Signature-256). See Security notes and examples below.
 
 ---
 
@@ -145,6 +145,33 @@ Expected response format:
 
 ---
 
+## 🔐 Webhook Signature Validation
+
+When a GitHub webhook secret is configured, all POST `/webhook` requests must include the `X-Hub-Signature-256` header. The value must be `sha256=<hex>` where `<hex>` is the lowercase HMAC SHA-256 of the raw request body using the shared secret. Validation is enforced by `WebhookSignatureFilter`.
+
+Configuration properties:
+- `app.github.webhook-secret`: the shared secret value
+- `app.github.allow-missing-webhook-secret`: set to `true` in dev to skip validation when no secret is provided (default `false` in prod)
+
+Example: generating the signature with OpenSSL and sending the request
+
+```bash
+BODY='{"repository": {"full_name": "owner/repo"}}'
+SECRET='your-secret'
+SIG=$(printf "%s" "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -binary | xxd -p -c 256)
+
+curl -X POST http://localhost:8080/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Hub-Signature-256: sha256:${SIG}" \
+  -d "$BODY"
+```
+
+Notes:
+- In development, if you do not set a secret and `app.github.allow-missing-webhook-secret=true`, the header is not required.
+- On GitHub, set the webhook "Secret" to the same value as `app.github.webhook-secret`.
+
+---
+
 ## 🖥️ Web UI
 
 - GET `/` — Dashboard listing all projects with basic info.
@@ -159,6 +186,7 @@ Templates:
 ## 📡 API Endpoints (Current)
 
 - POST `/webhook`
+  - Headers: `X-Hub-Signature-256: sha256=<hex>` (required when `app.github.webhook-secret` is set)
   - Request: `{ "repository": { "full_name": "owner/repo" } }`
   - Response: `{ "status": string, "message": string }`
 
@@ -180,7 +208,9 @@ Templates:
 
 ## ⚠️ Security and Limitations
 
-- Secrets: There is currently no verification of the GitHub webhook signature/secret. Do not expose this endpoint publicly without adding signature validation.
+- Secrets: GitHub webhook HMAC SHA-256 signature validation is implemented and enforced by a filter when a secret is configured.
+  - Set `app.github.webhook-secret` to enable validation. In dev, `app.github.allow-missing-webhook-secret=true` allows skipping it (see `application-dev.properties`).
+  - In production, set a strong secret and keep `app.github.allow-missing-webhook-secret=false`.
 - Execution: Builds run on the host using your local Gradle and Git, in the configured working directory. There is no sandboxing or container isolation yet. Use only with trusted repositories.
 - Logging: Build logs are captured and stored with each build; general application logs go to stdout. No retention/capping policies are implemented yet.
 
@@ -218,3 +248,39 @@ The application exposes two Actuator endpoints for operational visibility:
 ## 📄 License
 
 No license file is currently included in this repository. Until a license is added, all rights are reserved. If you intend to use this code, please contact the author or add a LICENSE file (e.g., MIT).
+
+
+---
+
+## 🐳 Docker
+
+Build the image:
+
+```bash
+docker build -t java-build-automaton:latest .
+```
+
+Run with PostgreSQL (example):
+
+```bash
+# Create an isolated network for DB and app (optional)
+docker network create jba-net
+
+# Start PostgreSQL
+docker run -d --name jba-db --network jba-net \
+  -e POSTGRES_USER=jba -e POSTGRES_PASSWORD=jba -e POSTGRES_DB=jba \
+  -p 5432:5432 postgres:16
+
+# Start the application (prod profile)
+docker run -d --name jba-app --network jba-net -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e JDBC_CONNECTION_STRING=jdbc:postgresql://jba-db:5432/jba \
+  -e DB_USERNAME=jba -e DB_PASSWORD=jba \
+  -e APP_GITHUB_WEBHOOK_SECRET=your-secret \
+  java-build-automaton:latest
+```
+
+Notes:
+- In production, set a strong `APP_GITHUB_WEBHOOK_SECRET`. The filter will reject unsigned/invalid webhook requests.
+- The app reads DB connection from `JDBC_CONNECTION_STRING`, `DB_USERNAME`, `DB_PASSWORD` (see `application-prod.properties`).
+- Health endpoints are exposed at `/actuator/health` and `/actuator/info`.
