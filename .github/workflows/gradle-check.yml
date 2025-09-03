@@ -1,0 +1,12 @@
+name: gradle-check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gradle_check:
+    uses: tomaszziola/cicd-library/.github/workflows/gradle-check.yml@main
+    with:
+      working-directory: .
+    secrets: inherit

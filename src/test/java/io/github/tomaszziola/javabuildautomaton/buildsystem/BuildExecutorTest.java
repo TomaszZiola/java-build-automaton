@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class BuildExecutorTest extends BaseUnit {
 
   @Test
-  void givenMaven_whenBuild_thenExecutesMvnCleanInstallAndPropagatesResult() {
+  @DisplayName(
+      "Given Maven tool, when build invoked, then execute mvn clean install and propagate result")
+  void executesMavenBuildWhenRequested() {
     // when
     final var result = buildExecutorImpl.build(MAVEN, tempDir);
 
@@ -24,7 +27,9 @@ class BuildExecutorTest extends BaseUnit {
   }
 
   @Test
-  void givenGradle_whenBuild_thenExecutesGradleCleanBuildAndPropagatesResult() {
+  @DisplayName(
+      "Given Gradle tool, when build invoked, then execute gradle clean build and propagate result")
+  void executesGradleBuildWhenRequested() {
     // when
     final var result = buildExecutorImpl.build(GRADLE, tempDir);
 

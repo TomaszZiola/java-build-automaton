@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProjectApiControllerTest extends BaseUnit {
 
   @Test
-  void givenExistingProjects_whenGetAllProjects_thenReturnMappedList() {
+  @DisplayName("Given existing projects, when getting all, then return mapped list")
+  void returnsMappedListWhenGetAllProjects() {
     // when
     final var result = projectApiControllerImpl.getAllProjects();
 
@@ -22,7 +24,8 @@ class ProjectApiControllerTest extends BaseUnit {
   }
 
   @Test
-  void givenProjectWithBuilds_whenGetProjectBuilds_thenReturnMappedBuilds() {
+  @DisplayName("Given project with builds, when getting builds, then return mapped builds")
+  void returnsMappedBuildsWhenGetProjectBuilds() {
     // when
     final var result = projectApiControllerImpl.getProjectBuilds(project.getId());
 
