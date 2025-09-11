@@ -8,6 +8,6 @@ public final class GitHubWebhookPayloadModel {
   private GitHubWebhookPayloadModel() {}
 
   public static GitHubWebhookPayload basic() {
-    return new GitHubWebhookPayload(new RepositoryInfo("TomaszZiola/test"));
+    return new GitHubWebhookPayload("refs/heads/main", new RepositoryInfo("TomaszZiola/test"));
   }
 }

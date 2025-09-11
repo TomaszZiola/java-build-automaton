@@ -96,6 +96,7 @@ class WebhookSecurityServiceTest extends BaseUnit {
           .when(() -> getInstance(anyString()))
           .thenThrow(new NoSuchAlgorithmException("forced by test"));
 
+      // when && then
       assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
     }
   }
@@ -103,11 +104,13 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @Test
   @DisplayName("When mac.init throws InvalidKeyException then returns false")
   void returnsFalseWhenInvalidKeyExceptionCaught() throws Exception {
+    // given
     final Mac macMock = mock(Mac.class);
     try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
       macStatic.when(() -> getInstance(anyString())).thenReturn(macMock);
       doThrow(new InvalidKeyException("forced by test")).when(macMock).init(any());
 
+      // when && then
       assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
     }
   }

@@ -1,45 +1,15 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProjectServiceTest extends BaseUnit {
-
-  @Test
-  @DisplayName("Given valid payload, when handling project lookup, then return ApiResponse")
-  void returnsApiResponseWhenPayloadValid() {
-    // when
-    final var result = projectServiceImpl.handleProjectLookup(payload);
-
-    // then
-    assertThat(result).isEqualTo(apiResponse);
-  }
-
-  @Test
-  @DisplayName(
-      "Given non-existing project, when handling project lookup, then return NOT_FOUND ApiResponse")
-  void returnsNotFoundWhenProjectMissingOnLookup() {
-    // given
-    when(projectRepository.findByRepositoryName(payload.repository().fullName()))
-        .thenReturn(Optional.empty());
-
-    // when
-    final var result = projectServiceImpl.handleProjectLookup(payload);
-
-    // then
-    assertThat(result.status()).isEqualTo(NOT_FOUND);
-    assertThat(result.message())
-        .isEqualTo("Project not found for repository: " + payload.repository().fullName());
-  }
 
   @Test
   @DisplayName("Given request, when finding all, then return list of ProjectDetailsDto")

@@ -2,6 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import static io.github.tomaszziola.javabuildautomaton.constants.FilterOrders.WEBHOOK_SIGNATURE;
 import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ReadListener;
@@ -12,7 +13,6 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -95,9 +95,7 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
     @Override
     public String getCharacterEncoding() {
-      return (super.getCharacterEncoding() != null)
-          ? super.getCharacterEncoding()
-          : StandardCharsets.UTF_8.name();
+      return (super.getCharacterEncoding() != null) ? super.getCharacterEncoding() : UTF_8.name();
     }
 
     @Override

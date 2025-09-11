@@ -75,9 +75,9 @@ public class WebhookSecurityService {
     }
 
     try {
-      final Mac mac = Mac.getInstance(HMAC_SHA256);
+      final var mac = Mac.getInstance(HMAC_SHA256);
       mac.init(hmacKey.get());
-      final byte[] expectedSigBytes = mac.doFinal(payloadBody);
+      final var expectedSigBytes = mac.doFinal(payloadBody);
 
       return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
     } catch (final NoSuchAlgorithmException | java.security.InvalidKeyException e) {
