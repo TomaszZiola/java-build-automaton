@@ -5,12 +5,14 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import io.github.tomaszziola.javabuildautomaton.models.BuildModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildSummaryDtoModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class BuildMapperTest extends BaseUnit {
 
   @Test
-  void givenBuild_whenToSummaryDto_thenMapsAllFields() {
+  @DisplayName("Given Build entity, when mapping to summary DTO, then map all fields")
+  void mapsSummaryFieldsWhenBuildProvided() {
     // when
     final var result = buildMapperImpl.toSummaryDto(build);
 
@@ -19,7 +21,8 @@ class BuildMapperTest extends BaseUnit {
   }
 
   @Test
-  void givenBuildWithoutEndTime_whenToSummaryDto_thenEndTimeIsNull() {
+  @DisplayName("Given build without end time, when mapping to summary DTO, then endTime is null")
+  void mapsSummaryEndTimeNullWhenNoEndTime() {
     // given
     build = BuildModel.inProgress();
     buildSummaryDto = BuildSummaryDtoModel.inProgress();
@@ -32,7 +35,8 @@ class BuildMapperTest extends BaseUnit {
   }
 
   @Test
-  void givenBuil_whentoDetailsDto_thenMapsAllFields() {
+  @DisplayName("Given Build entity, when mapping to details DTO, then map all fields")
+  void mapsDetailsFieldsWhenBuildProvided() {
     // when
     final var result = buildMapperImpl.toDetailsDto(build);
 

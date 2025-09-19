@@ -9,12 +9,15 @@ import static org.mockito.Mockito.verify;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class WebUiControllerTest extends BaseUnit {
 
   @Test
-  void givenExistingProjects_whenShowDashboard_thenReturnDashboardViewAndProjectsInModel() {
+  @DisplayName(
+      "Given existing projects, when showing dashboard, then return dashboard view and projects in model")
+  void returnsDashboardViewAndProjectsWhenShowDashboard() {
     // when
     final var view = webUiControllerImpl.showDashboard(modelImpl);
 
@@ -25,7 +28,9 @@ class WebUiControllerTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingProject_whenShowProjectDetails_thenReturnViewAndModelAttributes() {
+  @DisplayName(
+      "Given existing project, when showing project details, then return view and model attributes")
+  void returnsProjectDetailsViewAndModelWhenShowProjectDetails() {
     // when
     final var view = webUiControllerImpl.showProjectDetails(projectId, modelImpl);
 
@@ -39,7 +44,9 @@ class WebUiControllerTest extends BaseUnit {
   }
 
   @Test
-  void givenNonExistingProject_whenShowProjectDetails_thenThrowProjectNotFoundException() {
+  @DisplayName(
+      "Given non-existing project, when showing project details, then throw ProjectNotFoundException")
+  void throwsWhenProjectMissingOnShowProjectDetails() {
     // when / then
     assertThrows(
         ProjectNotFoundException.class,
@@ -48,7 +55,9 @@ class WebUiControllerTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingProject_whenShowBuildDetails_thenReturnViewAndModelAttributes() {
+  @DisplayName(
+      "Given existing project, when showing build details, then return view and model attributes")
+  void returnsBuildDetailsViewAndModelWhenShowBuildDetails() {
     // when
     final var view = webUiControllerImpl.showBuildDetails(projectId, buildId, modelImpl);
 
@@ -62,7 +71,9 @@ class WebUiControllerTest extends BaseUnit {
   }
 
   @Test
-  void givenNonExistingBuild_whenShowBuildDetails_thenThrowBuildNotFoundException() {
+  @DisplayName(
+      "Given non-existing build, when showing build details, then throw BuildNotFoundException")
+  void throwsWhenBuildMissingOnShowBuildDetails() {
     // when / then
     assertThrows(
         BuildNotFoundException.class,

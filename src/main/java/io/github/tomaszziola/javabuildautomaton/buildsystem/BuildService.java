@@ -2,6 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.IN_PROGRESS;
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.QUEUED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 import static java.time.Instant.now;
@@ -19,29 +20,31 @@ public class BuildService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildService.class);
 
+  private final BuildExecutor buildExecutor;
   private final BuildRepository buildRepository;
   private final GitCommandRunner gitCommandRunner;
-  private final BuildExecutor buildExecutor;
 
   @Autowired
   public BuildService(
+      final BuildExecutor buildExecutor,
       final BuildRepository buildRepository,
-      final GitCommandRunner gitCommandRunner,
-      final BuildExecutor buildExecutor) {
+      final GitCommandRunner gitCommandRunner) {
+    this.buildExecutor = buildExecutor;
     this.buildRepository = buildRepository;
     this.gitCommandRunner = gitCommandRunner;
-    this.buildExecutor = buildExecutor;
   }
 
   public void startBuildProcess(final Project project) {
     LOGGER.info("Starting build process for project: {}", project.getName());
-
     final var build = new Build();
     build.setProject(project);
     build.setStartTime(now());
     build.setStatus(IN_PROGRESS);
     buildRepository.save(build);
+    executeBuildSteps(project, build);
+  }
 
+  private void executeBuildSteps(final Project project, final Build build) {
     final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
     final var workingDirectory = new File(project.getLocalPath());
@@ -64,8 +67,27 @@ public class BuildService {
       LOGGER.error("Build failed for project: {}", project.getName());
       return;
     }
-
     completeBuild(build, SUCCESS, logBuilder);
+  }
+
+  public void executeBuild(final long buildId) {
+    final var build =
+        buildRepository
+            .findById(buildId)
+            .orElseThrow(() -> new IllegalStateException("Build not found: " + buildId));
+    final var project = build.getProject();
+    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getName());
+    build.setStatus(IN_PROGRESS);
+    buildRepository.save(build);
+    executeBuildSteps(project, build);
+  }
+
+  public Build createQueuedBuild(final Project project) {
+    final var build = new Build();
+    build.setProject(project);
+    build.setStatus(QUEUED);
+    build.setStartTime(now());
+    return buildRepository.save(build);
   }
 
   private void completeBuild(

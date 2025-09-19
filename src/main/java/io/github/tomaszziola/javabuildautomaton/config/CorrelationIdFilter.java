@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.config;
 
-import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
+import static io.github.tomaszziola.javabuildautomaton.constants.FilterOrders.CORRELATION_ID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
-@Order(HIGHEST_PRECEDENCE + 10)
+@Order(CORRELATION_ID)
 public class CorrelationIdFilter extends OncePerRequestFilter {
 
   public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";

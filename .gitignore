@@ -44,5 +44,37 @@ Desktop.iniŌ
 *.war
 *.ear
 
+### Terraform ###
+# Local cache and providers (never commit)
+infra/.terraform/
+infra/.terraform/**
+
+# Terraform state files (contain secrets)
+infra/terraform.tfstate
+infra/terraform.tfstate.*
+infra/**/terraform.tfstate
+infra/**/terraform.tfstate.*
+
+# Provider binaries and bundled LICENSE files
+infra/**/terraform-provider-*
+infra/**/LICENSE.txt
+
+# Optionally ignore lockfile if you don't want to pin provider hashes
+# (recommended is to commit it; comment out the next line to keep it)
+infra/.terraform.lock.hcl
+
+
 TASKS.md
 CODE_REVIEW.md
+
+application-local.properties
+
+
+# Terraform (infra) - ignore local state and caches
+infra/.terraform/
+infra/.terraform/*
+infra/.terraform.lock.hcl
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfstate
+infra/*.tfstate.backup

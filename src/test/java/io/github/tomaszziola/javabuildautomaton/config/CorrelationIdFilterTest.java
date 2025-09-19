@@ -12,6 +12,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import java.io.IOException;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
@@ -29,33 +30,33 @@ class CorrelationIdFilterTest extends BaseUnit {
   }
 
   @Test
-  void givenHeaderPresent_whenDoFilter_thenUsesHeaderAndCleansUpMdc()
-      throws ServletException, IOException {
+  @DisplayName("Given header present, when filtering, then use header and clean MDC")
+  void usesHeaderAndCleansMdcWhenHeaderPresent() throws ServletException, IOException {
     // given
-    request.addHeader(CORRELATION_ID_HEADER, incomingId);
+    httpServletRequest.addHeader(CORRELATION_ID_HEADER, incomingId);
     final var chain = new CapturingChain();
 
     // when
-    filterImpl.doFilter(request, response, chain);
+    correlationIdFilter.doFilter(httpServletRequest, httpServletResponse, chain);
 
     // then
     assertThat(chain.invoked).isTrue();
     assertThat(chain.mdcValue).isEqualTo(incomingId);
-    assertThat(response.getHeader(CORRELATION_ID_HEADER)).isEqualTo(incomingId);
+    assertThat(httpServletResponse.getHeader(CORRELATION_ID_HEADER)).isEqualTo(incomingId);
     assertThat(MDC.get(MDC_KEY)).isNull();
   }
 
   @Test
-  void givenHeaderMissing_whenDoFilter_thenGeneratesUuidAndCleansUpMdc()
-      throws ServletException, IOException {
+  @DisplayName("Given header missing, when filtering, then generate UUID and clean MDC")
+  void generatesUuidAndCleansMdcWhenHeaderMissing() throws ServletException, IOException {
     // given
     final var chain = new CapturingChain();
 
     // when
-    filterImpl.doFilter(request, response, chain);
+    correlationIdFilter.doFilter(httpServletRequest, httpServletResponse, chain);
 
     // then
-    final String headerValue = response.getHeader(CORRELATION_ID_HEADER);
+    final String headerValue = httpServletResponse.getHeader(CORRELATION_ID_HEADER);
     assertThat(headerValue).isNotBlank();
     assertValidUuid(headerValue);
     assertThat(chain.mdcValue).isEqualTo(headerValue);
@@ -63,16 +64,16 @@ class CorrelationIdFilterTest extends BaseUnit {
   }
 
   @Test
-  void givenHeaderBlank_whenDoFilter_thenGeneratesUuidAndCleansUpMdc()
-      throws ServletException, IOException {
+  @DisplayName("Given header blank, when filtering, then generate UUID and clean MDC")
+  void generatesUuidAndCleansMdcWhenHeaderBlank() throws ServletException, IOException {
     // given
-    request.addHeader(CORRELATION_ID_HEADER, "   ");
+    httpServletRequest.addHeader(CORRELATION_ID_HEADER, "   ");
 
     // when
-    filterImpl.doFilter(request, response, new CapturingChain());
+    correlationIdFilter.doFilter(httpServletRequest, httpServletResponse, new CapturingChain());
 
     // then
-    final String headerValue = response.getHeader(CORRELATION_ID_HEADER);
+    final String headerValue = httpServletResponse.getHeader(CORRELATION_ID_HEADER);
     assertThat(headerValue).isNotBlank();
     assertValidUuid(headerValue);
   }

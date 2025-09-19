@@ -1,0 +1,36 @@
+package io.github.tomaszziola.javabuildautomaton.webhook;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class WebhookStartupVerifier {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookStartupVerifier.class);
+
+  @Bean
+  ApplicationRunner verifyWebhookSecretOnStartup(
+      @Value("${app.github.webhook-secret:}") final String secret,
+      @Value("${app.github.allow-missing-webhook-secret:false}") final boolean allowMissing) {
+
+    return args -> {
+      if ((secret == null || secret.isBlank()) && !allowMissing) {
+        final String msg =
+            "Application misconfiguration: app.github.webhook-secret is empty but "
+                + "app.github.allow-missing-webhook-secret=false. "
+                + "Set APP_GITHUB_WEBHOOK_SECRET or explicitly allow missing (ONLY for local debug).";
+        LOGGER.error(msg);
+        throw new MissingWebhookSecretException(msg);
+      }
+      if ((secret == null || secret.isBlank()) && allowMissing) {
+        LOGGER.warn("Webhook secret is empty; validation is DISABLED (allow-missing=true).");
+      } else {
+        LOGGER.info("Webhook secret is configured; signature validation ENABLED.");
+      }
+    };
+  }
+}
