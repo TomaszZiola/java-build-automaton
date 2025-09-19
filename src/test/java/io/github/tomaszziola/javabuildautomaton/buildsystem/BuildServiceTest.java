@@ -15,6 +15,7 @@ import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.File;
 import java.nio.file.Files;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class BuildServiceTest extends BaseUnit {
@@ -24,7 +25,9 @@ class BuildServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenExistingWorkingDirectory_whenStartBuildProcess_thenSavesSuccessfulBuildAndLogs() {
+  @DisplayName(
+      "Given existing working directory, when starting build process, then save successful build and log")
+  void savesSuccessfulBuildAndLogsWhenWorkingDirectoryExists() {
     // when
     assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
 
@@ -36,7 +39,9 @@ class BuildServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenNonExistingWorkingDirectory_whenStartBuildProcess_thenSavesFailedBuildAndLogs() {
+  @DisplayName(
+      "Given non-existing working directory, when starting build process, then save failed build and log")
+  void savesFailedBuildAndLogsWhenWorkingDirectoryMissing() {
     // given
     project = ProjectModel.basic(nonExistentPath);
 
@@ -52,7 +57,9 @@ class BuildServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenGitPullFails_whenStartBuildProcess_thenSavesFailedBuildAndDoesNotRunBuildTool() {
+  @DisplayName(
+      "Given git pull fails, when starting build process, then save failed build and do not run build tool")
+  void savesFailedBuildAndSkipsBuildToolWhenGitPullFails() {
     // given
     when(gitCommandRunner.pull(any(File.class)))
         .thenReturn(new ExecutionResult(false, "pull failed"));
@@ -71,7 +78,8 @@ class BuildServiceTest extends BaseUnit {
   }
 
   @Test
-  void givenBuildFails_whenStartBuildProcess_thenSavesFailedBuild() {
+  @DisplayName("Given build fails, when starting build process, then save failed build")
+  void savesFailedBuildWhenBuildFails() {
     // given
     when(buildExecutor.build(eq(project.getBuildTool()), any(File.class)))
         .thenReturn(new ExecutionResult(false, "build failed"));

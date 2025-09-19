@@ -24,13 +24,10 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class WebhookSignatureFilterTest extends BaseUnit {
-  private static final String WEBHOOK_PATH = "/webhook";
-  private static final String API_PATH = "/api/projects";
-  private static final String POST = "POST";
 
   @Test
-  @DisplayName("Non-webhook requests are forwarded without validation")
-  void nonWebhookBypassesValidation() throws Exception {
+  @DisplayName("Given non-webhook request, when filtering, then forward without validation")
+  void forwardsWithoutValidationForNonWebhookRequest() throws Exception {
     // given
     httpServletRequest.setMethod("GET");
     httpServletRequest.setRequestURI(API_PATH);
@@ -39,14 +36,14 @@ class WebhookSignatureFilterTest extends BaseUnit {
     webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256Header, body);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
     verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
     assertThat(httpServletResponse.getStatus()).isEqualTo(200);
   }
 
   @Test
-  @DisplayName("GET " + WEBHOOK_PATH + " bypasses validation (non-POST)")
-  void webhookGetBypassesValidation() throws Exception {
+  @DisplayName("Given GET /webhook request, when filtering, then forward without validation")
+  void forwardsWithoutValidationForGetWebhook() throws Exception {
     // given
     httpServletRequest.setMethod("GET");
     httpServletRequest.setRequestURI(WEBHOOK_PATH);
@@ -55,23 +52,23 @@ class WebhookSignatureFilterTest extends BaseUnit {
     webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256Header, body);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
     verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
     assertThat(httpServletResponse.getStatus()).isEqualTo(200);
   }
 
   @Test
-  @DisplayName("POST non-webhook path bypasses validation")
-  void postNonWebhookBypassesValidation() throws Exception {
+  @DisplayName("Given POST non-webhook path, when filtering, then forward without validation")
+  void forwardsWithoutValidationForPostNonWebhookPath() throws Exception {
     // given
-    httpServletRequest.setMethod(POST);
+    httpServletRequest.setMethod(postMethod);
     httpServletRequest.setRequestURI(API_PATH);
 
     // when
     webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256Header, body);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
     verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
     assertThat(httpServletResponse.getStatus()).isEqualTo(200);
   }
@@ -79,14 +76,15 @@ class WebhookSignatureFilterTest extends BaseUnit {
   @ParameterizedTest
   @NullSource
   @ValueSource(strings = {"sha1=abc", "sha256=zz", "sha256=12"})
-  @DisplayName(POST + " " + WEBHOOK_PATH + " with invalid header returns 401 and stops chain")
-  void invalidHeaderReturns401(final String header) throws Exception {
+  @DisplayName(
+      "Given POST /webhook with invalid header {0}, when filtering, then return 401 and stop chain")
+  void returns401AndStopsChainForInvalidHeader(final String header) throws Exception {
     // given
-    httpServletRequest.setMethod(POST);
+    httpServletRequest.setMethod(postMethod);
     httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    httpServletRequest.setContent(body);
+    httpServletRequest.setContent(bodyBytes);
     if (header != null) {
-      httpServletRequest.addHeader("X-Hub-Signature-256", header);
+      httpServletRequest.addHeader(validSha256HeaderName, header);
       when(webhookSecurityService.isSignatureValid(eq(header), any())).thenReturn(false);
     } else {
       when(webhookSecurityService.isSignatureValid(isNull(), any())).thenReturn(false);
@@ -101,15 +99,17 @@ class WebhookSignatureFilterTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName(POST + " " + WEBHOOK_PATH + " with valid signature forwards request and wraps it")
-  void validSignatureForwardsAndWraps() throws Exception {
+  @DisplayName(
+      "Given POST /webhook with valid signature, when filtering, then forward request and wrap it")
+  void forwardsAndWrapsForValidSignature() throws Exception {
     // given
-    httpServletRequest.setMethod(POST);
+    httpServletRequest.setMethod(postMethod);
     httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    httpServletRequest.setContent(body);
-    httpServletRequest.addHeader("X-Hub-Signature-256", validSha256Header);
+    httpServletRequest.setContent(bodyBytes);
+    httpServletRequest.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
-    when(webhookSecurityService.isSignatureValid(eq(validSha256Header), any())).thenReturn(true);
+    when(webhookSecurityService.isSignatureValid(eq(validSha256HeaderValue), any()))
+        .thenReturn(true);
 
     // when
     webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
@@ -124,17 +124,13 @@ class WebhookSignatureFilterTest extends BaseUnit {
 
   @Test
   @DisplayName(
-      POST
-          + " "
-          + WEBHOOK_PATH
-          + " with valid signature allows downstream to read body (repeatable)")
-  void validSignatureAllowsDownstreamToReadBody() throws Exception {
+      "Given POST /webhook with valid signature, when filtering, then allow downstream to read body")
+  void allowsDownstreamToReadBodyForValidSignature() throws Exception {
     // given
-    httpServletRequest.setMethod(POST);
+    httpServletRequest.setMethod(postMethod);
     httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    final String bodyJson = "{\"msg\":\"hi\"}";
     httpServletRequest.setContent(bodyJson.getBytes(UTF_8));
-    httpServletRequest.addHeader("X-Hub-Signature-256", validSha256Header);
+    httpServletRequest.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
     final var chain = new BodyReadingChain();
 

@@ -13,11 +13,12 @@ import org.junit.jupiter.api.Test;
 class CachedBodyRequestWrapperTest extends BaseUnit {
 
   @Test
-  @DisplayName("getInputStream reads all bytes and isFinished transitions to true")
-  void inputStreamReadsAllAndIsFinished() throws IOException {
+  @DisplayName(
+      "Given cached request wrapper, when reading input stream, then read all bytes and mark finished")
+  void readsAllBytesAndMarksFinished() throws IOException {
     // given
     final var wrapper =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, body);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
 
     // when
     try (ServletInputStream inputStream = wrapper.getInputStream()) {
@@ -27,25 +28,26 @@ class CachedBodyRequestWrapperTest extends BaseUnit {
       assertThat(inputStream.isFinished()).isFalse();
 
       final byte[] read = inputStream.readAllBytes();
-      assertThat(read).isEqualTo(body);
+      assertThat(read).isEqualTo(bodyBytes);
       assertThat(inputStream.isFinished()).isTrue();
     }
 
-    assertThat(wrapper.getContentLength()).isEqualTo(body.length);
-    assertThat(wrapper.getContentLengthLong()).isEqualTo(body.length);
+    assertThat(wrapper.getContentLength()).isEqualTo(bodyBytes.length);
+    assertThat(wrapper.getContentLengthLong()).isEqualTo(bodyBytes.length);
   }
 
   @Test
-  @DisplayName("getCharacterEncoding returns request encoding or falls back to UTF-8")
-  void characterEncodingFallbackAndPreserve() {
+  @DisplayName(
+      "Given request encoding absent or set, when getting character encoding, then return request encoding or UTF-8")
+  void returnsRequestEncodingOrUtf8() {
     final var wrapperNoEnc =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, body);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
 
     assertThat(wrapperNoEnc.getCharacterEncoding()).isEqualTo(UTF_8.name());
 
     httpServletRequest.setCharacterEncoding(ISO_8859_1.name());
     final var wrapperWithEnc =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, body);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
 
     assertThat(wrapperWithEnc.getCharacterEncoding()).isEqualTo(ISO_8859_1.name());
   }

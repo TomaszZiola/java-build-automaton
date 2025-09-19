@@ -20,90 +20,97 @@ import org.mockito.MockedStatic;
 class WebhookSecurityServiceTest extends BaseUnit {
 
   @Test
-  @DisplayName("Missing secret (null) allowed returns true")
-  void missingSecretNullAllowedReturnsTrue() {
+  @DisplayName("Given missing secret allowed, when validating signature, then return true")
+  void returnsTrueWhenMissingSecretAllowed() {
     // given
     webhookSecurityServiceImpl = new WebhookSecurityService(null, true);
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isTrue();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isTrue();
   }
 
   @Test
-  @DisplayName("Valid signature returns true")
-  void validSignatureReturnsTrue() {
+  @DisplayName("Given valid signature, when validating signature, then return true")
+  void returnsTrueForValidSignature() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isTrue();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes))
+        .isTrue();
   }
 
   @Test
-  @DisplayName("Invalid signature returns false")
-  void invalidSignatureReturnsFalse() {
+  @DisplayName("Given invalid signature, when validating signature, then return false")
+  void returnsFalseForInvalidSignature() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidSha256Header, body)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidSha256HeaderValue, bodyBytes))
+        .isFalse();
   }
 
   @Test
-  @DisplayName("Missing secret allowed returns true")
-  void missingSecretAllowedReturnsTrue() {
+  @DisplayName("Given empty secret allowed, when validating signature, then return true")
+  void returnsTrueWhenEmptySecretAllowed() {
     // when && then
     webhookSecurityServiceImpl = new WebhookSecurityService("", true);
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isTrue();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isTrue();
   }
 
   @Test
-  @DisplayName("Missing secret not allowed returns false")
-  void missingSecretNotAllowedReturnsFalse() {
+  @DisplayName("Given missing secret not allowed, when validating signature, then return false")
+  void returnsFalseWhenMissingSecretNotAllowed() {
     // given
     webhookSecurityServiceImpl = new WebhookSecurityService("", false);
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isFalse();
   }
 
   @Test
-  @DisplayName("Invalid header format returns false when not starting with sha256=")
-  void invalidHeaderFormatReturnsFalse() {
+  @DisplayName(
+      "Given header not starting with sha256=, when validating signature, then return false")
+  void returnsFalseWhenHeaderNotStartingWithSha256Prefix() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidHeader, body)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidSha256HeaderValue, bodyBytes))
+        .isFalse();
   }
 
   @Test
-  @DisplayName("Null header returns false when secret configured")
-  void nullHeaderReturnsFalseWhenSecretConfigured() {
+  @DisplayName(
+      "Given configured secret and null header, when validating signature, then return false")
+  void returnsFalseWhenHeaderNullAndSecretConfigured() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, body)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isFalse();
   }
 
   @Test
-  @DisplayName("Invalid hex or length returns false")
-  void invalidHexOrLengthReturnsFalse() {
+  @DisplayName("Given invalid hex or length, when validating signature, then return false")
+  void returnsFalseForInvalidHexOrLength() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=zz", body)).isFalse();
-    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=aa", body)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=zz", bodyBytes)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=aa", bodyBytes)).isFalse();
   }
 
   @Test
-  @DisplayName("Null payload returns false when secret configured")
-  void nullPayloadReturnsFalse() {
+  @DisplayName(
+      "Given configured secret and null payload, when validating signature, then return false")
+  void returnsFalseWhenPayloadNullAndSecretConfigured() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, null)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, null)).isFalse();
   }
 
   @Test
-  @DisplayName("When Mac.getInstance throws NoSuchAlgorithmException then returns false")
-  void returnsFalseWhenNoSuchAlgorithmExceptionCaught() {
+  @DisplayName("Given crypto algorithm unavailable, when validating signature, then return false")
+  void returnsFalseWhenAlgorithmUnavailable() {
     try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
       macStatic
           .when(() -> getInstance(anyString()))
           .thenThrow(new NoSuchAlgorithmException("forced by test"));
 
       // when && then
-      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
+      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes))
+          .isFalse();
     }
   }
 
   @Test
-  @DisplayName("When mac.init throws InvalidKeyException then returns false")
-  void returnsFalseWhenInvalidKeyExceptionCaught() throws Exception {
+  @DisplayName("Given invalid key during mac init, when validating signature, then return false")
+  void returnsFalseWhenInvalidKeyDuringInit() throws Exception {
     // given
     final Mac macMock = mock(Mac.class);
     try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
@@ -111,7 +118,8 @@ class WebhookSecurityServiceTest extends BaseUnit {
       doThrow(new InvalidKeyException("forced by test")).when(macMock).init(any());
 
       // when && then
-      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256Header, body)).isFalse();
+      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes))
+          .isFalse();
     }
   }
 }

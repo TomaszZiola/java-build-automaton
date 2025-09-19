@@ -2,12 +2,13 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import jakarta.annotation.PostConstruct;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
@@ -32,10 +33,19 @@ public class BuildQueueService {
     }
   }
 
-  @Async
-  @PostConstruct
-  @SuppressWarnings("PMD.AvoidCatchingGenericException")
-  void runWorker() {
+  @EventListener(ApplicationReadyEvent.class)
+  void startWorker() {
+    Executors.newSingleThreadExecutor(
+            r -> {
+              final Thread thread = new Thread(r, "build-worker");
+              thread.setDaemon(true);
+              return thread;
+            })
+        .submit(this::runWorkerLoop);
+    LOGGER.info("Build worker scheduled");
+  }
+
+  void runWorkerLoop() {
     LOGGER.info("Build worker started");
     while (true) {
       try {
@@ -47,7 +57,7 @@ public class BuildQueueService {
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
         return;
-      } catch (Exception ex) {
+      } catch (Exception ex) { // NOPMD - Worker loop must continue despite any build failures
         LOGGER.error("Worker error", ex);
       }
     }

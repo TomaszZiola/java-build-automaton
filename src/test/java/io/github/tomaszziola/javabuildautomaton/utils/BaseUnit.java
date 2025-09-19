@@ -49,6 +49,7 @@ import io.github.tomaszziola.javabuildautomaton.webhook.WebhookDeliveryRepositor
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookIngestionService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
 import jakarta.servlet.FilterChain;
@@ -70,7 +71,12 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
-@SuppressWarnings({"PMD.TooManyFields", "PMD.CouplingBetweenObjects", "PMD.NcssCount"})
+@SuppressWarnings({
+  "PMD.TooManyFields",
+  "PMD.CouplingBetweenObjects",
+  "PMD.NcssCount",
+  "PMD.FieldNamingConventions"
+})
 public class BaseUnit {
 
   @TempDir protected File tempDir;
@@ -120,6 +126,7 @@ public class BaseUnit {
   protected WebhookIngestionService webhookIngestionServiceImpl;
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
   protected WebhookSecurityService webhookSecurityServiceImpl;
+  protected WebhookStartupVerifier webhookStartupVerifierImpl;
 
   protected ApiResponse apiResponse;
   protected Build build;
@@ -132,12 +139,13 @@ public class BaseUnit {
   protected Project project;
   protected ProjectDetailsDto projectDetailsDto;
 
-  protected byte[] body = "{\"msg\":\"hi\"}".getBytes(UTF_8);
+  protected String API_PATH = "/api/projects";
+  protected String bodyJson = "{\"msg\":\"hi\"}";
+  protected byte[] bodyBytes = bodyJson.getBytes(UTF_8);
   protected Long buildId = 1L;
   protected String[] cmd = {"git", "pull"};
   protected String expectedHex = "447455f04bc3e4c84f552ab236138532bece9ec6e47e813d8e1fd42094bb544e";
-  protected String invalidSha256Header = "sha256=xD";
-  protected String invalidHeader = "sha2=zz";
+  protected String invalidSha256HeaderValue = "sha256=xD";
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected String mainBranch = "refs/heads/main";
   protected String masterBranch = "refs/heads/master";
@@ -146,8 +154,11 @@ public class BaseUnit {
   protected Long nonExistentProjectId = 9L;
   protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
+  protected String postMethod = "POST";
   protected String secret = "top-secret";
-  protected String validSha256Header = "sha256=" + expectedHex;
+  protected String validSha256HeaderValue = "sha256=" + expectedHex;
+  protected String validSha256HeaderName = "X-Hub-Signature-256";
+  protected String WEBHOOK_PATH = "/webhook";
 
   @BeforeEach
   void mockResponses() throws IOException {
@@ -177,6 +188,7 @@ public class BaseUnit {
         new WebhookIngestionService(buildOrchestrator, ingestionGuard, projectRepository);
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
     webhookSecurityServiceImpl = new WebhookSecurityService(secret, false);
+    webhookStartupVerifierImpl = new WebhookStartupVerifier();
 
     apiResponse = ApiResponseModel.basic();
     build = BuildModel.basic();
@@ -222,7 +234,8 @@ public class BaseUnit {
     when(projectService.findProjectBuilds(nonExistentProjectId))
         .thenThrow(ProjectNotFoundException.class);
     when(requestHeaderAccessor.deliveryId()).thenReturn("id");
-    when(webhookSecurityService.isSignatureValid(validSha256Header, body)).thenReturn(true);
+    when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
+        .thenReturn(true);
     when(webhookIngestionService.handleWebhook(payload)).thenReturn(apiResponse);
 
     RequestContextHolder.resetRequestAttributes();

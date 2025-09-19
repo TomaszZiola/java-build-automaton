@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test;
 class CachedBodyRequestWrapperNullBodyTest extends BaseUnit {
 
   @Test
-  @DisplayName("Wrapper created with null body yields empty stream and zero lengths")
-  void nullBodyResultsInEmptyStreamAndZeroLengths() throws IOException {
+  @DisplayName("Given null body, when creating wrapper, then return empty stream and zero lengths")
+  void returnsEmptyStreamAndZeroLengthsWhenBodyNull() throws IOException {
     // given
     final var wrapper =
         new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, null);
