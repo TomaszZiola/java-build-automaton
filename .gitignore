@@ -59,22 +59,15 @@ infra/**/terraform.tfstate.*
 infra/**/terraform-provider-*
 infra/**/LICENSE.txt
 
-# Optionally ignore lockfile if you don't want to pin provider hashes
-# (recommended is to commit it; comment out the next line to keep it)
-infra/.terraform.lock.hcl
-
-
 TASKS.md
 CODE_REVIEW.md
+ROADMAP.md
 
 application-local.properties
 
-
 # Terraform (infra) - ignore local state and caches
-infra/.terraform/
 infra/.terraform/*
 infra/.terraform.lock.hcl
-infra/terraform.tfstate
 infra/terraform.tfstate.backup
 infra/*.tfstate
 infra/*.tfstate.backup

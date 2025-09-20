@@ -29,6 +29,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.flywaydb:flyway-core:11.11.2")

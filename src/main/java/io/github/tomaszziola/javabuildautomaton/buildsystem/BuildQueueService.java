@@ -1,27 +1,43 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import jakarta.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 @Service
-@EnableAsync
+@SuppressWarnings("PMD.CloseResource")
+@EnableConfigurationProperties(BuildProperties.class)
 public class BuildQueueService {
 
-  private final BuildService buildService;
-  private final BlockingQueue<Long> queue = new LinkedBlockingQueue<>(100);
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildQueueService.class);
+  private final Semaphore permits;
+  private final BlockingQueue<Long> queue;
+  private final AtomicBoolean started = new AtomicBoolean(false);
 
-  public BuildQueueService(final BuildService buildService) {
+  private volatile ExecutorService workerExecutor;
+  private volatile ExecutorService buildExecutor;
+
+  private final BuildService buildService;
+
+  public BuildQueueService(final BuildService buildService, final BuildProperties props) {
     this.buildService = buildService;
+    this.permits = new Semaphore(props.getMaxParallel(), true);
+    this.queue = new LinkedBlockingQueue<>(props.getQueue().getCapacity());
   }
 
   public void enqueue(final Long buildId) {
@@ -35,30 +51,84 @@ public class BuildQueueService {
 
   @EventListener(ApplicationReadyEvent.class)
   void startWorker() {
-    Executors.newSingleThreadExecutor(
+    if (!started.compareAndSet(false, true)) {
+      LOGGER.info("Build worker already started, skipping");
+      return;
+    }
+    workerExecutor =
+        newSingleThreadExecutor(
             r -> {
               final Thread thread = new Thread(r, "build-worker");
-              thread.setDaemon(true);
+              thread.setDaemon(false);
               return thread;
-            })
-        .submit(this::runWorkerLoop);
-    LOGGER.info("Build worker scheduled");
+            });
+    buildExecutor = newVirtualThreadPerTaskExecutor();
+
+    try {
+      workerExecutor.submit(this::runWorkerLoop);
+      LOGGER.info("Build worker scheduled");
+    } catch (RejectedExecutionException rex) {
+      LOGGER.error("Failed to schedule worker loop", rex);
+    }
   }
 
   void runWorkerLoop() {
     LOGGER.info("Build worker started");
-    while (true) {
+    while (!currentThread().isInterrupted()) {
       try {
-        final Long buildId = queue.poll(1, SECONDS);
+        final var buildId = queue.poll(1, SECONDS);
         if (buildId == null) {
           continue;
         }
-        buildService.executeBuild(buildId);
+        permits.acquire();
+        try {
+          buildExecutor.submit(
+              () -> {
+                try {
+                  buildService.executeBuild(buildId);
+                } finally {
+                  permits.release();
+                }
+              });
+        } catch (RejectedExecutionException rex) {
+          LOGGER.error("Build executor rejected task for id={}", buildId, rex);
+          permits.release();
+          SECONDS.sleep(1);
+        }
       } catch (InterruptedException ie) {
-        Thread.currentThread().interrupt();
-        return;
-      } catch (Exception ex) { // NOPMD - Worker loop must continue despite any build failures
-        LOGGER.error("Worker error", ex);
+        currentThread().interrupt();
+        break;
+      }
+    }
+    LOGGER.info("Build worker stopped");
+  }
+
+  @PreDestroy
+  void stopWorker() {
+    LOGGER.info("Shutting down build worker");
+    final ExecutorService workerExec = workerExecutor;
+    final ExecutorService buildExec = buildExecutor;
+
+    if (workerExec != null) {
+      workerExec.shutdownNow();
+      try {
+        if (!workerExec.awaitTermination(10, SECONDS)) {
+          LOGGER.warn("Worker executor did not terminate in time");
+        }
+      } catch (InterruptedException e) {
+        currentThread().interrupt();
+      }
+    }
+
+    if (buildExec != null) {
+      buildExec.shutdown();
+      try {
+        if (!buildExec.awaitTermination(60, SECONDS)) {
+          LOGGER.warn("Build executor did not terminate in time, forcing shutdown");
+          buildExec.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        currentThread().interrupt();
       }
     }
   }
