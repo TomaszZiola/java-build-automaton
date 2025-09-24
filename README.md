@@ -17,11 +17,13 @@ This is not just another CRUD application—it's a practical tool that solves a 
 
 ## ✨ Key Features
 
-* **Webhook Reception:** Fully integrated with the GitHub API to listen for `push` events.
-* **Dynamic Process Execution:** Securely runs system commands (`git`, `gradle`, `mvn`) from within the Java application using `ProcessBuilder`.
-* **Workspace Isolation:** Each project is built in its own dedicated working directory.
-* **Real-time Logging:** Captures logs from the build process into memory and stores them with the build; streaming to console/UI is not yet implemented.
-* **Error Handling:** Detects build failures based on the process exit code.
+* **Webhook Reception:** Listens for GitHub `push` events via Webhooks.
+* **Dynamic Process Execution:** Runs system commands (`git`, `gradle`, `mvn`) using `ProcessBuilder`.
+* **Workspace Isolation:** Each project builds in its own working directory.
+* **Asynchronous Build Queue:** Enqueue builds and run them concurrently on virtual threads; limits via `build.max-parallel` and `build.queue.capacity`.
+* **Persisted Build History & UI:** Build results and logs are stored in PostgreSQL and visible in the Dashboard, Project, and Build Details pages.
+* **Logging:** Captures process output and stores it with the build (not streamed in real time yet).
+* **Robust Error Handling:** Detects failures via exit codes and exceptions.
 
 ---
 
@@ -31,7 +33,7 @@ This is not just another CRUD application—it's a practical tool that solves a 
 * Build Tool: Gradle (Kotlin DSL)
 * API: Spring Web (REST), Spring Boot Actuator
 * Frontend: Thymeleaf (dashboard and project details)
-* Data: Spring Data JPA; H2 in dev, PostgreSQL in prod (Flyway migrations)
+* Data: Spring Data JPA; PostgreSQL with Flyway migrations
 * Integration: GitHub Webhooks with HMAC SHA-256 signature validation
 * Observability: CorrelationId filter, structured logging (logstash encoder)
 * Containerization: Docker (multi-stage Dockerfile)
@@ -64,6 +66,11 @@ To run the project locally, follow the steps below.
 
 3.  **Run the Spring Boot application:**
     ```bash
+    # Ensure DB env variables are set (see Configuration)
+    export JDBC_CONNECTION_STRING=jdbc:postgresql://localhost:5432/jba
+    export DB_USERNAME=jba
+    export DB_PASSWORD=jba
+
     ./gradlew bootRun
     ```
     The application will start on port `8080`. Open http://localhost:8080/ to view the dashboard.
@@ -91,9 +98,9 @@ This project is actively under development. Here are the planned features:
 
 See the full, living plan in [ROADMAP.md](./ROADMAP.md).
 
--   [ ] **Configuration Module:** Manage projects from a database instead of a hardcoded path.
--   [ ] **Build History Module:** Save every build (status, logs, commit hash) to a database.
--   [ ] **Enhance User Interface:** Expand existing Thymeleaf views to display detailed build logs and statuses.
+-   [ ] **Configuration/Admin UI:** Manage projects via an admin UI (create/update/delete).
+-   [x] **Build History Module:** Persist every build (status, logs, commit hash) to the database.
+-   [x] **Basic Web UI:** Dashboard, project details, and build details pages.
 -   [ ] **Notification System:** Send email or Discord/Slack notifications about the build outcome.
 -   [ ] **Docker Support:** Run builds in isolated Docker containers.
 
@@ -101,20 +108,42 @@ See the full, living plan in [ROADMAP.md](./ROADMAP.md).
 
 ## ⚙️ Configuration
 
-This project currently seeds a demo Project at startup for convenience (see `DataSeeder`). To make it work on your machine:
+Database (PostgreSQL + Flyway):
+- The app uses PostgreSQL. Flyway runs on startup to create/update the schema.
+- Configure via environment variables (or Spring properties):
+  - JDBC_CONNECTION_STRING or SPRING_DATASOURCE_URL (e.g., `jdbc:postgresql://localhost:5432/jba`)
+  - DB_USERNAME or SPRING_DATASOURCE_USERNAME
+  - DB_PASSWORD or SPRING_DATASOURCE_PASSWORD
+- Example (local Postgres via Docker):
+  ```bash
+  docker run -d --name jba-db -p 5432:5432 \
+    -e POSTGRES_USER=jba -e POSTGRES_PASSWORD=jba -e POSTGRES_DB=jba postgres:16
 
-- Adjust the seeded project's fields in `src/main/java/io/github/tomaszziola/javabuildautomaton/config/DataSeeder.java`:
-  - name: Friendly display name
-  - repositoryName: GitHub repo in the form `owner/repo` (e.g., `TomaszZiola/test`)
-  - localPath: Absolute path on your machine where the repo exists. The app will run commands in this directory.
-- Ensure that directory is a valid git working copy of the specified repository and that you have the appropriate access.
+  export JDBC_CONNECTION_STRING=jdbc:postgresql://localhost:5432/jba
+  export DB_USERNAME=jba
+  export DB_PASSWORD=jba
+  ```
 
-Database:
-- Uses in-memory H2 by default; data (including seeded project and build history) resets on restart.
-- H2 console is enabled at `/h2-console` (username `sa`, empty password).
+Projects:
+- Projects are stored in the database. Create at least one row so webhooks can match it by repository name.
+- Minimal SQL example:
+  ```text
+  INSERT INTO public.project (id, name, repository_name, local_path, build_tool)
+  VALUES (nextval('project_sq'), 'My Project', 'owner/repo', '/absolute/path/to/working/dir', 'GRADLE');
+  ```
+  Fields:
+  - repository_name must match your GitHub repo `owner/repo`.
+  - local_path must point to an existing local clone; builds run in this directory.
+  - build_tool is `GRADLE` or `MAVEN`.
+
+Build Queue and Concurrency:
+- Builds are enqueued and executed asynchronously on virtual threads.
+- Configure limits in application properties or env vars:
+  - build.max-parallel (default 3) — max concurrent builds
+  - build.queue.capacity (default 100) — queue size
 
 Important:
-- The build process uses the system `gradle` command (not the wrapper). Make sure Gradle is installed and on your PATH. Alternatively, modify `BuildExecutor` to use `./gradlew` in your repo.
+- The build process uses the system `gradle`/`mvn` command (not the wrapper). Ensure they are installed and on your PATH. Alternatively, adapt `BuildExecutor` to prefer `./gradlew`/`./mvnw` if present.
 - Webhook signature validation is implemented (HMAC SHA-256 via X-Hub-Signature-256). See Security notes and examples below.
 
 ---
@@ -176,10 +205,12 @@ Notes:
 
 - GET `/` — Dashboard listing all projects with basic info.
 - GET `/projects/{projectId}` — Project details including recent builds.
+- GET `/projects/{projectId}/builds/{buildId}` — Build details including logs and execution info.
 
 Templates:
 - `src/main/resources/templates/dashboard.html`
 - `src/main/resources/templates/project-details.html`
+- `src/main/resources/templates/build-details.html`
 
 ---
 
@@ -209,7 +240,7 @@ Templates:
 ## ⚠️ Security and Limitations
 
 - Secrets: GitHub webhook HMAC SHA-256 signature validation is implemented and enforced by a filter when a secret is configured.
-  - Set `app.github.webhook-secret` to enable validation. In dev, `app.github.allow-missing-webhook-secret=true` allows skipping it (see `application-dev.properties`).
+  - Set `app.github.webhook-secret` to enable validation. In dev, you can set the env var `ALLOW_MISSING_WEBHOOK_SECRET=true` (maps to `app.github.allow-missing-webhook-secret`) to temporarily skip validation.
   - In production, set a strong secret and keep `app.github.allow-missing-webhook-secret=false`.
 - Execution: Builds run on the host using your local Gradle and Git, in the configured working directory. There is no sandboxing or container isolation yet. Use only with trusted repositories.
 - Logging: Build logs are captured and stored with each build; general application logs go to stdout. No retention/capping policies are implemented yet.
@@ -282,5 +313,5 @@ docker run -d --name jba-app --network jba-net -p 8080:8080 \
 
 Notes:
 - In production, set a strong `APP_GITHUB_WEBHOOK_SECRET`. The filter will reject unsigned/invalid webhook requests.
-- The app reads DB connection from `JDBC_CONNECTION_STRING`, `DB_USERNAME`, `DB_PASSWORD` (see `application-prod.properties`).
+- The app reads DB connection from `JDBC_CONNECTION_STRING`, `DB_USERNAME`, `DB_PASSWORD` (or standard Spring `SPRING_DATASOURCE_*` vars). See `src/main/resources/application.properties` for details.
 - Health endpoints are exposed at `/actuator/health` and `/actuator/info`.

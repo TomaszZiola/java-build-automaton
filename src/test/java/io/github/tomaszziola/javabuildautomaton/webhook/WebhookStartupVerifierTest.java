@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import static ch.qos.logback.classic.Level.ALL;
+import static ch.qos.logback.classic.Level.TRACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -18,16 +18,14 @@ import org.springframework.boot.ApplicationRunner;
 class WebhookStartupVerifierTest extends BaseUnit {
 
   private ListAppender<ILoggingEvent> logAppender;
-  private Logger logger; // NOPMD - Shared test fixture across multiple test methods
 
   @BeforeEach
   void setUp() {
-    // Set up log capture
-    logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
+    final Logger logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
     logAppender = new ListAppender<>();
     logAppender.start();
     logger.addAppender(logAppender);
-    logger.setLevel(ALL);
+    logger.setLevel(TRACE);
   }
 
   @Test
