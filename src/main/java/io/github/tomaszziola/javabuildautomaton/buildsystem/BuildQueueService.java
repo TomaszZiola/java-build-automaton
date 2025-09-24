@@ -41,6 +41,10 @@ public class BuildQueueService {
   }
 
   public void enqueue(final Long buildId) {
+    if (buildId == null) {
+      LOGGER.warn("Cannot enqueue null build id");
+      return;
+    }
     final boolean offered = queue.offer(buildId);
     if (offered) {
       LOGGER.info("Enqueued build id={}", buildId);
@@ -104,6 +108,7 @@ public class BuildQueueService {
   }
 
   @PreDestroy
+  @SuppressWarnings("PMD.NullAssignment")
   void stopWorker() {
     LOGGER.info("Shutting down build worker");
     final ExecutorService workerExec = workerExecutor;
@@ -119,7 +124,6 @@ public class BuildQueueService {
         currentThread().interrupt();
       }
     }
-
     if (buildExec != null) {
       buildExec.shutdown();
       try {
@@ -131,5 +135,9 @@ public class BuildQueueService {
         currentThread().interrupt();
       }
     }
+
+    workerExecutor = null;
+    buildExecutor = null;
+    started.set(false);
   }
 }

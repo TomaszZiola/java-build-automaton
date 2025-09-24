@@ -14,6 +14,7 @@ import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildOrchestrator;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildProperties;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildQueueService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
@@ -75,7 +76,8 @@ import org.springframework.web.context.request.RequestContextHolder;
   "PMD.TooManyFields",
   "PMD.CouplingBetweenObjects",
   "PMD.NcssCount",
-  "PMD.FieldNamingConventions"
+  "PMD.FieldNamingConventions",
+  "PMD.DoubleBraceInitialization"
 })
 public class BaseUnit {
 
@@ -108,6 +110,8 @@ public class BaseUnit {
   protected BuildExecutor buildExecutorImpl;
   protected BuildMapper buildMapperImpl;
   protected BuildOrchestrator buildOrchestratorImpl;
+  protected BuildProperties buildProperties;
+  protected BuildQueueService buildQueueServiceImpl;
   protected BuildService buildServiceImpl;
   protected CorrelationIdFilter correlationIdFilter;
   protected GitCommandRunner gitCommandRunnerImpl;
@@ -167,6 +171,14 @@ public class BaseUnit {
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildMapperImpl = new BuildMapper();
     buildOrchestratorImpl = new BuildOrchestrator(buildQueueService, buildService);
+    buildProperties =
+        new BuildProperties() {
+          {
+            setMaxParallel(2);
+            getQueue().setCapacity(3);
+          }
+        };
+    buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
     buildServiceImpl = new BuildService(buildExecutor, buildRepository, gitCommandRunner);
     correlationIdFilter = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);

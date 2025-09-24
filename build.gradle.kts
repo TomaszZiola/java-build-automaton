@@ -97,11 +97,7 @@ tasks.jacocoTestReport {
                     "**/repository/**",
                     "**/exception/**",
                     "**/entity/**",
-                    // Exclude infra and low-value infra services that are hard to test deterministically
-                    "**/buildsystem/BuildQueueService*",
                     "**/buildsystem/ProcessRunner*",
-                    "**/buildsystem/OutputCollector*",
-                    "**/webhook/RequestHeaderAccessor*"
                     )
             }
         })

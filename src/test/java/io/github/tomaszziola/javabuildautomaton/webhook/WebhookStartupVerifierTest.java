@@ -21,7 +21,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
 
   @BeforeEach
   void setUp() {
-    Logger logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
+    final Logger logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
     logAppender = new ListAppender<>();
     logAppender.start();
     logger.addAppender(logAppender);
