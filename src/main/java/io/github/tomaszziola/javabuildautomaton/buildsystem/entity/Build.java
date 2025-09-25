@@ -18,11 +18,13 @@ import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 @Entity
 @Getter
 @Setter
+@ToString(exclude = {"project", "logs"})
 public class Build {
 
   @Id
@@ -37,13 +39,18 @@ public class Build {
   @Enumerated(STRING)
   private BuildStatus status;
 
-  private Instant startTime;
-
-  private Instant endTime;
-
   @Lob
   @Column(columnDefinition = "TEXT")
   private String logs;
+
+  @Column(name = "duration_ms")
+  private Long durationMs;
+
+  @Column(name = "failure_reason")
+  private String failureReason;
+
+  private Instant startTime;
+  private Instant endTime;
 
   @Override
   public boolean equals(final Object other) {
