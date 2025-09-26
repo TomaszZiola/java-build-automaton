@@ -9,13 +9,13 @@ public final class ProjectModel {
 
   private ProjectModel() {}
 
-  public static Project basic(final String localPath) {
+  public static Project basic() {
     final var project = new Project();
     project.setId(1L);
     project.setName("test-project-from-db");
-    project.setSlug("test-project-from-db");
-    project.setSlug(localPath);
+    project.setSlug("demo1");
     project.setRepositoryName("TomaszZiola/test");
+    project.setRepositoryUrl("https://github.com/app/test");
     project.setBuildTool(GRADLE);
     project.setCreatedAt(parse("2025-08-24T10:15:10Z"));
     project.setUpdatedAt(parse("2025-09-21T20:10:50Z"));

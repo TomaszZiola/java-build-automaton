@@ -216,7 +216,7 @@ public class BaseUnit {
     buildSummaryDto = BuildSummaryDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic();
     payload = GitHubWebhookPayloadModel.basic();
-    project = ProjectModel.basic(tempDir.getAbsolutePath());
+    project = ProjectModel.basic();
     projectDetailsDto = ProjectDetailsDtoModel.basic();
 
     when(branchPolicy.isNonTriggerRef(mainBranch)).thenReturn(false);

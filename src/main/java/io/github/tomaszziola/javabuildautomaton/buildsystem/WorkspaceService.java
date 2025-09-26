@@ -73,8 +73,10 @@ public class WorkspaceService {
 
   private CanonicalPaths resolveCanonical(final Path workspacePath) {
     try {
-      final var canonicalBase = get(properties.getBaseDir()).toRealPath(NOFOLLOW_LINKS);
-      final var canonicalProject = workspacePath.toRealPath(NOFOLLOW_LINKS);
+      // Resolve base canonical path following symlinks to avoid false negatives on systems where /var is a symlink
+      final var canonicalBase = get(properties.getBaseDir()).toRealPath();
+      // Follow symlinks for project path to detect symlink escapes outside base directory
+      final var canonicalProject = workspacePath.toRealPath();
       return new CanonicalPaths(canonicalBase, canonicalProject);
     } catch (IOException e) {
       throw new WorkspaceException(
