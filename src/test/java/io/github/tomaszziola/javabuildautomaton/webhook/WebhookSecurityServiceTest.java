@@ -29,7 +29,7 @@ class WebhookSecurityServiceTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("Given valid signature, when validating signature, then return true")
+  @DisplayName("Given isValid signature, when validating signature, then return true")
   void returnsTrueForValidSignature() {
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes))

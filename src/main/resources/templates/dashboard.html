@@ -74,16 +74,16 @@
 <div class="container">
   <h1>Project Dashboard</h1>
 
-  <!-- Ten blok zostanie wyświetlony, jeśli lista projektów jest pusta -->
   <div th:if="${projects.isEmpty()}" class="no-projects">
     <p>No projects have been configured yet.</p>
   </div>
 
-  <!-- Tabela zostanie wyświetlona tylko, jeśli lista projektów NIE jest pusta -->
   <table th:unless="${projects.isEmpty()}">
     <thead>
     <tr>
       <th>ID</th>
+      <th>Repository URL</th>
+      <th>Slug</th>
       <th>Project Name</th>
       <th>Repository</th>
       <th>Build Tool</th>
@@ -91,14 +91,14 @@
     </tr>
     </thead>
     <tbody>
-    <!-- Magia Thymeleaf: pętla po liście 'projects' z modelu -->
     <tr th:each="project : ${projects}">
       <td th:text="${project.id()}">1</td>
+      <td th:text="${project.repositoryUrl()}">1</td>
+      <td th:text="${project.slug()}">1</td>
       <td th:text="${project.name()}">My Awesome Project</td>
       <td th:text="${project.repositoryName()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>
       <td>
-        <!-- Ten link prowadzi teraz do strony ze szczegółami projektu -->
         <a th:href="@{/projects/{id}(id=${project.id()})}">View Builds</a>
       </td>
     </tr>

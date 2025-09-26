@@ -11,9 +11,10 @@ public final class ProjectDetailsDtoModel {
   public static ProjectDetailsDto basic() {
     return new ProjectDetailsDto(
         1L,
+        "https://github.com/example/test",
         "test-project-from-db",
-        "TomaszZiola/test",
-        "/Users/Tomasz/Documents/IdeaProjects/test",
+        "/IdeaProjects/test",
+        "testApp",
         GRADLE);
   }
 }

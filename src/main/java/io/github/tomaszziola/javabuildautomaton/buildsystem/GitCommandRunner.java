@@ -15,4 +15,8 @@ public class GitCommandRunner {
   public ExecutionResult pull(final File workingDir) {
     return processExecutor.execute(workingDir, "git", "pull");
   }
+
+  public ExecutionResult cloneRepo(final String repositoryUrl, final File targetDir) {
+    return processExecutor.execute(targetDir, "git", "clone", repositoryUrl, ".");
+  }
 }

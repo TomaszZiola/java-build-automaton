@@ -13,7 +13,8 @@ public final class ProjectModel {
     final var project = new Project();
     project.setId(1L);
     project.setName("test-project-from-db");
-    project.setLocalPath(localPath);
+    project.setSlug("test-project-from-db");
+    project.setSlug(localPath);
     project.setRepositoryName("TomaszZiola/test");
     project.setBuildTool(GRADLE);
     project.setCreatedAt(parse("2025-08-24T10:15:10Z"));

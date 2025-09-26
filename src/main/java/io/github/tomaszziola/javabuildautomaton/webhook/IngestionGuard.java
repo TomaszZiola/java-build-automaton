@@ -1,8 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.ALLOW;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.DUPLICATE;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.NON_TRIGGER_REF;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.ALLOW;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.DUPLICATE;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.NON_TRIGGER_REF;
 
 import org.springframework.stereotype.Component;
 
@@ -22,18 +22,12 @@ public class IngestionGuard {
     this.requestHeaderAccessor = requestHeaderAccessor;
   }
 
-  public enum Outcome {
-    ALLOW,
-    DUPLICATE,
-    NON_TRIGGER_REF
-  }
-
-  public Outcome check(final String ref) {
+  public IngestionGuardResult check(final String ref) {
     final var deliveryId = requestHeaderAccessor.deliveryId();
-    if (!idempotencyService.firstSeen(deliveryId)) {
+    if (idempotencyService.isDuplicate(deliveryId)) {
       return DUPLICATE;
     }
-    if (!branchPolicy.isTriggerRef(ref)) {
+    if (branchPolicy.isNonTriggerRef(ref)) {
       return NON_TRIGGER_REF;
     }
     return ALLOW;

@@ -18,8 +18,8 @@ class IdempotencyServiceTest extends BaseUnit {
   void shouldReturnTrue_whenNullOrBlank() {
 
     // when & then
-    assertThat(idempotencyServiceImpl.firstSeen(null)).isTrue();
-    assertThat(idempotencyServiceImpl.firstSeen(" ")).isTrue();
+    assertThat(idempotencyServiceImpl.isDuplicate(null)).isFalse();
+    assertThat(idempotencyServiceImpl.isDuplicate(" ")).isFalse();
   }
 
   @Test
@@ -27,10 +27,10 @@ class IdempotencyServiceTest extends BaseUnit {
   void shouldPersistAndReturnTrue_whenNewId() {
     // given
     final var id = "abc";
-    final var result = idempotencyServiceImpl.firstSeen(id);
+    final var result = idempotencyServiceImpl.isDuplicate(id);
 
     // when & then
-    assertThat(result).isTrue();
+    assertThat(result).isFalse();
     verify(webhookDeliveryRepository).save(any(WebhookDelivery.class));
   }
 
@@ -43,9 +43,9 @@ class IdempotencyServiceTest extends BaseUnit {
         .when(webhookDeliveryRepository)
         .save(any(WebhookDelivery.class));
 
-    final var result = idempotencyServiceImpl.firstSeen(id);
+    final var result = idempotencyServiceImpl.isDuplicate(id);
 
     // when & then
-    assertThat(result).isFalse();
+    assertThat(result).isTrue();
   }
 }

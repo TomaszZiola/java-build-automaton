@@ -124,7 +124,7 @@ class BuildServiceTest extends BaseUnit {
 
   @Test
   @DisplayName(
-      "Given valid build id, when executing build, then build status is updated and build steps are executed")
+      "Given isValid build id, when executing build, then build status is updated and build steps are executed")
   void executeBuildWithValidId() {
     // given
     final Long buildId = 123L;
@@ -161,8 +161,8 @@ class BuildServiceTest extends BaseUnit {
 
     // when & then
     assertThatThrownBy(() -> buildServiceImpl.executeBuild(buildId))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Build not found: " + buildId);
+        .isInstanceOf(io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException.class)
+        .hasMessage("Build not found with id: " + buildId);
 
     verify(buildRepository).findById(buildId);
     verify(buildRepository, times(0)).save(any());
@@ -189,5 +189,29 @@ class BuildServiceTest extends BaseUnit {
     assertThat(savedBuild.getStatus()).isEqualTo(QUEUED);
     assertThat(savedBuild.getStartTime()).isNotNull();
     assertThat(result).isEqualTo(mockBuild);
+  }
+
+  @Test
+  @DisplayName(
+      "Given missing .git, when starting build process, then perform git clone and build")
+  void usesCloneWhenRepositoryNotInitialized() {
+    // given: remove the .git directory to simulate fresh workspace
+    final File gitDir = new File(tempDir, ".git");
+    if (gitDir.exists()) {
+      // It should be empty in our setup, so delete should succeed
+      gitDir.delete();
+    }
+
+    // when
+    assertDoesNotThrow(() -> buildServiceImpl.startBuildProcess(project));
+
+    // then
+    verify(gitCommandRunner, times(1)).cloneRepo(eq(project.getRepositoryName()), any(File.class));
+    verify(gitCommandRunner, times(0)).pull(any(File.class));
+
+    verify(buildRepository, times(2)).save(buildCaptor.capture());
+    final var finalBuild = buildCaptor.getAllValues().getLast();
+    assertThat(finalBuild.getStatus()).isEqualTo(SUCCESS);
+    assertThat(normalizeEol(finalBuild.getLogs())).isEqualTo("clone's ok\nbuild's ok\n");
   }
 }

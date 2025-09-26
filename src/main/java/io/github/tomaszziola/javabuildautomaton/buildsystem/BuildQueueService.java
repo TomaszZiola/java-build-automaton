@@ -1,6 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static java.lang.Thread.currentThread;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -66,7 +67,7 @@ public class BuildQueueService {
               thread.setDaemon(false);
               return thread;
             });
-    buildExecutor = newVirtualThreadPerTaskExecutor();
+    buildExecutor = newCachedThreadPool();
 
     try {
       workerExecutor.submit(this::runWorkerLoop);
@@ -98,6 +99,8 @@ public class BuildQueueService {
           LOGGER.error("Build executor rejected task for id={}", buildId, rex);
           permits.release();
           SECONDS.sleep(1);
+        } catch (Exception e) {
+          LOGGER.error("Error executing build id={}", buildId, e);
         }
       } catch (InterruptedException ie) {
         currentThread().interrupt();

@@ -10,7 +10,7 @@ services:
     volumes:
       - jba-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-jba} -d ${DB_NAME:-jba}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-jba} -d ${DB_NAME:-jba}" ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -29,9 +29,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       APP_GITHUB_WEBHOOK_SECRET: ${APP_GITHUB_WEBHOOK_SECRET}
+      SPRING_APPLICATION_JSON: '{"workspace":{"baseDir":"/workspaces"}}'
       JAVA_OPTS: "-Dserver.address=0.0.0.0 -Dapp.build.timeout.seconds=600"
+    volumes:
+      - jba-workspace:/workspaces
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -39,3 +42,6 @@ services:
 
 volumes:
   jba-db-data:
+  jba-workspace:
+    external: true
+

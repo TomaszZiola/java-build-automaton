@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ProcessExecutorTest extends BaseUnit {
 
   @Test
-  @DisplayName("Given valid command, when executing, then capture output and return success")
+  @DisplayName("Given isValid command, when executing, then capture output and return success")
   void returnsSuccessAndCapturesOutputWhenCommandSucceeds() throws InterruptedException {
     // given
     when(process.getInputStream())

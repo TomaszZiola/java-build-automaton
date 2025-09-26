@@ -10,9 +10,10 @@ public class ProjectMapper {
   public ProjectDetailsDto toDetailsDto(final Project project) {
     return new ProjectDetailsDto(
         project.getId(),
+        project.getRepositoryUrl(),
         project.getName(),
         project.getRepositoryName(),
-        project.getLocalPath(),
+        project.getSlug(),
         project.getBuildTool());
   }
 }

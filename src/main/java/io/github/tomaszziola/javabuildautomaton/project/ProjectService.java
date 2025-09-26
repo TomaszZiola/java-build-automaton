@@ -9,6 +9,7 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFo
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProjectService {
@@ -40,6 +41,7 @@ public class ProjectService {
         .orElseThrow(() -> new ProjectNotFoundException(projectId));
   }
 
+  @Transactional(readOnly = true)
   public List<BuildSummaryDto> findProjectBuilds(final Long projectId) {
     final var project =
         projectRepository

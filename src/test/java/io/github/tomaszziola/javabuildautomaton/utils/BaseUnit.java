@@ -12,6 +12,7 @@ import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildLifecycleService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildOrchestrator;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildProperties;
@@ -24,6 +25,8 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.GitCommandRunner;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkingDirectoryValidator;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkspaceService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
@@ -85,6 +88,7 @@ public class BaseUnit {
 
   @Mock protected BranchPolicy branchPolicy;
   @Mock protected BuildExecutor buildExecutor;
+  @Mock protected BuildLifecycleService buildLifecycleService;
   @Mock protected BuildMapper buildMapper;
   @Mock protected BuildOrchestrator buildOrchestrator;
   @Mock protected BuildQueueService buildQueueService;
@@ -104,6 +108,8 @@ public class BaseUnit {
   @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
   @Mock protected WebhookIngestionService webhookIngestionService;
   @Mock protected WebhookSecurityService webhookSecurityService;
+  @Mock protected WorkingDirectoryValidator workingDirectoryValidator;
+  @Mock protected WorkspaceService workspaceService;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
@@ -138,6 +144,7 @@ public class BaseUnit {
   protected BuildSummaryDto buildSummaryDto;
   protected ExecutionResult buildExecutionResult;
   protected ExecutionResult pullExecutionResult;
+  protected ExecutionResult cloneExecutionResult;
   protected File workingDir;
   protected GitHubWebhookPayload payload;
   protected Project project;
@@ -179,7 +186,7 @@ public class BaseUnit {
           }
         };
     buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
-    buildServiceImpl = new BuildService(buildExecutor, buildRepository, gitCommandRunner);
+    buildServiceImpl = new BuildService(buildExecutor,buildLifecycleService,  buildRepository, gitCommandRunner, workingDirectoryValidator);
     correlationIdFilter = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
     idempotencyServiceImpl = new IdempotencyService(webhookDeliveryRepository);
@@ -211,9 +218,8 @@ public class BaseUnit {
     payload = GitHubWebhookPayloadModel.basic();
     project = ProjectModel.basic(tempDir.getAbsolutePath());
     projectDetailsDto = ProjectDetailsDtoModel.basic();
-    workingDir = new File(project.getLocalPath());
 
-    when(branchPolicy.isTriggerRef(mainBranch)).thenReturn(true);
+    when(branchPolicy.isNonTriggerRef(mainBranch)).thenReturn(false);
     when(buildExecutor.build(any(BuildTool.class), any(File.class)))
         .thenReturn(buildExecutionResult);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
@@ -223,7 +229,7 @@ public class BaseUnit {
     when(buildRepository.findByProject(project)).thenReturn(of(build));
     when(buildService.createQueuedBuild(project)).thenReturn(build);
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
-    when(idempotencyService.firstSeen("id")).thenReturn(true);
+    when(idempotencyService.isDuplicate("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
