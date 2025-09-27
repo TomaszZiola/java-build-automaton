@@ -29,7 +29,7 @@ This is not just another CRUD application—it's a practical tool that solves a 
 
 ## 🛠️ Tech Stack
 
-* Backend: Java 21, Spring Boot 3.5.4
+* Backend: Java 25, Spring Boot 3.5.6
 * Build Tool: Gradle (Kotlin DSL)
 * API: Spring Web (REST), Spring Boot Actuator
 * Frontend: Thymeleaf (dashboard and project details)
@@ -46,7 +46,7 @@ To run the project locally, follow the steps below.
 
 ### Prerequisites
 
-* Java JDK 21 or newer
+* Java JDK 25 or newer
 * Git
 * [Ngrok](https://ngrok.com/) (for testing webhooks locally)
 * A configured test repository on GitHub
