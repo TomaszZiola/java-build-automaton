@@ -81,8 +81,7 @@ import org.springframework.web.context.request.RequestContextHolder;
   "PMD.TooManyFields",
   "PMD.CouplingBetweenObjects",
   "PMD.NcssCount",
-  "PMD.FieldNamingConventions",
-  "PMD.DoubleBraceInitialization"
+  "PMD.FieldNamingConventions"
 })
 public class BaseUnit {
 

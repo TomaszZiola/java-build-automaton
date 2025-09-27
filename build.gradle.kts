@@ -1,8 +1,8 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.5.4"
+    id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.diffplug.spotless") version "7.2.1"
+    id("com.diffplug.spotless") version "8.0.0"
     pmd
     jacoco
 }
@@ -17,7 +17,7 @@ jacoco {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -67,7 +67,7 @@ spotless {
 
 pmd {
     isConsoleOutput = true
-    toolVersion = "7.12.0"
+    toolVersion = "7.14.0"
     rulesMinimumPriority = 5
     ruleSetFiles = files("config/pmd/ruleset.xml")
 }
@@ -116,4 +116,3 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     classDirectories.setFrom(tasks.jacocoTestReport.get().classDirectories)
     executionData.setFrom(tasks.jacocoTestReport.get().executionData)
 }
-

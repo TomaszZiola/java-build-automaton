@@ -56,8 +56,8 @@ class ProcessExecutorTest extends BaseUnit {
     assertThat(result.logs())
         .isEqualTo(
             "[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\""
-                + ": error=2, "
-                + "No such file or directory\n");
+                + ": Exec failed, error: 2 "
+                + "(No such file or directory) \n");
   }
 
   @Test
@@ -76,6 +76,6 @@ class ProcessExecutorTest extends BaseUnit {
     assertThat(result.isSuccess()).isFalse();
     assertThat(result.logs()).isEqualTo("[[ERROR]] Interrupted: stop\n");
 
-    Thread.interrupted();
+    assertThat(Thread.interrupted()).isTrue();
   }
 }
