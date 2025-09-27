@@ -9,11 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
-import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,6 +46,7 @@ public class Project {
 
   private String name;
   private String repositoryName;
+
   @Column(name = "repository_url")
   private String repositoryUrl;
 

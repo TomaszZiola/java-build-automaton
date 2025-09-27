@@ -39,7 +39,11 @@ public class GlobalExceptionHandler {
       final WorkspaceException exception, final HttpServletRequest request) {
     final var errorResponse =
         new ErrorResponse(
-            now(), BAD_REQUEST.value(), "Workspace not prepared", exception.getMessage(), request.getRequestURI());
+            now(),
+            BAD_REQUEST.value(),
+            "Workspace not prepared",
+            exception.getMessage(),
+            request.getRequestURI());
     return new ResponseEntity<>(errorResponse, NOT_FOUND);
   }
 }

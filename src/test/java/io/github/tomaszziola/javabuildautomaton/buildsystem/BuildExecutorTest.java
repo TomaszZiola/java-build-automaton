@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
+import java.io.File;
+import java.nio.file.Files;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,5 +38,20 @@ class BuildExecutorTest extends BaseUnit {
     // then
     verify(processExecutor).execute(tempDir, "gradle", "clean", "build");
     assertThat(result).isSameAs(pullExecutionResult);
+  }
+
+  @Test
+  @DisplayName("Given gradlew present and executable, when building, then use wrapper script path")
+  void usesGradlewWhenPresentAndExecutable() throws Exception {
+    // given
+    final File gradlew = new File(tempDir, "gradlew");
+    Files.writeString(gradlew.toPath(), "#!/bin/sh\necho gradle\n");
+    assertThat(gradlew.setExecutable(true)).isTrue();
+
+    // when
+    buildExecutorImpl.build(GRADLE, tempDir);
+
+    // then
+    verify(processExecutor).execute(tempDir, gradlew.getPath(), "clean", "build");
   }
 }

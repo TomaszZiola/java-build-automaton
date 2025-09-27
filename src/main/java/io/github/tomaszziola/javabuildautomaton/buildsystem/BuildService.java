@@ -102,9 +102,7 @@ public class BuildService {
   @Transactional
   public void executeBuild(final long buildId) {
     final var build =
-        buildRepository
-            .findById(buildId)
-            .orElseThrow(() -> new BuildNotFoundException(buildId));
+        buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
     final var project = build.getProject();
     LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getName());
     buildLifecycleService.markInProgress(build);

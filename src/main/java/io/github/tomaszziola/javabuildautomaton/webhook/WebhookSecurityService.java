@@ -5,6 +5,7 @@ import static java.util.Locale.ROOT;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -13,7 +14,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,14 +27,13 @@ public class WebhookSecurityService {
   private final Optional<SecretKeySpec> hmacKey;
   private final boolean allowMissingSecret;
 
-  public WebhookSecurityService(
-      @Value("${app.github.webhook-secret:}") final String webhookSecret,
-      @Value("${app.github.allow-missing-webhook-secret:false}") final boolean allowMissingSecret) {
+  public WebhookSecurityService(final WebhookProperties properties) {
+    this.allowMissingSecret = properties.isAllowMissingSecret();
+    final String webhookSecret = properties.getWebhookSecret();
     this.hmacKey =
         (webhookSecret == null || webhookSecret.isBlank())
             ? empty()
             : of(new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_SHA256));
-    this.allowMissingSecret = allowMissingSecret;
   }
 
   public boolean isSignatureValid(final String signatureHeader, final byte[] payloadBody) {
@@ -80,7 +79,7 @@ public class WebhookSecurityService {
       final var expectedSigBytes = mac.doFinal(payloadBody);
 
       return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
-    } catch (final NoSuchAlgorithmException | java.security.InvalidKeyException e) {
+    } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
       LOGGER.error("Error while verifying webhook signature", e);
       return false;
     }

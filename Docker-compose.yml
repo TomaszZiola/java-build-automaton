@@ -28,7 +28,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      APP_GITHUB_WEBHOOK_SECRET: ${APP_GITHUB_WEBHOOK_SECRET}
+      WEBHOOK_WEBHOOK_SECRET: ${WEBHOOK_WEBHOOK_SECRET}
       SPRING_APPLICATION_JSON: '{"workspace":{"baseDir":"/workspaces"}}'
       JAVA_OPTS: "-Dserver.address=0.0.0.0 -Dapp.build.timeout.seconds=600"
     volumes:

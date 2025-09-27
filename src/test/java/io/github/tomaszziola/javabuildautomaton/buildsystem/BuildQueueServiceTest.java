@@ -230,6 +230,25 @@ class BuildQueueServiceTest extends BaseUnit {
     assertDoesNotThrow(buildQueueServiceImpl::stopWorker);
   }
 
+  @Test
+  @DisplayName("Given full queue, when enqueuing, then drop and log warning")
+  void dropsWhenQueueFull() {
+    // given
+    buildProperties.getQueue().setCapacity(1);
+    buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
+
+    // when
+    buildQueueServiceImpl.enqueue(1L);
+    buildQueueServiceImpl.enqueue(2L);
+
+    // then
+    assertThat(
+            logAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .anyMatch(m -> m.contains("Queue full")))
+        .isTrue();
+  }
+
   private void execute() {
     buildQueueServiceImpl.stopWorker();
   }

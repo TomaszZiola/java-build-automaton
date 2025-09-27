@@ -19,18 +19,18 @@ public class WorkingDirectoryValidator {
   private final WorkspaceService workspaceService;
 
   @Autowired
-  public WorkingDirectoryValidator(final WorkspaceService workspaceService,
-      final BuildLifecycleService buildLifecycleService) {
+  public WorkingDirectoryValidator(
+      final WorkspaceService workspaceService, final BuildLifecycleService buildLifecycleService) {
     this.workspaceService = workspaceService;
     this.buildLifecycleService = buildLifecycleService;
   }
 
-  public ValidationResult prepareWorkspace(final Project project, final Build build,
-      final StringBuilder buildLog) {
+  public ValidationResult prepareWorkspace(
+      final Project project, final Build build, final StringBuilder buildLog) {
     final File workingDirectory;
     try {
       workingDirectory = resolveWorkspace(project);
-    } catch (RuntimeException ex) {
+    } catch (WorkspaceException ex) {
       onResolveFailure(project, build, buildLog);
       return new ValidationResult(false, null);
     }
@@ -42,8 +42,8 @@ public class WorkingDirectoryValidator {
     return projectWorkspace.toFile();
   }
 
-  private ValidationResult validateWorkspace(final File dir, final Project project, final Build build,
-      final StringBuilder buildLog) {
+  private ValidationResult validateWorkspace(
+      final File dir, final Project project, final Build build, final StringBuilder buildLog) {
     if (!dir.exists() || !dir.isDirectory()) {
       buildLog.append("\nBUILD FAILED:\nNo such file or directory");
       buildLifecycleService.complete(build, FAILED, buildLog);
@@ -53,13 +53,14 @@ public class WorkingDirectoryValidator {
     return new ValidationResult(true, dir);
   }
 
-  private void onResolveFailure(final Project project, final Build build, final StringBuilder buildLog) {
+  private void onResolveFailure(
+      final Project project, final Build build, final StringBuilder buildLog) {
     buildLog.append("\nBUILD FAILED:\nNo such file or directory");
     buildLifecycleService.complete(build, FAILED, buildLog);
     try {
       final var workspacePath = workspaceService.resolve(project);
       logWorkingDirError(project, workspacePath.toAbsolutePath().toString());
-    } catch (RuntimeException inner) {
+    } catch (WorkspaceException inner) {
       logWorkingDirError(project, null);
     }
   }
@@ -68,7 +69,8 @@ public class WorkingDirectoryValidator {
     if (pathText != null) {
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
-          project.getName(), pathText);
+          project.getName(),
+          pathText);
     } else {
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory",

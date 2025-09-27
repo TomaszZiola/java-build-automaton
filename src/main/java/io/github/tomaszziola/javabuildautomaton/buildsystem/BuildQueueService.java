@@ -1,7 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static java.lang.Thread.currentThread;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -16,13 +15,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 @SuppressWarnings("PMD.CloseResource")
-@EnableConfigurationProperties(BuildProperties.class)
 public class BuildQueueService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildQueueService.class);
@@ -67,7 +64,7 @@ public class BuildQueueService {
               thread.setDaemon(false);
               return thread;
             });
-    buildExecutor = newCachedThreadPool();
+    buildExecutor = newVirtualThreadPerTaskExecutor();
 
     try {
       workerExecutor.submit(this::runWorkerLoop);
@@ -99,8 +96,6 @@ public class BuildQueueService {
           LOGGER.error("Build executor rejected task for id={}", buildId, rex);
           permits.release();
           SECONDS.sleep(1);
-        } catch (Exception e) {
-          LOGGER.error("Error executing build id={}", buildId, e);
         }
       } catch (InterruptedException ie) {
         currentThread().interrupt();

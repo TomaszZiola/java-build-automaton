@@ -27,18 +27,18 @@ class WorkspaceServiceTest {
     service = new WorkspaceService(props);
   }
 
-  private static Project projectWithSlug(String slug) {
-    final var p = new Project();
-    p.setSlug(slug);
-    return p;
+  private static Project projectWithSlug(final String slug) {
+    final var project = new Project();
+    project.setSlug(slug);
+    return project;
   }
 
   @Test
   @DisplayName("Given missing baseDir, when resolving, then throw WorkspaceException")
   void missingBaseDirFails() {
-    final var p = projectWithSlug("p1");
+    final var project = projectWithSlug("p1");
     props.setBaseDir(null);
-    assertThatThrownBy(() -> service.resolve(p))
+    assertThatThrownBy(() -> service.resolve(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("workspace.baseDir not configured");
   }
@@ -46,9 +46,9 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given blank baseDir, when resolving, then throw WorkspaceException")
   void blankBaseDirFails() {
-    final var p = projectWithSlug("p1");
+    final var project = projectWithSlug("p1");
     props.setBaseDir("  ");
-    assertThatThrownBy(() -> service.resolve(p))
+    assertThatThrownBy(() -> service.resolve(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("workspace.baseDir not configured");
   }
@@ -105,10 +105,10 @@ class WorkspaceServiceTest {
     assertThat(base.toFile().mkdirs()).isTrue();
     props.setBaseDir(base.toString());
 
-    final var p = new Project();
-    p.setSlug(null);
+    final var project = new Project();
+    project.setSlug(null);
 
-    assertThatThrownBy(() -> service.resolve(p))
+    assertThatThrownBy(() -> service.resolve(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("slug is missing");
   }
@@ -120,8 +120,8 @@ class WorkspaceServiceTest {
     createDirectories(base);
     props.setBaseDir(base.toString());
 
-    final var p = projectWithSlug("proj-1");
-    final Path result = service.ensureExists(p);
+    final var project = projectWithSlug("proj-1");
+    final Path result = service.ensureExists(project);
 
     assertThat(Files.isDirectory(result)).isTrue();
     final Path canonicalBase = base.toRealPath();
