@@ -22,4 +22,16 @@ class GitCommandRunnerTest extends BaseUnit {
     verify(processExecutor).execute(tempDir, "git", "pull");
     assertThat(result).isSameAs(pullExecutionResult);
   }
+
+  @Test
+  @DisplayName(
+      "Given repository and target dir, when cloning, then delegate to process executor and propagate result")
+  void delegatesToProcessExecutorWhenCloning() {
+    // when
+    final var result = gitCommandRunnerImpl.cloneRepo(repositoryName, tempDir);
+
+    // then
+    verify(processExecutor).execute(tempDir, "git", "clone", repositoryName, ".");
+    assertThat(result).isSameAs(cloneExecutionResult);
+  }
 }

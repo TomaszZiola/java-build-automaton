@@ -15,13 +15,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 @SuppressWarnings("PMD.CloseResource")
-@EnableConfigurationProperties(BuildProperties.class)
 public class BuildQueueService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildQueueService.class);

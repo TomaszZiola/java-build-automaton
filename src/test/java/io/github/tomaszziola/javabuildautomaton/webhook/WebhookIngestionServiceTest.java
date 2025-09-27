@@ -2,9 +2,9 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.FOUND;
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.ALLOW;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.DUPLICATE;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.NON_TRIGGER_REF;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.ALLOW;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.DUPLICATE;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.NON_TRIGGER_REF;
 import static java.util.Optional.empty;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.verify;

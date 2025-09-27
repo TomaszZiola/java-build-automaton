@@ -13,7 +13,7 @@ public class IdempotencyService {
     this.repository = repository;
   }
 
-  public boolean firstSeen(final String deliveryId) {
+  private boolean registerIfFirstSeen(final String deliveryId) {
     if (deliveryId == null || deliveryId.isBlank()) {
       return true;
     }
@@ -23,5 +23,9 @@ public class IdempotencyService {
     } catch (DataIntegrityViolationException exception) {
       return false;
     }
+  }
+
+  public boolean isDuplicate(final String deliveryId) {
+    return !registerIfFirstSeen(deliveryId);
   }
 }

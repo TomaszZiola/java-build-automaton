@@ -82,7 +82,7 @@ class CorrelationIdFilterTest extends BaseUnit {
     try {
       UUID.fromString(value);
     } catch (IllegalArgumentException ex) {
-      fail("Correlation ID is not a valid UUID: " + value);
+      fail("Correlation ID is not a isValid UUID: " + value);
     }
   }
 }

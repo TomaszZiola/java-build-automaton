@@ -2,7 +2,6 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,11 +11,16 @@ public class WebhookStartupVerifier {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebhookStartupVerifier.class);
 
-  @Bean
-  ApplicationRunner verifyWebhookSecretOnStartup(
-      @Value("${app.github.webhook-secret:}") final String secret,
-      @Value("${app.github.allow-missing-webhook-secret:false}") final boolean allowMissing) {
+  private final String secret;
+  private final boolean allowMissing;
 
+  public WebhookStartupVerifier(final WebhookProperties properties) {
+    this.secret = properties.getWebhookSecret();
+    this.allowMissing = properties.isAllowMissingSecret();
+  }
+
+  @Bean
+  ApplicationRunner verifyWebhookSecretOnStartup() {
     return args -> {
       if ((secret == null || secret.isBlank()) && !allowMissing) {
         final String msg =

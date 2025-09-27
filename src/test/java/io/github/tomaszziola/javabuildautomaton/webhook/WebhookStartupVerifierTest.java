@@ -8,6 +8,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,10 +33,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
   @DisplayName("Given empty secret and allowMissing=false, when verifying, then throw exception")
   void throwsExceptionWhenSecretEmptyAndNotAllowMissing() {
     // given
-    final String secret = "";
-    final boolean allowMissing = false;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic("");
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -49,10 +49,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
   @DisplayName("Given null secret and allowMissing=false, when verifying, then throw exception")
   void throwsExceptionWhenSecretNullAndNotAllowMissing() {
     // given
-    final String secret = null;
-    final boolean allowMissing = false;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic(null);
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -62,12 +61,11 @@ class WebhookStartupVerifierTest extends BaseUnit {
 
   @Test
   @DisplayName("Given blank secret and allowMissing=false, when verifying, then throw exception")
-  void throwsExceptionWhenSecretBlankAndNotAllowMissing() throws Exception {
+  void throwsExceptionWhenSecretBlankAndNotAllowMissing() {
     // given
-    final String secret = "   ";
-    final boolean allowMissing = false;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic("   ");
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -83,10 +81,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
       "Given empty secret and allowMissing=true, when verifying, then log warning and succeed")
   void logsWarningWhenSecretEmptyAndAllowMissing() throws Exception {
     // given
-    final String secret = "";
-    final boolean allowMissing = true;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic("", true);
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -106,10 +103,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
       "Given null secret and allowMissing=true, when verifying, then log warning and succeed")
   void logsWarningWhenSecretNullAndAllowMissing() throws Exception {
     // given
-    final String secret = null;
-    final boolean allowMissing = true;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic(null, true);
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -128,10 +124,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
   @DisplayName("Given configured secret, when verifying, then log info and succeed")
   void logsInfoWhenSecretConfigured() throws Exception {
     // given
-    final String secret = "my-secret-key";
-    final boolean allowMissing = false;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -149,10 +142,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
       "Given configured secret with allowMissing=true, when verifying, then log info and succeed")
   void logsInfoWhenSecretConfiguredEvenWithAllowMissing() throws Exception {
     // given
-    final String secret = "my-secret-key";
-    final boolean allowMissing = true;
-    final ApplicationRunner runner =
-        webhookStartupVerifierImpl.verifyWebhookSecretOnStartup(secret, allowMissing);
+    webhookProperties = WebhookPropertiesModel.basic("my secret key", true);
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);

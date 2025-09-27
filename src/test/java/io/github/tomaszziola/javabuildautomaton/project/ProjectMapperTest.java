@@ -20,7 +20,6 @@ class ProjectMapperTest extends BaseUnit {
     assertThat(result.id()).isEqualTo(1L);
     assertThat(result.name()).isEqualTo("test-project-from-db");
     assertThat(result.repositoryName()).isEqualTo("TomaszZiola/test");
-    assertThat(result.localPath()).isEqualTo(tempDir.getAbsolutePath());
     assertThat(result.buildTool()).isEqualTo(GRADLE);
   }
 }

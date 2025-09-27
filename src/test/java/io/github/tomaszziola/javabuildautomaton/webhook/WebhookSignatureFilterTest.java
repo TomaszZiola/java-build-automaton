@@ -100,7 +100,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
 
   @Test
   @DisplayName(
-      "Given POST /webhook with valid signature, when filtering, then forward request and wrap it")
+      "Given POST /webhook with isValid signature, when filtering, then forward request and wrap it")
   void forwardsAndWrapsForValidSignature() throws Exception {
     // given
     httpServletRequest.setMethod(postMethod);
@@ -124,7 +124,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
 
   @Test
   @DisplayName(
-      "Given POST /webhook with valid signature, when filtering, then allow downstream to read body")
+      "Given POST /webhook with isValid signature, when filtering, then allow downstream to read body")
   void allowsDownstreamToReadBodyForValidSignature() throws Exception {
     // given
     httpServletRequest.setMethod(postMethod);

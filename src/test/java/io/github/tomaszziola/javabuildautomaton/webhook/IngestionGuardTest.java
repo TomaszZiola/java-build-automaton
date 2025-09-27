@@ -1,8 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.ALLOW;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.DUPLICATE;
-import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard.Outcome.NON_TRIGGER_REF;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.ALLOW;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.DUPLICATE;
+import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.NON_TRIGGER_REF;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -17,7 +17,7 @@ class IngestionGuardTest extends BaseUnit {
   void shouldReturnDuplicate_whenNotFirstSeen() {
     // given
     when(requestHeaderAccessor.deliveryId()).thenReturn("id");
-    when(idempotencyService.firstSeen("id")).thenReturn(false);
+    when(idempotencyService.isDuplicate("id")).thenReturn(true);
 
     // when & then
     assertThat(ingestionGuardImpl.check("refs/heads/main")).isEqualTo(DUPLICATE);
@@ -28,7 +28,7 @@ class IngestionGuardTest extends BaseUnit {
   void shouldReturnNonTrigger_whenRefNotAllowed() {
     // given
     when(requestHeaderAccessor.deliveryId()).thenReturn("id");
-    when(branchPolicy.isTriggerRef("refs/heads/feat")).thenReturn(false);
+    when(branchPolicy.isNonTriggerRef("refs/heads/feat")).thenReturn(true);
 
     // when & then
     assertThat(ingestionGuardImpl.check("refs/heads/feat")).isEqualTo(NON_TRIGGER_REF);

@@ -11,7 +11,7 @@ public class BranchPolicy {
   private static final String REF_MASTER = "refs/heads/master";
   private static final Set<String> TRIGGER_REFS = of(REF_MAIN, REF_MASTER);
 
-  public boolean isTriggerRef(final String ref) {
-    return ref != null && TRIGGER_REFS.contains(ref);
+  public boolean isNonTriggerRef(final String ref) {
+    return ref == null || !TRIGGER_REFS.contains(ref);
   }
 }

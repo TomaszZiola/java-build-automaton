@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ProcessExecutorTest extends BaseUnit {
 
   @Test
-  @DisplayName("Given valid command, when executing, then capture output and return success")
+  @DisplayName("Given isValid command, when executing, then capture output and return success")
   void returnsSuccessAndCapturesOutputWhenCommandSucceeds() throws InterruptedException {
     // given
     when(process.getInputStream())
@@ -55,10 +55,8 @@ class ProcessExecutorTest extends BaseUnit {
     assertThat(result.isSuccess()).isFalse();
     assertThat(result.logs())
         .isEqualTo(
-            "[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\" "
-                + "(in directory \""
-                + tempDir.getAbsolutePath()
-                + "\"): error=2, "
+            "[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\""
+                + ": error=2, "
                 + "No such file or directory\n");
   }
 

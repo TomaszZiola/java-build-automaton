@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
+import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -23,13 +24,14 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Given missing secret allowed, when validating signature, then return true")
   void returnsTrueWhenMissingSecretAllowed() {
     // given
-    webhookSecurityServiceImpl = new WebhookSecurityService(null, true);
+    webhookProperties = WebhookPropertiesModel.basic(null, true);
+    webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isTrue();
   }
 
   @Test
-  @DisplayName("Given valid signature, when validating signature, then return true")
+  @DisplayName("Given isValid signature, when validating signature, then return true")
   void returnsTrueForValidSignature() {
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes))
@@ -48,7 +50,8 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Given empty secret allowed, when validating signature, then return true")
   void returnsTrueWhenEmptySecretAllowed() {
     // when && then
-    webhookSecurityServiceImpl = new WebhookSecurityService("", true);
+    webhookProperties = WebhookPropertiesModel.basic("", true);
+    webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isTrue();
   }
 
@@ -56,7 +59,8 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Given missing secret not allowed, when validating signature, then return false")
   void returnsFalseWhenMissingSecretNotAllowed() {
     // given
-    webhookSecurityServiceImpl = new WebhookSecurityService("", false);
+    webhookProperties = WebhookPropertiesModel.basic("");
+    webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     // when && then
     assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes)).isFalse();
   }

@@ -4,15 +4,20 @@ import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 @Entity
@@ -20,6 +25,7 @@ import org.hibernate.proxy.HibernateProxy;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Project {
 
   @Id
@@ -27,12 +33,25 @@ public class Project {
   @GeneratedValue(strategy = SEQUENCE, generator = "project_sq")
   private Long id;
 
-  private String name;
-  private String repositoryName;
-  private String localPath;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
+
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  private Instant updatedAt;
 
   @Enumerated(STRING)
   private BuildTool buildTool;
+
+  private String name;
+  private String repositoryName;
+
+  @Column(name = "repository_url")
+  private String repositoryUrl;
+
+  @Column(nullable = false)
+  private String slug;
 
   @Override
   public boolean equals(final Object other) {

@@ -12,6 +12,7 @@ import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildLifecycleService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildOrchestrator;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildProperties;
@@ -24,17 +25,20 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.GitCommandRunner;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkingDirectoryValidator;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
 import io.github.tomaszziola.javabuildautomaton.models.ApiResponseModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildModel;
+import io.github.tomaszziola.javabuildautomaton.models.BuildPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildSummaryDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ExecutionResultModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
+import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectApiController;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
@@ -48,6 +52,7 @@ import io.github.tomaszziola.javabuildautomaton.webhook.RequestHeaderAccessor;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookDeliveryRepository;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookIngestionService;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookProperties;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
@@ -85,6 +90,7 @@ public class BaseUnit {
 
   @Mock protected BranchPolicy branchPolicy;
   @Mock protected BuildExecutor buildExecutor;
+  @Mock protected BuildLifecycleService buildLifecycleService;
   @Mock protected BuildMapper buildMapper;
   @Mock protected BuildOrchestrator buildOrchestrator;
   @Mock protected BuildQueueService buildQueueService;
@@ -104,13 +110,13 @@ public class BaseUnit {
   @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
   @Mock protected WebhookIngestionService webhookIngestionService;
   @Mock protected WebhookSecurityService webhookSecurityService;
+  @Mock protected WorkingDirectoryValidator workingDirectoryValidator;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
   protected BuildExecutor buildExecutorImpl;
   protected BuildMapper buildMapperImpl;
   protected BuildOrchestrator buildOrchestratorImpl;
-  protected BuildProperties buildProperties;
   protected BuildQueueService buildQueueServiceImpl;
   protected BuildService buildServiceImpl;
   protected CorrelationIdFilter correlationIdFilter;
@@ -131,17 +137,21 @@ public class BaseUnit {
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
   protected WebhookSecurityService webhookSecurityServiceImpl;
   protected WebhookStartupVerifier webhookStartupVerifierImpl;
+  protected WebhookProperties webhookConfiguration;
 
   protected ApiResponse apiResponse;
   protected Build build;
   protected BuildDetailsDto buildDetailsDto;
+  protected BuildProperties buildProperties;
   protected BuildSummaryDto buildSummaryDto;
   protected ExecutionResult buildExecutionResult;
   protected ExecutionResult pullExecutionResult;
+  protected ExecutionResult cloneExecutionResult;
   protected File workingDir;
   protected GitHubWebhookPayload payload;
   protected Project project;
   protected ProjectDetailsDto projectDetailsDto;
+  protected WebhookProperties webhookProperties;
 
   protected String API_PATH = "/api/projects";
   protected String bodyJson = "{\"msg\":\"hi\"}";
@@ -153,35 +163,48 @@ public class BaseUnit {
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected String mainBranch = "refs/heads/main";
   protected String masterBranch = "refs/heads/master";
-  protected String nonExistentPath = new File(tempDir, "does-not-exist").getAbsolutePath();
   protected Long projectId = 1L;
   protected Long nonExistentProjectId = 9L;
   protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
   protected String postMethod = "POST";
-  protected String secret = "top-secret";
   protected String validSha256HeaderValue = "sha256=" + expectedHex;
   protected String validSha256HeaderName = "X-Hub-Signature-256";
   protected String WEBHOOK_PATH = "/webhook";
 
   @BeforeEach
   void mockResponses() throws IOException {
+
+    apiResponse = ApiResponseModel.basic();
+    build = BuildModel.basic();
+    buildDetailsDto = BuildDetailsDtoModel.basic();
+    buildExecutionResult = ExecutionResultModel.basic("build");
+    buildProperties = BuildPropertiesModel.basic();
+    buildSummaryDto = BuildSummaryDtoModel.basic();
+    pullExecutionResult = ExecutionResultModel.basic();
+    payload = GitHubWebhookPayloadModel.basic();
+    project = ProjectModel.basic();
+    projectDetailsDto = ProjectDetailsDtoModel.basic();
+    webhookProperties = WebhookPropertiesModel.basic();
+
     buildCaptor = ArgumentCaptor.forClass(Build.class);
     branchPolicyImpl = new BranchPolicy();
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildMapperImpl = new BuildMapper();
     buildOrchestratorImpl = new BuildOrchestrator(buildQueueService, buildService);
-    buildProperties =
-        new BuildProperties() {
-          {
-            setMaxParallel(2);
-            getQueue().setCapacity(3);
-          }
-        };
+
     buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
-    buildServiceImpl = new BuildService(buildExecutor, buildRepository, gitCommandRunner);
+    buildServiceImpl =
+        new BuildService(
+            buildExecutor,
+            buildLifecycleService,
+            buildRepository,
+            gitCommandRunner,
+            workingDirectoryValidator);
     correlationIdFilter = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
+    httpServletRequest = new MockHttpServletRequest();
+    httpServletResponse = new MockHttpServletResponse();
     idempotencyServiceImpl = new IdempotencyService(webhookDeliveryRepository);
     ingestionGuardImpl =
         new IngestionGuard(branchPolicy, idempotencyService, requestHeaderAccessor);
@@ -192,28 +215,16 @@ public class BaseUnit {
     projectServiceImpl =
         new ProjectService(buildMapper, buildRepository, projectMapper, projectRepository);
     requestHeaderAccessorImpl = new RequestHeaderAccessor();
-    httpServletRequest = new MockHttpServletRequest();
-    httpServletResponse = new MockHttpServletResponse();
     webhookControllerImpl = new WebhookController(webhookIngestionService);
-    webUiControllerImpl = new WebUiController(projectService);
     webhookIngestionServiceImpl =
         new WebhookIngestionService(buildOrchestrator, ingestionGuard, projectRepository);
+    webhookConfiguration = new WebhookProperties();
+    webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
-    webhookSecurityServiceImpl = new WebhookSecurityService(secret, false);
-    webhookStartupVerifierImpl = new WebhookStartupVerifier();
+    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
+    webUiControllerImpl = new WebUiController(projectService);
 
-    apiResponse = ApiResponseModel.basic();
-    build = BuildModel.basic();
-    buildDetailsDto = BuildDetailsDtoModel.basic();
-    buildExecutionResult = ExecutionResultModel.basic("build");
-    buildSummaryDto = BuildSummaryDtoModel.basic();
-    pullExecutionResult = ExecutionResultModel.basic();
-    payload = GitHubWebhookPayloadModel.basic();
-    project = ProjectModel.basic(tempDir.getAbsolutePath());
-    projectDetailsDto = ProjectDetailsDtoModel.basic();
-    workingDir = new File(project.getLocalPath());
-
-    when(branchPolicy.isTriggerRef(mainBranch)).thenReturn(true);
+    when(branchPolicy.isNonTriggerRef(mainBranch)).thenReturn(false);
     when(buildExecutor.build(any(BuildTool.class), any(File.class)))
         .thenReturn(buildExecutionResult);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
@@ -223,7 +234,7 @@ public class BaseUnit {
     when(buildRepository.findByProject(project)).thenReturn(of(build));
     when(buildService.createQueuedBuild(project)).thenReturn(build);
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
-    when(idempotencyService.firstSeen("id")).thenReturn(true);
+    when(idempotencyService.isDuplicate("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
