@@ -116,4 +116,3 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     classDirectories.setFrom(tasks.jacocoTestReport.get().classDirectories)
     executionData.setFrom(tasks.jacocoTestReport.get().executionData)
 }
-
