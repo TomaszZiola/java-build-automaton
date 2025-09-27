@@ -1,7 +1,9 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
+import java.io.Serial;
+
 public class WorkspaceException extends RuntimeException {
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   public WorkspaceException(final String message) {
     super(message);

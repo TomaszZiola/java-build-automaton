@@ -61,7 +61,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
 
   @Test
   @DisplayName("Given blank secret and allowMissing=false, when verifying, then throw exception")
-  void throwsExceptionWhenSecretBlankAndNotAllowMissing() throws Exception {
+  void throwsExceptionWhenSecretBlankAndNotAllowMissing() {
     // given
     webhookProperties = WebhookPropertiesModel.basic("   ");
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);

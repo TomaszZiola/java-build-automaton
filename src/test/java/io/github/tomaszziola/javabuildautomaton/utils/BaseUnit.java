@@ -168,7 +168,6 @@ public class BaseUnit {
   protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
   protected String postMethod = "POST";
-  protected String secret = "top-secret";
   protected String validSha256HeaderValue = "sha256=" + expectedHex;
   protected String validSha256HeaderName = "X-Hub-Signature-256";
   protected String WEBHOOK_PATH = "/webhook";
