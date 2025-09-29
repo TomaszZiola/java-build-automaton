@@ -18,7 +18,7 @@ class CachedBodyRequestWrapperTest extends BaseUnit {
   void readsAllBytesAndMarksFinished() throws IOException {
     // given
     final var wrapper =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequestImpl, bodyBytes);
 
     // when
     try (ServletInputStream inputStream = wrapper.getInputStream()) {
@@ -41,13 +41,13 @@ class CachedBodyRequestWrapperTest extends BaseUnit {
       "Given request encoding absent or set, when getting character encoding, then return request encoding or UTF-8")
   void returnsRequestEncodingOrUtf8() {
     final var wrapperNoEnc =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequestImpl, bodyBytes);
 
     assertThat(wrapperNoEnc.getCharacterEncoding()).isEqualTo(UTF_8.name());
 
-    httpServletRequest.setCharacterEncoding(ISO_8859_1.name());
+    httpServletRequestImpl.setCharacterEncoding(ISO_8859_1.name());
     final var wrapperWithEnc =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, bodyBytes);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequestImpl, bodyBytes);
 
     assertThat(wrapperWithEnc.getCharacterEncoding()).isEqualTo(ISO_8859_1.name());
   }

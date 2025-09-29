@@ -44,7 +44,7 @@ class ProcessExecutorTest extends BaseUnit {
 
   @Test
   @DisplayName("Given non-existing command, when executing, then return failure with message")
-  void returnsFailureWithMessageWhenCommandNotFound() throws IOException, InterruptedException {
+  void returnsFailureWithMessageWhenCommandNotFound() throws IOException {
     // given
     when(processRunner.start(workingDir, "__definitely_not_a_command__"))
         .thenThrow(

@@ -3,6 +3,7 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.File;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +42,7 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given repo not initialized and clone succeeds, when building, then complete SUCCESS with aggregated logs")
-  void cloneSuccessThenBuildSuccess() throws Exception {
+  void cloneSuccessThenBuildSuccess() {
     // given
     final var logsCaptor = forClass(CharSequence.class);
 
@@ -60,7 +62,7 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given repo not initialized and clone fails, when building, then complete FAILED and do not build")
-  void cloneFailureStopsProcess() throws Exception {
+  void cloneFailureStopsProcess() {
     // given
     when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
         .thenReturn(new ExecutionResult(false, "clone failed\n"));
@@ -76,7 +78,7 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given repo initialized and pull fails, when building, then complete FAILED and do not build")
-  void pullFailureStopsProcess() throws Exception {
+  void pullFailureStopsProcess() {
     // given
     final var gitDir = new File(workingDir, ".git");
     assertThat(gitDir.mkdir()).isTrue();
@@ -94,7 +96,7 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given repo initialized and pull succeeds but build fails, when building, then complete FAILED")
-  void buildFailureAfterSuccessfulPull() throws Exception {
+  void buildFailureAfterSuccessfulPull() {
     // given
     when(buildExecutor.build(project.getBuildTool(), workingDir))
         .thenReturn(new ExecutionResult(false, "build failed\n"));
@@ -109,7 +111,7 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given repo initialized and pull/build succeed, when building, then complete SUCCESS with aggregated logs")
-  void pullSuccessThenBuildSuccess() throws Exception {
+  void pullSuccessThenBuildSuccess() {
     // given
     final File gitDir = new File(workingDir, ".git");
     assertThat(gitDir.mkdir()).isTrue();
@@ -140,11 +142,12 @@ class BuildServiceTest extends BaseUnit {
     verify(buildLifecycleService).markInProgress(build);
   }
 
-  //  @Test
-  //  @DisplayName(
-  //      "Given missing build id, when executing build by id, then throw BuildNotFoundException")
-  //  void executeBuildByIdNotFound() {
-  //    assertThatThrownBy(() -> buildServiceImpl.executeBuild(nonExistentBuildId))
-  //        .isInstanceOf(BuildNotFoundException.class);
-  //  }
+  @Test
+  @DisplayName(
+      "Given missing build id, when executing build by id, then throw BuildNotFoundException")
+  void executeBuildByIdNotFound() {
+    assertThatThrownBy(() -> buildServiceImpl.executeBuild(nonExistentBuildId))
+        .isInstanceOf(BuildNotFoundException.class)
+        .hasMessageContaining(nonExistentBuildId.toString());
+  }
 }

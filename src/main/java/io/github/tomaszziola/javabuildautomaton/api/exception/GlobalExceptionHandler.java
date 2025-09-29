@@ -44,6 +44,6 @@ public class GlobalExceptionHandler {
             "Workspace not prepared",
             exception.getMessage(),
             request.getRequestURI());
-    return new ResponseEntity<>(errorResponse, NOT_FOUND);
+    return new ResponseEntity<>(errorResponse, BAD_REQUEST);
   }
 }

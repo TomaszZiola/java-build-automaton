@@ -29,48 +29,51 @@ class WebhookSignatureFilterTest extends BaseUnit {
   @DisplayName("Given non-webhook request, when filtering, then forward without validation")
   void forwardsWithoutValidationForNonWebhookRequest() throws Exception {
     // given
-    httpServletRequest.setMethod("GET");
-    httpServletRequest.setRequestURI(API_PATH);
+    httpServletRequestImpl.setMethod("GET");
+    httpServletRequestImpl.setRequestURI(API_PATH);
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
     verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
-    verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
-    assertThat(httpServletResponse.getStatus()).isEqualTo(200);
+    verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
 
   @Test
   @DisplayName("Given GET /webhook request, when filtering, then forward without validation")
   void forwardsWithoutValidationForGetWebhook() throws Exception {
     // given
-    httpServletRequest.setMethod("GET");
-    httpServletRequest.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setMethod("GET");
+    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
     verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
-    verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
-    assertThat(httpServletResponse.getStatus()).isEqualTo(200);
+    verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
 
   @Test
   @DisplayName("Given POST non-webhook path, when filtering, then forward without validation")
   void forwardsWithoutValidationForPostNonWebhookPath() throws Exception {
     // given
-    httpServletRequest.setMethod(postMethod);
-    httpServletRequest.setRequestURI(API_PATH);
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(API_PATH);
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
     verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
-    verify(filterChain, times(1)).doFilter(httpServletRequest, httpServletResponse);
-    assertThat(httpServletResponse.getStatus()).isEqualTo(200);
+    verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
 
   @ParameterizedTest
@@ -80,22 +83,24 @@ class WebhookSignatureFilterTest extends BaseUnit {
       "Given POST /webhook with invalid header {0}, when filtering, then return 401 and stop chain")
   void returns401AndStopsChainForInvalidHeader(final String header) throws Exception {
     // given
-    httpServletRequest.setMethod(postMethod);
-    httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    httpServletRequest.setContent(bodyBytes);
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setContent(bodyBytes);
     if (header != null) {
-      httpServletRequest.addHeader(validSha256HeaderName, header);
+      httpServletRequestImpl.addHeader(validSha256HeaderName, header);
       when(webhookSecurityService.isSignatureValid(eq(header), any())).thenReturn(false);
     } else {
       when(webhookSecurityService.isSignatureValid(isNull(), any())).thenReturn(false);
     }
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    assertThat(httpServletResponse.getStatus()).isEqualTo(401);
-    verify(filterChain, never()).doFilter(any(HttpServletRequest.class), eq(httpServletResponse));
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(401);
+    verify(filterChain, never())
+        .doFilter(any(HttpServletRequest.class), eq(httpServletResponseImpl));
   }
 
   @Test
@@ -103,23 +108,24 @@ class WebhookSignatureFilterTest extends BaseUnit {
       "Given POST /webhook with isValid signature, when filtering, then forward request and wrap it")
   void forwardsAndWrapsForValidSignature() throws Exception {
     // given
-    httpServletRequest.setMethod(postMethod);
-    httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    httpServletRequest.setContent(bodyBytes);
-    httpServletRequest.addHeader(validSha256HeaderName, validSha256HeaderValue);
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setContent(bodyBytes);
+    httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
     when(webhookSecurityService.isSignatureValid(eq(validSha256HeaderValue), any()))
         .thenReturn(true);
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, filterChain);
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
     final var requestCaptor = forClass(HttpServletRequest.class);
-    verify(filterChain, times(1)).doFilter(requestCaptor.capture(), eq(httpServletResponse));
+    verify(filterChain, times(1)).doFilter(requestCaptor.capture(), eq(httpServletResponseImpl));
     final HttpServletRequest wrapped = requestCaptor.getValue();
-    assertThat(wrapped).isNotSameAs(httpServletRequest);
-    assertThat(httpServletResponse.getStatus()).isEqualTo(200);
+    assertThat(wrapped).isNotSameAs(httpServletRequestImpl);
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
 
   @Test
@@ -127,19 +133,19 @@ class WebhookSignatureFilterTest extends BaseUnit {
       "Given POST /webhook with isValid signature, when filtering, then allow downstream to read body")
   void allowsDownstreamToReadBodyForValidSignature() throws Exception {
     // given
-    httpServletRequest.setMethod(postMethod);
-    httpServletRequest.setRequestURI(WEBHOOK_PATH);
-    httpServletRequest.setContent(bodyJson.getBytes(UTF_8));
-    httpServletRequest.addHeader(validSha256HeaderName, validSha256HeaderValue);
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setContent(bodyJson.getBytes(UTF_8));
+    httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
     final var chain = new BodyReadingChain();
 
     // when
-    webhookSignatureFilterImpl.doFilter(httpServletRequest, httpServletResponse, chain);
+    webhookSignatureFilterImpl.doFilter(httpServletRequestImpl, httpServletResponseImpl, chain);
 
     // then
     assertThat(chain.capturedRequest).isInstanceOf(HttpServletRequest.class);
-    assertThat(chain.capturedRequest).isNotSameAs(httpServletRequest);
+    assertThat(chain.capturedRequest).isNotSameAs(httpServletRequestImpl);
     assertThat(chain.capturedBody).isEqualTo(bodyJson);
   }
 

@@ -64,4 +64,17 @@ class BuildLifecycleServiceTest extends BaseUnit {
     assertThat(build.getStatus()).isEqualTo(IN_PROGRESS);
     verify(buildRepository).save(build);
   }
+
+  @Test
+  @DisplayName("complete with null logs sets status and end time and keeps logs null")
+  void completeWithNullLogsSetsFieldsAndSaves() {
+    // when
+    buildLifecycleServiceImpl.complete(build, SUCCESS, null);
+
+    // then
+    assertThat(build.getStatus()).isEqualTo(SUCCESS);
+    assertThat(build.getEndTime()).isNotNull();
+    assertThat(build.getLogs()).isNull();
+    verify(buildRepository).save(build);
+  }
 }

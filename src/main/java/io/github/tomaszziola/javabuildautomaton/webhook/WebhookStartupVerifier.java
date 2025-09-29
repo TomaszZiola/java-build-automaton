@@ -21,7 +21,7 @@ public class WebhookStartupVerifier {
 
   @Bean
   ApplicationRunner verifyWebhookSecretOnStartup() {
-    return args -> {
+    return _ -> {
       if ((secret == null || secret.isBlank()) && !allowMissing) {
         final String msg =
             "Application misconfiguration: webhook.webhook-secret is empty but "

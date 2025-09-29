@@ -62,6 +62,7 @@ import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -100,9 +101,9 @@ public class BaseUnit {
   @Mock protected BuildService buildService;
   @Mock protected FilterChain filterChain;
   @Mock protected GitCommandRunner gitCommandRunner;
+  @Mock protected HttpServletRequest httpServletRequest;
   @Mock protected IdempotencyService idempotencyService;
   @Mock protected IngestionGuard ingestionGuard;
-  @Mock protected OutputCollector outputCollector;
   @Mock protected Process process;
   @Mock protected ProcessExecutor processExecutor;
   @Mock protected ProcessRunner processRunner;
@@ -123,14 +124,15 @@ public class BaseUnit {
   protected BuildOrchestrator buildOrchestratorImpl;
   protected BuildQueueService buildQueueServiceImpl;
   protected BuildService buildServiceImpl;
-  protected CorrelationIdFilter correlationIdFilter;
+  protected CorrelationIdFilter correlationIdFilterImpl;
   protected GitCommandRunner gitCommandRunnerImpl;
   protected IdempotencyService idempotencyServiceImpl;
   protected IngestionGuard ingestionGuardImpl;
   protected Model modelImpl;
-  protected MockHttpServletRequest httpServletRequest;
-  protected MockHttpServletResponse httpServletResponse;
+  protected MockHttpServletRequest httpServletRequestImpl;
+  protected MockHttpServletResponse httpServletResponseImpl;
   protected ProcessExecutor processExecutorImpl;
+  protected ProcessRunner processRunnerImpl;
   protected ProjectApiController projectApiControllerImpl;
   protected ProjectMapper projectMapperImpl;
   protected ProjectService projectServiceImpl;
@@ -208,15 +210,16 @@ public class BaseUnit {
             buildRepository,
             gitCommandRunner,
             workingDirectoryValidator);
-    correlationIdFilter = new CorrelationIdFilter();
+    correlationIdFilterImpl = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
-    httpServletRequest = new MockHttpServletRequest();
-    httpServletResponse = new MockHttpServletResponse();
+    httpServletRequestImpl = new MockHttpServletRequest();
+    httpServletResponseImpl = new MockHttpServletResponse();
     idempotencyServiceImpl = new IdempotencyService(webhookDeliveryRepository);
     ingestionGuardImpl =
         new IngestionGuard(branchPolicy, idempotencyService, requestHeaderAccessor);
     modelImpl = new ExtendedModelMap();
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
+    processRunnerImpl = new ProcessRunner();
     projectApiControllerImpl = new ProjectApiController(projectService);
     projectMapperImpl = new ProjectMapper();
     projectServiceImpl =
@@ -248,6 +251,7 @@ public class BaseUnit {
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
     when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
         .thenReturn(cloneExecutionResult);
+    when(httpServletRequest.getRequestURI()).thenReturn("/api/projects/123");
     when(idempotencyService.isDuplicate("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
