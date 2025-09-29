@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +20,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(process.waitFor()).thenReturn(0);
 
     // when
-    final ExecutionResult result = processExecutorImpl.execute(workingDir, cmd);
+    final var result = processExecutorImpl.execute(workingDir, cmd);
 
     // then
     assertThat(result.isSuccess()).isTrue();
@@ -34,7 +35,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(process.waitFor()).thenReturn(2);
 
     // when
-    final ExecutionResult result = processExecutorImpl.execute(workingDir, cmd);
+    final var result = processExecutorImpl.execute(workingDir, cmd);
 
     // then
     assertThat(result.isSuccess()).isFalse();
@@ -43,21 +44,23 @@ class ProcessExecutorTest extends BaseUnit {
 
   @Test
   @DisplayName("Given non-existing command, when executing, then return failure with message")
-  void returnsFailureWithMessageWhenCommandNotFound() {
+  void returnsFailureWithMessageWhenCommandNotFound() throws IOException, InterruptedException {
     // given
-    processExecutorImpl = new ProcessExecutor(new ProcessRunner(), new OutputCollector());
+    when(processRunner.start(workingDir, "__definitely_not_a_command__"))
+        .thenThrow(
+            new IOException(
+                "Cannot run program \"__definitely_not_a_command__\" (in directory \""
+                    + workingDir
+                    + "\"): Exec failed, error: 2 (No such file or directory)"));
 
     // when
-    final ExecutionResult result =
-        processExecutorImpl.execute(workingDir, "__definitely_not_a_command__");
+    final var result = processExecutorImpl.execute(workingDir, "__definitely_not_a_command__");
 
     // then
     assertThat(result.isSuccess()).isFalse();
     assertThat(result.logs())
-        .isEqualTo(
-            "[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\""
-                + ": Exec failed, error: 2 "
-                + "(No such file or directory) \n");
+        .startsWith("[[ERROR]] IO failure: Cannot run program \"__definitely_not_a_command__\"");
+    assertThat(result.logs()).contains(": Exec failed, error: 2 (No such file or directory)");
   }
 
   @Test
@@ -70,7 +73,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(processRunner.start(workingDir, "noop")).thenReturn(process);
 
     // when
-    final ExecutionResult result = processExecutorImpl.execute(workingDir, "noop");
+    final var result = processExecutorImpl.execute(workingDir, "noop");
 
     // then
     assertThat(result.isSuccess()).isFalse();

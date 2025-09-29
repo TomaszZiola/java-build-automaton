@@ -24,9 +24,9 @@ public class WebhookStartupVerifier {
     return args -> {
       if ((secret == null || secret.isBlank()) && !allowMissing) {
         final String msg =
-            "Application misconfiguration: app.github.webhook-secret is empty but "
-                + "app.github.allow-missing-webhook-secret=false. "
-                + "Set APP_GITHUB_WEBHOOK_SECRET or explicitly allow missing (ONLY for local debug).";
+            "Application misconfiguration: webhook.webhook-secret is empty but "
+                + "webhook.allow-missing-webhook-secret=false. "
+                + "Set WEBHOOK_WEBHOOK_SECRET or explicitly allow missing (ONLY for local debug).";
         LOGGER.error(msg);
         throw new MissingWebhookSecretException(msg);
       }

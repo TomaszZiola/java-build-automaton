@@ -82,10 +82,11 @@
     <thead>
     <tr>
       <th>ID</th>
-      <th>Repository URL</th>
       <th>Slug</th>
-      <th>Project Name</th>
+      <th>Created</th>
+      <th>Updated</th>
       <th>Repository</th>
+      <th>Repository URL</th>
       <th>Build Tool</th>
       <th>Actions</th>
     </tr>
@@ -93,10 +94,12 @@
     <tbody>
     <tr th:each="project : ${projects}">
       <td th:text="${project.id()}">1</td>
-      <td th:text="${project.repositoryUrl()}">1</td>
       <td th:text="${project.slug()}">1</td>
-      <td th:text="${project.name()}">My Awesome Project</td>
+      <td th:text="${project.updatedAt()}">1</td>
+      <td th:text="${project.createdAt()()}">1</td>
+      <td th:text="${project.slug()}">1</td>
       <td th:text="${project.repositoryName()}">user/repo</td>
+      <td th:text="${project.repositoryUrl()()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>
       <td>
         <a th:href="@{/projects/{id}(id=${project.id()})}">View Builds</a>

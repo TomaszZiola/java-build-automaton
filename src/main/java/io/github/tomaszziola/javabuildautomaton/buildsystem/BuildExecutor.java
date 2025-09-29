@@ -25,9 +25,13 @@ public class BuildExecutor {
 
   public ExecutionResult build(final BuildTool buildTool, final File workingDir) {
     return switch (buildTool) {
-      case MAVEN -> processExecutor.execute(workingDir, CMD_MVN, ARG_CLEAN, ARG_INSTALL);
+      case MAVEN -> runMaven(workingDir);
       case GRADLE -> runGradle(workingDir);
     };
+  }
+
+  private ExecutionResult runMaven(final File workingDir) {
+    return processExecutor.execute(workingDir, CMD_MVN, ARG_CLEAN, ARG_INSTALL);
   }
 
   private ExecutionResult runGradle(final File workingDir) {

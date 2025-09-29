@@ -1,9 +1,12 @@
 package io.github.tomaszziola.javabuildautomaton.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.createTempDirectory;
 import static java.util.List.of;
 import static java.util.Optional.empty;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 
@@ -19,12 +22,12 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildProperties;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildQueueService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ExecutionResult;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.GitCommandRunner;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.ValidationResult;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkingDirectoryValidator;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
@@ -99,6 +102,7 @@ public class BaseUnit {
   @Mock protected GitCommandRunner gitCommandRunner;
   @Mock protected IdempotencyService idempotencyService;
   @Mock protected IngestionGuard ingestionGuard;
+  @Mock protected OutputCollector outputCollector;
   @Mock protected Process process;
   @Mock protected ProcessExecutor processExecutor;
   @Mock protected ProcessRunner processRunner;
@@ -114,6 +118,7 @@ public class BaseUnit {
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
   protected BuildExecutor buildExecutorImpl;
+  protected BuildLifecycleService buildLifecycleServiceImpl;
   protected BuildMapper buildMapperImpl;
   protected BuildOrchestrator buildOrchestratorImpl;
   protected BuildQueueService buildQueueServiceImpl;
@@ -144,13 +149,13 @@ public class BaseUnit {
   protected BuildProperties buildProperties;
   protected BuildSummaryDto buildSummaryDto;
   protected ExecutionResult buildExecutionResult;
-  protected ExecutionResult pullExecutionResult;
   protected ExecutionResult cloneExecutionResult;
-  protected File workingDir;
+  protected ExecutionResult pullExecutionResult;
   protected GitHubWebhookPayload payload;
   protected Project project;
   protected ProjectDetailsDto projectDetailsDto;
   protected WebhookProperties webhookProperties;
+  protected File workingDir;
 
   protected String API_PATH = "/api/projects";
   protected String bodyJson = "{\"msg\":\"hi\"}";
@@ -167,6 +172,7 @@ public class BaseUnit {
   protected Long nonExistentBuildId = 9L;
   protected String repositoryName = "TomaszZiola/test";
   protected String postMethod = "POST";
+  protected String temp_prefix = "ws-";
   protected String validSha256HeaderValue = "sha256=" + expectedHex;
   protected String validSha256HeaderName = "X-Hub-Signature-256";
   protected String WEBHOOK_PATH = "/webhook";
@@ -180,18 +186,20 @@ public class BaseUnit {
     buildExecutionResult = ExecutionResultModel.basic("build");
     buildProperties = BuildPropertiesModel.basic();
     buildSummaryDto = BuildSummaryDtoModel.basic();
-    pullExecutionResult = ExecutionResultModel.basic();
+    cloneExecutionResult = ExecutionResultModel.basic("clone");
     payload = GitHubWebhookPayloadModel.basic();
     project = ProjectModel.basic();
     projectDetailsDto = ProjectDetailsDtoModel.basic();
+    pullExecutionResult = ExecutionResultModel.basic("pull");
     webhookProperties = WebhookPropertiesModel.basic();
+    workingDir = createTempDirectory(temp_prefix).toFile();
 
     buildCaptor = ArgumentCaptor.forClass(Build.class);
     branchPolicyImpl = new BranchPolicy();
     buildExecutorImpl = new BuildExecutor(processExecutor);
+    buildLifecycleServiceImpl = new BuildLifecycleService(buildRepository);
     buildMapperImpl = new BuildMapper();
     buildOrchestratorImpl = new BuildOrchestrator(buildQueueService, buildService);
-
     buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
     buildServiceImpl =
         new BuildService(
@@ -224,21 +232,30 @@ public class BaseUnit {
     webUiControllerImpl = new WebUiController(projectService);
 
     when(branchPolicy.isNonTriggerRef(mainBranch)).thenReturn(false);
-    when(buildExecutor.build(any(BuildTool.class), any(File.class)))
+    when(buildExecutor.build(project.getBuildTool(), workingDir))
+        .thenReturn(buildExecutionResult)
         .thenReturn(buildExecutionResult);
+    when(buildLifecycleService.createInProgress(project)).thenReturn(build);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
     when(buildMapper.toDetailsDto(build)).thenReturn(buildDetailsDto);
     when(buildRepository.findById(buildId)).thenReturn(Optional.of(build));
     when(buildRepository.findById(nonExistentBuildId)).thenReturn(empty());
     when(buildRepository.findByProject(project)).thenReturn(of(build));
+    when(buildRepository.save(any(Build.class))).thenAnswer(inv -> inv.getArgument(0));
     when(buildService.createQueuedBuild(project)).thenReturn(build);
+    when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
+        .thenReturn(cloneExecutionResult);
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
+    when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
+        .thenReturn(cloneExecutionResult);
     when(idempotencyService.isDuplicate("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "git", "pull")).thenReturn(pullExecutionResult);
+    when(processExecutor.execute(tempDir, "git", "clone", project.getRepositoryUrl(), "."))
+        .thenReturn(cloneExecutionResult);
     when(processRunner.start(workingDir, cmd)).thenReturn(process);
     when(projectMapper.toDetailsDto(project)).thenReturn(projectDetailsDto);
     when(projectRepository.findAll()).thenReturn(of(project));
@@ -259,6 +276,9 @@ public class BaseUnit {
     when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
         .thenReturn(true);
     when(webhookIngestionService.handleWebhook(payload)).thenReturn(apiResponse);
+    when(workingDirectoryValidator.prepareWorkspace(
+            eq(project), eq(build), isA(StringBuilder.class)))
+        .thenReturn(new ValidationResult(true, workingDir));
 
     RequestContextHolder.resetRequestAttributes();
   }

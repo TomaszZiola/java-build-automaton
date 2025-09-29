@@ -17,6 +17,7 @@ public final class BuildModel {
     build.setStartTime(parse("2025-08-22T11:10:10Z"));
     build.setEndTime(parse("2025-08-22T11:20:10Z"));
     build.setLogs("Everything worked good!");
+    build.setProject(ProjectModel.basic());
     return build;
   }
 

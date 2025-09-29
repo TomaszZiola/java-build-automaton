@@ -13,7 +13,7 @@ public class BuildProperties {
 
   @Setter
   @Min(1)
-  private int maxParallel = 3;
+  private int maxParallel;
 
   private final QueueProps queue = new QueueProps();
 
@@ -21,6 +21,6 @@ public class BuildProperties {
   @Getter
   public static class QueueProps {
     @Min(1)
-    private int capacity = 100;
+    private int capacity;
   }
 }

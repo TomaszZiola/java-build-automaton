@@ -48,12 +48,12 @@ public class BuildService {
   private void executeBuildSteps(final Project project, final Build build) {
     final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var validationResult =
+    final var workingDirectoryStatus =
         workingDirectoryValidator.prepareWorkspace(project, build, logBuilder);
-    if (!validationResult.isValid()) {
+    if (!workingDirectoryStatus.isValid()) {
       return;
     }
-    final var workingDirectory = validationResult.workingDirectory();
+    final var workingDirectory = workingDirectoryStatus.workingDirectory();
 
     if (!runGitSync(project, build, workingDirectory, logBuilder)) {
       return;
@@ -71,7 +71,7 @@ public class BuildService {
     final var gitResult =
         repoInitialized
             ? gitCommandRunner.pull(workingDirectory)
-            : gitCommandRunner.cloneRepo(project.getRepositoryUrl(), workingDirectory);
+            : gitCommandRunner.clone(project.getRepositoryUrl(), workingDirectory);
 
     logBuilder.append(gitResult.logs());
     if (!gitResult.isSuccess()) {

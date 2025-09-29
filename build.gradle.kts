@@ -98,6 +98,7 @@ tasks.jacocoTestReport {
                     "**/exception/**",
                     "**/entity/**",
                     "**/buildsystem/ProcessRunner*",
+                    "**/*Properties*"
                     )
             }
         })
