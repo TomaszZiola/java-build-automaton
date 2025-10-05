@@ -3,5 +3,6 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 public enum IngestionGuardResult {
   ALLOW,
   DUPLICATE,
-  NON_TRIGGER_REF
+  NON_TRIGGER_REF,
+  JAVA_OUTDATED
 }

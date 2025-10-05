@@ -1,11 +1,13 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import java.io.File;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class BuildExecutor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildExecutor.class);
@@ -19,10 +21,6 @@ public class BuildExecutor {
 
   private final ProcessExecutor processExecutor;
 
-  public BuildExecutor(final ProcessExecutor processExecutor) {
-    this.processExecutor = processExecutor;
-  }
-
   public ExecutionResult build(final BuildTool buildTool, final File workingDir) {
     return switch (buildTool) {
       case MAVEN -> runMaven(workingDir);
@@ -35,19 +33,22 @@ public class BuildExecutor {
   }
 
   private ExecutionResult runGradle(final File workingDir) {
-    final File gradlew = new File(workingDir, CMD_GRADLEW);
-    if (!gradlew.exists()) {
+    final var gradlew = new File(workingDir, CMD_GRADLEW);
+    if (!gradlew.exists() || !gradlew.isFile()) {
       return processExecutor.execute(workingDir, CMD_GRADLE, ARG_CLEAN, ARG_BUILD);
     }
-    if (!gradlew.canExecute()) {
-      final boolean madeExec = gradlew.setExecutable(true);
-      if (!madeExec) {
+
+    var executable = gradlew.canExecute();
+    if (!executable) {
+      executable = gradlew.setExecutable(true);
+      if (!executable) {
         LOGGER.warn(
             "Failed to set executable bit on '{}'. Falling back to 'gradle' command.",
-            gradlew.getPath());
+            gradlew.getAbsolutePath());
       }
     }
-    final String cmd = gradlew.canExecute() ? gradlew.getPath() : CMD_GRADLE;
+
+    final var cmd = executable ? gradlew.getAbsolutePath() : CMD_GRADLE;
     return processExecutor.execute(workingDir, cmd, ARG_CLEAN, ARG_BUILD);
   }
 }

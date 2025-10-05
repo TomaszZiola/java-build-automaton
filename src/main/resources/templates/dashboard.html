@@ -18,7 +18,7 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
       background-color: #ffffff;
       padding: 2em;
@@ -74,10 +74,22 @@
 <div class="container">
   <h1>Project Dashboard</h1>
 
-  <div th:if="${projects.isEmpty()}" class="no-projects">
-    <p>No projects have been configured yet.</p>
+  <div style="margin: 1em 0;">
+    <a href="/projects/new"
+       style="display:inline-block;background:#28a745;color:#fff;padding:10px 14px;border-radius:6px;font-weight:600;">
+      + New Project
+    </a>
   </div>
 
+  <div th:if="${projects.isEmpty()}" class="no-projects">
+    <p>No projects have been configured yet.</p>
+    <p>
+      <a href="/projects/new"
+         style="display:inline-block;background:#28a745;color:#fff;padding:10px 14px;border-radius:6px;font-weight:600;">
+        + Create your first project
+      </a>
+    </p>
+  </div>
   <table th:unless="${projects.isEmpty()}">
     <thead>
     <tr>
@@ -89,6 +101,7 @@
       <th>Repository URL</th>
       <th>Build Tool</th>
       <th>Actions</th>
+      <th>Builds</th>
     </tr>
     </thead>
     <tbody>
@@ -96,10 +109,10 @@
       <td th:text="${project.id()}">1</td>
       <td th:text="${project.slug()}">1</td>
       <td th:text="${project.updatedAt()}">1</td>
-      <td th:text="${project.createdAt()()}">1</td>
+      <td th:text="${project.createdAt()}">1</td>
       <td th:text="${project.slug()}">1</td>
       <td th:text="${project.repositoryName()}">user/repo</td>
-      <td th:text="${project.repositoryUrl()()}">user/repo</td>
+      <td th:text="${project.repositoryUrl()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>
       <td>
         <a th:href="@{/projects/{id}(id=${project.id()})}">View Builds</a>

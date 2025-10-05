@@ -13,7 +13,8 @@ import static org.mockito.quality.Strictness.LENIENT;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
-import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDetailsDto;
+import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
+import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildLifecycleService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
@@ -39,12 +40,13 @@ import io.github.tomaszziola.javabuildautomaton.models.BuildPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildSummaryDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ExecutionResultModel;
 import io.github.tomaszziola.javabuildautomaton.models.GitHubWebhookPayloadModel;
+import io.github.tomaszziola.javabuildautomaton.models.PostProjectDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
-import io.github.tomaszziola.javabuildautomaton.project.ProjectApiController;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
+import io.github.tomaszziola.javabuildautomaton.project.ProjectRestController;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
@@ -133,7 +135,7 @@ public class BaseUnit {
   protected MockHttpServletResponse httpServletResponseImpl;
   protected ProcessExecutor processExecutorImpl;
   protected ProcessRunner processRunnerImpl;
-  protected ProjectApiController projectApiControllerImpl;
+  protected ProjectRestController projectRestControllerImpl;
   protected ProjectMapper projectMapperImpl;
   protected ProjectService projectServiceImpl;
   protected RequestHeaderAccessor requestHeaderAccessorImpl;
@@ -154,8 +156,9 @@ public class BaseUnit {
   protected ExecutionResult cloneExecutionResult;
   protected ExecutionResult pullExecutionResult;
   protected GitHubWebhookPayload payload;
+  protected PostProjectDto postProjectDto;
   protected Project project;
-  protected ProjectDetailsDto projectDetailsDto;
+  protected ProjectDto projectDto;
   protected WebhookProperties webhookProperties;
   protected File workingDir;
 
@@ -190,8 +193,9 @@ public class BaseUnit {
     buildSummaryDto = BuildSummaryDtoModel.basic();
     cloneExecutionResult = ExecutionResultModel.basic("clone");
     payload = GitHubWebhookPayloadModel.basic();
+    postProjectDto = PostProjectDtoModel.basic();
     project = ProjectModel.basic();
-    projectDetailsDto = ProjectDetailsDtoModel.basic();
+    projectDto = ProjectDetailsDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic("pull");
     webhookProperties = WebhookPropertiesModel.basic();
     workingDir = createTempDirectory(temp_prefix).toFile();
@@ -201,7 +205,7 @@ public class BaseUnit {
     buildExecutorImpl = new BuildExecutor(processExecutor);
     buildLifecycleServiceImpl = new BuildLifecycleService(buildRepository);
     buildMapperImpl = new BuildMapper();
-    buildOrchestratorImpl = new BuildOrchestrator(buildQueueService, buildService);
+    buildOrchestratorImpl = new BuildOrchestrator(buildQueueService, buildLifecycleService);
     buildQueueServiceImpl = new BuildQueueService(buildService, buildProperties);
     buildServiceImpl =
         new BuildService(
@@ -220,7 +224,7 @@ public class BaseUnit {
     modelImpl = new ExtendedModelMap();
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
     processRunnerImpl = new ProcessRunner();
-    projectApiControllerImpl = new ProjectApiController(projectService);
+    projectRestControllerImpl = new ProjectRestController(projectService);
     projectMapperImpl = new ProjectMapper();
     projectServiceImpl =
         new ProjectService(buildMapper, buildRepository, projectMapper, projectRepository);
@@ -239,20 +243,20 @@ public class BaseUnit {
         .thenReturn(buildExecutionResult)
         .thenReturn(buildExecutionResult);
     when(buildLifecycleService.createInProgress(project)).thenReturn(build);
+    when(buildLifecycleService.createQueued(project)).thenReturn(build);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
     when(buildMapper.toDetailsDto(build)).thenReturn(buildDetailsDto);
     when(buildRepository.findById(buildId)).thenReturn(Optional.of(build));
     when(buildRepository.findById(nonExistentBuildId)).thenReturn(empty());
     when(buildRepository.findByProject(project)).thenReturn(of(build));
     when(buildRepository.save(any(Build.class))).thenAnswer(inv -> inv.getArgument(0));
-    when(buildService.createQueuedBuild(project)).thenReturn(build);
     when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
         .thenReturn(cloneExecutionResult);
     when(gitCommandRunner.pull(workingDir)).thenReturn(pullExecutionResult);
     when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
         .thenReturn(cloneExecutionResult);
     when(httpServletRequest.getRequestURI()).thenReturn("/api/projects/123");
-    when(idempotencyService.isDuplicate("id")).thenReturn(false);
+    when(idempotencyService.isDuplicateWebhook("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
@@ -261,16 +265,17 @@ public class BaseUnit {
     when(processExecutor.execute(tempDir, "git", "clone", project.getRepositoryUrl(), "."))
         .thenReturn(cloneExecutionResult);
     when(processRunner.start(workingDir, cmd)).thenReturn(process);
-    when(projectMapper.toDetailsDto(project)).thenReturn(projectDetailsDto);
+    when(projectMapper.toDetailsDto(project)).thenReturn(projectDto);
     when(projectRepository.findAll()).thenReturn(of(project));
     when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
     when(projectRepository.findById(nonExistentProjectId)).thenReturn(empty());
     when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
-    when(projectService.findAll()).thenReturn(of(projectDetailsDto));
+    when(projectService.saveProject(postProjectDto)).thenReturn(projectDto);
+    when(projectService.findAll()).thenReturn(of(projectDto));
     when(projectService.findBuildDetailsById(buildId)).thenReturn(buildDetailsDto);
     when(projectService.findBuildDetailsById(nonExistentBuildId))
         .thenThrow(new BuildNotFoundException(nonExistentBuildId));
-    when(projectService.findDetailsById(projectId)).thenReturn(projectDetailsDto);
+    when(projectService.findDetailsById(projectId)).thenReturn(projectDto);
     when(projectService.findDetailsById(nonExistentProjectId))
         .thenThrow(new ProjectNotFoundException(nonExistentProjectId));
     when(projectService.findProjectBuilds(projectId)).thenReturn(of(buildSummaryDto));

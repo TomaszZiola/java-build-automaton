@@ -16,6 +16,7 @@ class BuildOrchestratorTest extends BaseUnit {
   void enqueuesQueuedBuildId() {
     // when & then
     buildOrchestratorImpl.enqueueBuild(project);
+    verify(buildLifecycleService).createQueued(project);
     verify(buildQueueService).enqueue(build.getId());
   }
 }

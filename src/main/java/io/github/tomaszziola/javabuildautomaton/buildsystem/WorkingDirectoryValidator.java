@@ -3,27 +3,22 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import java.io.File;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class WorkingDirectoryValidator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WorkingDirectoryValidator.class);
 
   private final BuildLifecycleService buildLifecycleService;
   private final WorkspaceService workspaceService;
-
-  @Autowired
-  public WorkingDirectoryValidator(
-      final WorkspaceService workspaceService, final BuildLifecycleService buildLifecycleService) {
-    this.workspaceService = workspaceService;
-    this.buildLifecycleService = buildLifecycleService;
-  }
 
   public ValidationResult prepareWorkspace(
       final Project project, final Build build, final StringBuilder buildLog) {
@@ -69,12 +64,12 @@ public class WorkingDirectoryValidator {
     if (pathText != null) {
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
-          project.getName(),
+          project.getUsername(),
           pathText);
     } else {
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory",
-          project.getName());
+          project.getUsername());
     }
   }
 }

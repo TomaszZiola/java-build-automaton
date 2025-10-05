@@ -39,8 +39,18 @@ public class BuildService {
     this.workingDirectoryValidator = workingDirectoryValidator;
   }
 
+  @Transactional
+  public void executeBuild(final long buildId) {
+    final var build =
+        buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
+    final var project = build.getProject();
+    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getUsername());
+    buildLifecycleService.markInProgress(build);
+    executeBuildSteps(project, build);
+  }
+
   public void startBuildProcess(final Project project) {
-    LOGGER.info("Starting build process for project: {}", project.getName());
+    LOGGER.info("Starting build process for project: {}", project.getUsername());
     final var build = buildLifecycleService.createInProgress(project);
     executeBuildSteps(project, build);
   }
@@ -55,13 +65,14 @@ public class BuildService {
     }
     final var workingDirectory = workingDirectoryStatus.workingDirectory();
 
-    if (!runGitSync(project, build, workingDirectory, logBuilder)) {
+    final var gitSyncStatus = runGitSync(project, build, workingDirectory, logBuilder);
+    if (!gitSyncStatus.isSuccess()) {
       return;
     }
     runProjectBuild(project, build, workingDirectory, logBuilder);
   }
 
-  private boolean runGitSync(
+  private ExecutionResult runGitSync(
       final Project project,
       final Build build,
       final File workingDirectory,
@@ -77,10 +88,10 @@ public class BuildService {
     if (!gitResult.isSuccess()) {
       buildLifecycleService.complete(build, FAILED, logBuilder);
       final var action = repoInitialized ? "pull" : "clone";
-      LOGGER.error("Git {} failed for project: {}", action, project.getName());
-      return false;
+      LOGGER.error("Git {} failed for project: {}", action, project.getUsername());
+      return gitResult;
     }
-    return true;
+    return gitResult;
   }
 
   private void runProjectBuild(
@@ -93,23 +104,9 @@ public class BuildService {
     logBuilder.append(buildResult.logs());
     if (!buildResult.isSuccess()) {
       buildLifecycleService.complete(build, FAILED, logBuilder);
-      LOGGER.error("Build failed for project: {}", project.getName());
+      LOGGER.error("Build failed for project: {}", project.getUsername());
       return;
     }
     buildLifecycleService.complete(build, SUCCESS, logBuilder);
-  }
-
-  @Transactional
-  public void executeBuild(final long buildId) {
-    final var build =
-        buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
-    final var project = build.getProject();
-    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getName());
-    buildLifecycleService.markInProgress(build);
-    executeBuildSteps(project, build);
-  }
-
-  public Build createQueuedBuild(final Project project) {
-    return buildLifecycleService.createQueued(project);
   }
 }

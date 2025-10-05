@@ -2,7 +2,7 @@
 <html lang="pl" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:text="|Build History for ${project.name()}|">Build History</title>
+  <title th:text="|Build History for ${project.username()}|">Build History</title>
   <!-- Używamy tych samych stylów co w dashboardzie dla spójności -->
   <style>
     body {
@@ -89,7 +89,7 @@
 
 <div class="container">
   <a href="/" class="back-link">&larr; Back to Dashboard</a>
-  <h1 th:text="|Project: ${project.name()}|">Project Details</h1>
+  <h1 th:text="|Project: ${project.username()}|">Project Details</h1>
   <h2>Build History</h2>
 
   <table th:unless="${builds.isEmpty()}">

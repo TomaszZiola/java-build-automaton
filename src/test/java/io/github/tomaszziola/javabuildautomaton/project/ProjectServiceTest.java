@@ -18,7 +18,7 @@ class ProjectServiceTest extends BaseUnit {
     final var result = projectServiceImpl.findAll();
 
     // then
-    assertThat(result.getFirst()).isEqualTo(projectDetailsDto);
+    assertThat(result.getFirst()).isEqualTo(projectDto);
   }
 
   @Test
@@ -28,7 +28,7 @@ class ProjectServiceTest extends BaseUnit {
     final var result = projectServiceImpl.findDetailsById(projectId);
 
     // then
-    assertThat(result).isEqualTo(projectDetailsDto);
+    assertThat(result).isEqualTo(projectDto);
   }
 
   @Test

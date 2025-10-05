@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Locale.ROOT;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -13,13 +14,12 @@ import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WebhookSecurityService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookSecurityService.class);
+  private static final Logger LOGGER = getLogger(WebhookSecurityService.class);
   private static final String HMAC_SHA256 = "HmacSHA256";
   private static final String SIGNATURE_PREFIX = "sha256=";
   private static final int EXPECTED_SIGNATURE_BYTES = 32;
@@ -29,7 +29,7 @@ public class WebhookSecurityService {
 
   public WebhookSecurityService(final WebhookProperties properties) {
     this.allowMissingSecret = properties.isAllowMissingSecret();
-    final String webhookSecret = properties.getWebhookSecret();
+    final var webhookSecret = properties.getWebhookSecret();
     this.hmacKey =
         (webhookSecret == null || webhookSecret.isBlank())
             ? empty()

@@ -1,5 +1,0 @@
-ALTER TABLE project ADD COLUMN IF NOT EXISTS slug VARCHAR(255);
-
-ALTER TABLE project ALTER COLUMN slug SET NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS project_slug_uindex ON project (slug);

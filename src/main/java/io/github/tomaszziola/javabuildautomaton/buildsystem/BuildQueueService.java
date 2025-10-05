@@ -27,8 +27,8 @@ public class BuildQueueService {
   private final BlockingQueue<Long> queue;
   private final AtomicBoolean started = new AtomicBoolean(false);
 
-  private volatile ExecutorService workerExecutor;
   private volatile ExecutorService buildExecutor;
+  private volatile ExecutorService workerExecutor;
 
   private final BuildService buildService;
 
@@ -60,7 +60,7 @@ public class BuildQueueService {
     workerExecutor =
         newSingleThreadExecutor(
             r -> {
-              final Thread thread = new Thread(r, "build-worker");
+              final var thread = new Thread(r, "build-worker");
               thread.setDaemon(false);
               return thread;
             });

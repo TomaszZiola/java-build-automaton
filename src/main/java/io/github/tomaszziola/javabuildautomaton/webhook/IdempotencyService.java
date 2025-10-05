@@ -1,17 +1,15 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import io.github.tomaszziola.javabuildautomaton.webhook.entity.WebhookDelivery;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class IdempotencyService {
 
   private final WebhookDeliveryRepository repository;
-
-  public IdempotencyService(final WebhookDeliveryRepository repository) {
-    this.repository = repository;
-  }
 
   private boolean registerIfFirstSeen(final String deliveryId) {
     if (deliveryId == null || deliveryId.isBlank()) {
@@ -25,7 +23,7 @@ public class IdempotencyService {
     }
   }
 
-  public boolean isDuplicate(final String deliveryId) {
+  public boolean isDuplicateWebhook(final String deliveryId) {
     return !registerIfFirstSeen(deliveryId);
   }
 }

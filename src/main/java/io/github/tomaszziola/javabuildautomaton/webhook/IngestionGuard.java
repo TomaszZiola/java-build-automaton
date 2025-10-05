@@ -4,27 +4,20 @@ import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardRes
 import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.DUPLICATE;
 import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardResult.NON_TRIGGER_REF;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class IngestionGuard {
 
   private final BranchPolicy branchPolicy;
   private final IdempotencyService idempotencyService;
   private final RequestHeaderAccessor requestHeaderAccessor;
 
-  public IngestionGuard(
-      final BranchPolicy branchPolicy,
-      final IdempotencyService idempotencyService,
-      final RequestHeaderAccessor requestHeaderAccessor) {
-    this.branchPolicy = branchPolicy;
-    this.idempotencyService = idempotencyService;
-    this.requestHeaderAccessor = requestHeaderAccessor;
-  }
-
-  public IngestionGuardResult check(final String ref) {
+  public IngestionGuardResult evaluateIngestion(final String ref) {
     final var deliveryId = requestHeaderAccessor.deliveryId();
-    if (idempotencyService.isDuplicate(deliveryId)) {
+    if (idempotencyService.isDuplicateWebhook(deliveryId)) {
       return DUPLICATE;
     }
     if (branchPolicy.isNonTriggerRef(ref)) {

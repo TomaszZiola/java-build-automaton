@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.buildsystem;
+package io.github.tomaszziola.javabuildautomaton.buildsystem.exception;
 
 import java.io.Serial;
 

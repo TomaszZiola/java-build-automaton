@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ErrorResponse;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;

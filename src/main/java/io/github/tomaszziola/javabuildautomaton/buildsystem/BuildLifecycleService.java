@@ -6,16 +6,14 @@ import static java.time.Instant.now;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class BuildLifecycleService {
 
   private final BuildRepository buildRepository;
-
-  public BuildLifecycleService(final BuildRepository buildRepository) {
-    this.buildRepository = buildRepository;
-  }
 
   public Build createInProgress(final Project project) {
     final var build = new Build();

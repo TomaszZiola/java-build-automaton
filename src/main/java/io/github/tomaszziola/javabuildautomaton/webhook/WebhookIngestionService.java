@@ -29,7 +29,7 @@ public class WebhookIngestionService {
   }
 
   public ApiResponse handleWebhook(final GitHubWebhookPayload payload) {
-    final var ingestionGuardResult = ingestionGuard.check(payload.ref());
+    final var ingestionGuardResult = ingestionGuard.evaluateIngestion(payload.ref());
     switch (ingestionGuardResult) {
       case DUPLICATE -> {
         final var msg = "Duplicate delivery ignored";
@@ -47,7 +47,7 @@ public class WebhookIngestionService {
             .findByRepositoryName(repository)
             .map(
                 project -> {
-                  final var message = "Project found in the database: " + project.getName();
+                  final var message = "Project found in the database: " + project.getUsername();
                   LOGGER.info(message);
                   buildOrchestrator.enqueueBuild(project);
                   return new ApiResponse(FOUND, message + ". Build process started.");
