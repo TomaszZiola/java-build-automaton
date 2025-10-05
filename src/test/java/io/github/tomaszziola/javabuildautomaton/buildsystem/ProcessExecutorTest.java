@@ -1,5 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +17,7 @@ class ProcessExecutorTest extends BaseUnit {
   void returnsSuccessAndCapturesOutputWhenCommandSucceeds() throws InterruptedException {
     // given
     when(process.getInputStream())
-        .thenReturn(new ByteArrayInputStream("hello\nworld\n".getBytes()));
+        .thenReturn(new ByteArrayInputStream("hello\nworld\n".getBytes(UTF_8)));
     when(process.waitFor()).thenReturn(0);
 
     // when

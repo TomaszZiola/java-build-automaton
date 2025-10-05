@@ -67,7 +67,7 @@ spotless {
 
 pmd {
     isConsoleOutput = true
-    toolVersion = "7.14.0"
+    toolVersion = "7.17.0"
     rulesMinimumPriority = 5
     ruleSetFiles = files("config/pmd/ruleset.xml")
 }

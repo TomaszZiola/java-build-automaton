@@ -59,9 +59,11 @@ public class WebhookIngestionService {
                   return new ApiResponse(NOT_FOUND, message);
                 });
       }
+      default -> {
+        final var msg = "Unhandled outcome: " + ingestionGuardResult;
+        LOGGER.warn(msg);
+        return new ApiResponse(NOT_FOUND, msg);
+      }
     }
-    final var msg = "Unhandled outcome: " + ingestionGuardResult;
-    LOGGER.warn(msg);
-    return new ApiResponse(NOT_FOUND, msg);
   }
 }

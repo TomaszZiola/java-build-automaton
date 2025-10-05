@@ -38,9 +38,9 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      final @NonNull HttpServletRequest request,
-      final @NonNull HttpServletResponse response,
-      final @NonNull FilterChain filterChain)
+      @NonNull final HttpServletRequest request,
+      @NonNull final HttpServletResponse response,
+      @NonNull final FilterChain filterChain)
       throws ServletException, IOException {
 
     final var bodyBytes = request.getInputStream().readAllBytes();
