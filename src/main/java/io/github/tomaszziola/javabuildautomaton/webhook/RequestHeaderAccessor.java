@@ -1,8 +1,9 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
+import static org.springframework.web.context.request.RequestContextHolder.getRequestAttributes;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Component
@@ -10,7 +11,7 @@ public class RequestHeaderAccessor {
   private static final String DELIVERY_HEADER = "X-GitHub-Delivery";
 
   public String deliveryId() {
-    final var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    final var attrs = (ServletRequestAttributes) getRequestAttributes();
     if (attrs == null) {
       return null;
     }

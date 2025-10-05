@@ -7,19 +7,18 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.Paths.get;
 import static org.springframework.util.StringUtils.hasText;
 
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import java.io.IOException;
 import java.nio.file.Path;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class WorkspaceService {
 
   private final WorkspaceProperties properties;
-
-  public WorkspaceService(final WorkspaceProperties properties) {
-    this.properties = properties;
-  }
 
   private Path requireExistingBase() {
     final var base = properties.getBaseDir();
@@ -38,18 +37,18 @@ public class WorkspaceService {
     }
   }
 
-  private String requireSlug(final Project project) {
-    final var slug = project.getSlug();
-    if (!hasText(slug)) {
+  private String requiresRepositoryName(final Project project) {
+    final var repoName = project.getRepositoryName();
+    if (!hasText(repoName)) {
       throw new WorkspaceException("Project slug is missing; cannot resolve workspace path");
     }
-    return slug;
+    return repoName;
   }
 
   public Path resolve(final Project project) {
     final var base = requireExistingBase();
-    final var slug = requireSlug(project);
-    final var projectDir = base.resolve(slug).normalize();
+    final var repoName = requiresRepositoryName(project);
+    final var projectDir = base.resolve(repoName).normalize();
     if (exists(projectDir) && !isDirectory(projectDir)) {
       throw new WorkspaceException("Workspace path exists but is not a directory: " + projectDir);
     }

@@ -13,12 +13,15 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @Order(WEBHOOK_SIGNATURE)
+@RequiredArgsConstructor
 public class WebhookSignatureFilter extends OncePerRequestFilter {
 
   private static final String WEBHOOK_PATH = "/webhook";
@@ -26,10 +29,6 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
   private static final String HTTP_METHOD = "POST";
 
   private final WebhookSecurityService security;
-
-  public WebhookSignatureFilter(final WebhookSecurityService security) {
-    this.security = security;
-  }
 
   @Override
   protected boolean shouldNotFilter(final HttpServletRequest request) {
@@ -39,9 +38,9 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      final HttpServletRequest request,
-      final HttpServletResponse response,
-      final FilterChain filterChain)
+      @NonNull final HttpServletRequest request,
+      @NonNull final HttpServletResponse response,
+      @NonNull final FilterChain filterChain)
       throws ServletException, IOException {
 
     final var bodyBytes = request.getInputStream().readAllBytes();

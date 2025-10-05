@@ -44,14 +44,16 @@ public class Project {
   @Enumerated(STRING)
   private BuildTool buildTool;
 
-  private String name;
+  private String username;
+
+  @Column(name = "repository_name")
   private String repositoryName;
+
+  @Column(name = "full_name")
+  private String fullName;
 
   @Column(name = "repository_url")
   private String repositoryUrl;
-
-  @Column(nullable = false)
-  private String slug;
 
   @Override
   public boolean equals(final Object other) {

@@ -7,22 +7,19 @@ import static java.lang.Thread.currentThread;
 
 import java.io.File;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ProcessExecutor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
 
   private final ProcessRunner processRunner;
   private final OutputCollector outputCollector;
-
-  public ProcessExecutor(final ProcessRunner processRunner, final OutputCollector outputCollector) {
-    this.processRunner = processRunner;
-    this.outputCollector = outputCollector;
-  }
 
   public ExecutionResult execute(final File workingDir, final String... command) {
     LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));

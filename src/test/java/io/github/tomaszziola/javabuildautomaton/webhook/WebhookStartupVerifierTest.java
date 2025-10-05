@@ -40,9 +40,9 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // when & then
     assertThatThrownBy(() -> runner.run(null))
         .isInstanceOf(MissingWebhookSecretException.class)
-        .hasMessageContaining("Application misconfiguration: app.github.webhook-secret is empty")
-        .hasMessageContaining("app.github.allow-missing-webhook-secret=false")
-        .hasMessageContaining("Set APP_GITHUB_WEBHOOK_SECRET or explicitly allow missing");
+        .hasMessageContaining("Application misconfiguration: webhook.webhook-secret is empty")
+        .hasMessageContaining("webhook.allow-missing-webhook-secret=false")
+        .hasMessageContaining("Set WEBHOOK_WEBHOOK_SECRET or explicitly allow missing");
   }
 
   @Test
@@ -56,7 +56,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // when & then
     assertThatThrownBy(() -> runner.run(null))
         .isInstanceOf(MissingWebhookSecretException.class)
-        .hasMessageContaining("Application misconfiguration: app.github.webhook-secret is empty");
+        .hasMessageContaining("Application misconfiguration: webhook.webhook-secret is empty");
   }
 
   @Test
@@ -70,7 +70,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // when & then
     assertThatThrownBy(() -> runner.run(null))
         .isInstanceOf(MissingWebhookSecretException.class)
-        .hasMessageContaining("Application misconfiguration: app.github.webhook-secret is empty");
+        .hasMessageContaining("Application misconfiguration: webhook.webhook-secret is empty");
 
     // verify error log
     assertThat(logAppender.list).extracting(ILoggingEvent::getLevel).contains(Level.ERROR);
@@ -144,7 +144,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic("my secret key", true);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    final var runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);

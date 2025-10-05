@@ -15,7 +15,7 @@ class CachedBodyRequestWrapperNullBodyTest extends BaseUnit {
   void returnsEmptyStreamAndZeroLengthsWhenBodyNull() throws IOException {
     // given
     final var wrapper =
-        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequest, null);
+        new WebhookSignatureFilter.CachedBodyRequestWrapper(httpServletRequestImpl, null);
 
     // when
     try (ServletInputStream inputStream = wrapper.getInputStream()) {

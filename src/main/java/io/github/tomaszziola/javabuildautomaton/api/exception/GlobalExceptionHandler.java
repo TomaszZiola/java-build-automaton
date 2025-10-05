@@ -5,8 +5,8 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ErrorResponse;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +44,6 @@ public class GlobalExceptionHandler {
             "Workspace not prepared",
             exception.getMessage(),
             request.getRequestURI());
-    return new ResponseEntity<>(errorResponse, NOT_FOUND);
+    return new ResponseEntity<>(errorResponse, BAD_REQUEST);
   }
 }

@@ -1,11 +1,14 @@
 package io.github.tomaszziola.javabuildautomaton.api.dto;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
+import java.time.Instant;
 
-public record ProjectDetailsDto(
+public record ProjectDto(
     Long id,
-    String repositoryUrl,
-    String name,
+    Instant createdAt,
+    Instant updatedAt,
+    String username,
     String repositoryName,
-    String slug,
+    String fullName,
+    String repositoryUrl,
     BuildTool buildTool) {}

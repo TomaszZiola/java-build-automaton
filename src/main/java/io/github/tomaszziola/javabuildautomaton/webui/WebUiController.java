@@ -1,21 +1,26 @@
 package io.github.tomaszziola.javabuildautomaton.webui;
 
+import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.values;
+
+import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/")
+@RequiredArgsConstructor
 public class WebUiController {
 
   private final ProjectService projectService;
-
-  public WebUiController(final ProjectService projectService) {
-    this.projectService = projectService;
-  }
 
   @GetMapping
   public String showDashboard(final Model model) {
@@ -47,5 +52,26 @@ public class WebUiController {
     model.addAttribute("build", build);
 
     return "build-details";
+  }
+
+  @GetMapping("/projects/create")
+  public String showCreateProjectForm(final Model model) {
+    model.addAttribute("request", new PostProjectDto(null, null));
+    model.addAttribute("buildTools", values());
+    return "projects-create";
+  }
+
+  @PostMapping("/projects/create")
+  public String createProject(
+      @ModelAttribute("request") @Valid final PostProjectDto request,
+      final BindingResult bindingResult,
+      final Model model) {
+    if (bindingResult.hasErrors()) {
+      model.addAttribute("buildTools", values());
+      return "projects-create";
+    }
+
+    projectService.saveProject(request);
+    return "redirect:/";
   }
 }

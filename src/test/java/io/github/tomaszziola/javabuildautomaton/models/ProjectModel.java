@@ -12,10 +12,10 @@ public final class ProjectModel {
   public static Project basic() {
     final var project = new Project();
     project.setId(1L);
-    project.setName("test-project-from-db");
-    project.setSlug("demo1");
-    project.setRepositoryName("TomaszZiola/test");
-    project.setRepositoryUrl("https://github.com/app/test");
+    project.setUsername("TomaszZiola");
+    project.setRepositoryName("java-build-automaton");
+    project.setFullName("TomaszZiola/java-build-automaton");
+    project.setRepositoryUrl("https://github.com/TomaszZiola/java-build-automaton.git");
     project.setBuildTool(GRADLE);
     project.setCreatedAt(parse("2025-08-24T10:15:10Z"));
     project.setUpdatedAt(parse("2025-09-21T20:10:50Z"));

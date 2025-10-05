@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import java.io.File;
 import java.nio.file.Files;
@@ -31,7 +32,7 @@ class WorkingDirectoryValidatorTest {
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
 
     final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(workspaceService, lifecycle);
+        new WorkingDirectoryValidator(lifecycle, workspaceService);
 
     final Project project = new Project();
     final Build build = new Build();
@@ -60,7 +61,7 @@ class WorkingDirectoryValidatorTest {
     final WorkspaceService workspaceService = Mockito.mock(WorkspaceService.class);
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
     final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(workspaceService, lifecycle);
+        new WorkingDirectoryValidator(lifecycle, workspaceService);
 
     final Project project = new Project();
     final Build build = new Build();
@@ -91,7 +92,7 @@ class WorkingDirectoryValidatorTest {
     final WorkspaceService workspaceService = Mockito.mock(WorkspaceService.class);
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
     final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(workspaceService, lifecycle);
+        new WorkingDirectoryValidator(lifecycle, workspaceService);
 
     final Project project = new Project();
     final Build build = new Build();

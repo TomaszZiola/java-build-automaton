@@ -6,11 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.validation.BeanPropertyBindingResult;
 
 class WebUiControllerTest extends BaseUnit {
 
@@ -23,7 +26,7 @@ class WebUiControllerTest extends BaseUnit {
 
     // then
     assertThat(view).isEqualTo("dashboard");
-    assertThat(modelImpl.asMap()).containsEntry("projects", of(projectDetailsDto));
+    assertThat(modelImpl.asMap()).containsEntry("projects", of(projectDto));
     verify(projectService).findAll();
   }
 
@@ -37,7 +40,7 @@ class WebUiControllerTest extends BaseUnit {
     // then
     assertThat(view).isEqualTo("project-details");
     assertThat(modelImpl.asMap())
-        .containsEntry("project", projectDetailsDto)
+        .containsEntry("project", projectDto)
         .containsEntry("builds", of(buildSummaryDto));
     verify(projectService).findDetailsById(projectId);
     verify(projectService).findProjectBuilds(projectId);
@@ -64,7 +67,7 @@ class WebUiControllerTest extends BaseUnit {
     // then
     assertThat(view).isEqualTo("build-details");
     assertThat(modelImpl.asMap())
-        .containsEntry("project", projectDetailsDto)
+        .containsEntry("project", projectDto)
         .containsEntry("build", buildDetailsDto);
     verify(projectService).findDetailsById(projectId);
     verify(projectService).findBuildDetailsById(buildId);
@@ -79,5 +82,50 @@ class WebUiControllerTest extends BaseUnit {
         BuildNotFoundException.class,
         () -> webUiControllerImpl.showBuildDetails(projectId, nonExistentBuildId, modelImpl));
     verify(projectService, never()).findProjectBuilds(nonExistentProjectId);
+  }
+
+  @Test
+  @DisplayName(
+      "Given request to show create project form, then return form view and include empty request and build tools")
+  void returnsFormViewAndModelWhenShowCreateProjectForm() {
+    // when
+    final var view = webUiControllerImpl.showCreateProjectForm(modelImpl);
+
+    // then
+    assertThat(view).isEqualTo("projects-create");
+    assertThat(modelImpl.asMap())
+        .containsEntry("request", new PostProjectDto(null, null))
+        .containsEntry("buildTools", BuildTool.values());
+  }
+
+  @Test
+  @DisplayName(
+      "Given invalid request, when creating project, then return form view and include build tools")
+  void returnsFormViewAndBuildToolsWhenCreateProjectHasErrors() {
+    // given
+    final var errors = new BeanPropertyBindingResult(postProjectDto, "request");
+    errors.reject("invalid");
+
+    // when
+    final var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
+
+    // then
+    assertThat(view).isEqualTo("projects-create");
+    assertThat(modelImpl.asMap()).containsEntry("buildTools", BuildTool.values());
+    verify(projectService, never()).saveProject(postProjectDto);
+  }
+
+  @Test
+  @DisplayName("Given valid request, when creating project, then save and redirect to dashboard")
+  void savesProjectAndRedirectsWhenCreateProjectIsValid() {
+    // given
+    final var errors = new BeanPropertyBindingResult(postProjectDto, "request");
+
+    // when
+    final var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
+
+    // then
+    assertThat(view).isEqualTo("redirect:/");
+    verify(projectService).saveProject(postProjectDto);
   }
 }
