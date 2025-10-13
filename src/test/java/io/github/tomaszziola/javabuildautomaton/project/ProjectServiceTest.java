@@ -3,7 +3,6 @@ package io.github.tomaszziola.javabuildautomaton.project;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;
@@ -60,25 +59,5 @@ class ProjectServiceTest extends BaseUnit {
     assertThrows(
         ProjectNotFoundException.class,
         () -> projectServiceImpl.findProjectBuilds(nonExistentProjectId));
-  }
-
-  @Test
-  @DisplayName("Given existing build id, when finding build details, then return BuildDetailsDto")
-  void returnsBuildDetailsWhenFindBuildDetailsById() {
-    // when
-    final var result = projectServiceImpl.findBuildDetailsById(buildId);
-
-    // then
-    assertThat(result).isEqualTo(buildDetailsDto);
-  }
-
-  @Test
-  @DisplayName(
-      "Given non-existing build id, when finding build details, then throw BuildNotFoundException")
-  void throwsWhenBuildMissingOnFindBuildDetailsById() {
-    // when / then
-    assertThrows(
-        BuildNotFoundException.class,
-        () -> projectServiceImpl.findBuildDetailsById(nonExistentBuildId));
   }
 }

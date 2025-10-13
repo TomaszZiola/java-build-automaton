@@ -6,27 +6,21 @@ import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOU
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildOrchestrator;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
+import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.GitHubWebhookPayload;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class WebhookIngestionService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebhookIngestionService.class);
   private final BuildOrchestrator buildOrchestrator;
   private final IngestionGuard ingestionGuard;
   private final ProjectRepository projectRepository;
-
-  public WebhookIngestionService(
-      final BuildOrchestrator buildOrchestrator,
-      final IngestionGuard ingestionGuard,
-      final ProjectRepository projectRepository) {
-    this.buildOrchestrator = buildOrchestrator;
-    this.ingestionGuard = ingestionGuard;
-    this.projectRepository = projectRepository;
-  }
 
   public ApiResponse handleWebhook(final GitHubWebhookPayload payload) {
     final var ingestionGuardResult = ingestionGuard.evaluateIngestion(payload.ref());
@@ -42,22 +36,11 @@ public class WebhookIngestionService {
         return new ApiResponse(NOT_FOUND, msg);
       }
       case ALLOW -> {
-        final var repository = payload.repository().fullName();
+        final var repositoryFullName = payload.repository().fullName();
         return projectRepository
-            .findByRepositoryName(repository)
-            .map(
-                project -> {
-                  final var message = "Project found in the database: " + project.getUsername();
-                  LOGGER.info(message);
-                  buildOrchestrator.enqueueBuild(project);
-                  return new ApiResponse(FOUND, message + ". Build process started.");
-                })
-            .orElseGet(
-                () -> {
-                  final var message = "Project not found for repository: " + repository;
-                  LOGGER.warn(message);
-                  return new ApiResponse(NOT_FOUND, message);
-                });
+            .findByRepositoryName(repositoryFullName)
+            .map(this::handleProjectFound)
+            .orElseGet(() -> handleProjectMissing(repositoryFullName));
       }
       default -> {
         final var msg = "Unhandled outcome: " + ingestionGuardResult;
@@ -65,5 +48,18 @@ public class WebhookIngestionService {
         return new ApiResponse(NOT_FOUND, msg);
       }
     }
+  }
+
+  private ApiResponse handleProjectFound(final Project project) {
+    final var message = "Project found in the database: " + project.getRepositoryName();
+    LOGGER.info(message);
+    buildOrchestrator.enqueueBuild(project);
+    return new ApiResponse(FOUND, message + ". Build process started.");
+  }
+
+  private ApiResponse handleProjectMissing(final String repositoryFullName) {
+    final var message = "Project not found for repositoryFullName: " + repositoryFullName;
+    LOGGER.warn(message);
+    return new ApiResponse(NOT_FOUND, message);
   }
 }

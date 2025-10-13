@@ -70,7 +70,7 @@ class WebUiControllerTest extends BaseUnit {
         .containsEntry("project", projectDto)
         .containsEntry("build", buildDetailsDto);
     verify(projectService).findDetailsById(projectId);
-    verify(projectService).findBuildDetailsById(buildId);
+    verify(buildService).findBuildDetailsById(buildId);
   }
 
   @Test

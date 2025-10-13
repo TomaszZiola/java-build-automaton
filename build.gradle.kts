@@ -38,7 +38,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     compileOnly("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("io.rest-assured:rest-assured:5.5.6")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.testcontainers:postgresql:1.20.3")
 }
 
 tasks.withType<Test> {

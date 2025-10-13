@@ -1,17 +1,14 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildMapper;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildRepository;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +30,6 @@ public class ProjectService {
         .orElseThrow(() -> new ProjectNotFoundException(projectId));
   }
 
-  @Transactional(readOnly = true)
   public List<BuildSummaryDto> findProjectBuilds(final Long projectId) {
     final var project =
         projectRepository
@@ -42,13 +38,6 @@ public class ProjectService {
 
     final var builds = buildRepository.findByProject(project);
     return builds.stream().map(buildMapper::toSummaryDto).toList();
-  }
-
-  public BuildDetailsDto findBuildDetailsById(final Long buildId) {
-    return buildRepository
-        .findById(buildId)
-        .map(buildMapper::toDetailsDto)
-        .orElseThrow(() -> new BuildNotFoundException(buildId));
   }
 
   public ProjectDto saveProject(final PostProjectDto request) {

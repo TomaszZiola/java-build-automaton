@@ -211,6 +211,7 @@ public class BaseUnit {
         new BuildService(
             buildExecutor,
             buildLifecycleService,
+            buildMapper,
             buildRepository,
             gitCommandRunner,
             workingDirectoryValidator);
@@ -236,7 +237,7 @@ public class BaseUnit {
     webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    webUiControllerImpl = new WebUiController(projectService);
+    webUiControllerImpl = new WebUiController(buildService, projectService);
 
     when(branchPolicy.isNonTriggerRef(mainBranch)).thenReturn(false);
     when(buildExecutor.build(project.getBuildTool(), workingDir))
@@ -272,8 +273,8 @@ public class BaseUnit {
     when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
     when(projectService.saveProject(postProjectDto)).thenReturn(projectDto);
     when(projectService.findAll()).thenReturn(of(projectDto));
-    when(projectService.findBuildDetailsById(buildId)).thenReturn(buildDetailsDto);
-    when(projectService.findBuildDetailsById(nonExistentBuildId))
+    when(buildService.findBuildDetailsById(buildId)).thenReturn(buildDetailsDto);
+    when(buildService.findBuildDetailsById(nonExistentBuildId))
         .thenThrow(new BuildNotFoundException(nonExistentBuildId));
     when(projectService.findDetailsById(projectId)).thenReturn(projectDto);
     when(projectService.findDetailsById(nonExistentProjectId))

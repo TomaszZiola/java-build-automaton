@@ -17,7 +17,7 @@ public class ProjectMapper {
         project.getUpdatedAt(),
         project.getUsername(),
         project.getRepositoryName(),
-        project.getFullName(),
+        project.getRepositoryFullName(),
         project.getRepositoryUrl(),
         project.getBuildTool());
   }
@@ -27,7 +27,7 @@ public class ProjectMapper {
     project.setCreatedAt(now());
     project.setRepositoryName(extractRepositoryName(request.repositoryUrl()));
     project.setUsername(extractUsername(request.repositoryUrl()));
-    project.setFullName(extractUserAndRepo(request.repositoryUrl()));
+    project.setRepositoryFullName(extractUserAndRepo(request.repositoryUrl()));
     project.setRepositoryUrl(request.repositoryUrl());
     project.setBuildTool(request.buildTool());
     return project;

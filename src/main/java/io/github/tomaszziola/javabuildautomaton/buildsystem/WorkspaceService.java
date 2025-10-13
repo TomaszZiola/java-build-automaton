@@ -40,7 +40,7 @@ public class WorkspaceService {
   private String requiresRepositoryName(final Project project) {
     final var repoName = project.getRepositoryName();
     if (!hasText(repoName)) {
-      throw new WorkspaceException("Project slug is missing; cannot resolve workspace path");
+      throw new WorkspaceException("Repository Name is missing; cannot resolve workspace path");
     }
     return repoName;
   }

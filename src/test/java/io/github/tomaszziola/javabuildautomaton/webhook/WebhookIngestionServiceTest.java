@@ -75,7 +75,7 @@ class WebhookIngestionServiceTest extends BaseUnit {
     // then
     assertThat(result.status()).isEqualTo(NOT_FOUND);
     assertThat(result.message())
-        .isEqualTo("Project not found for repository: " + payload.repository().fullName());
+        .isEqualTo("Project not found for repositoryFullName: " + payload.repository().fullName());
   }
 
   @Test

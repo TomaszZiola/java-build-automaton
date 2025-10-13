@@ -4,6 +4,7 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.F
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,6 +17,7 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.io.File;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -149,5 +151,25 @@ class BuildServiceTest extends BaseUnit {
     assertThatThrownBy(() -> buildServiceImpl.executeBuild(nonExistentBuildId))
         .isInstanceOf(BuildNotFoundException.class)
         .hasMessageContaining(nonExistentBuildId.toString());
+  }
+
+  @Test
+  @DisplayName("Given existing build id, when finding build details, then return BuildDetailsDto")
+  void returnsBuildDetailsWhenFindBuildDetailsById() {
+    // when
+    final var result = buildServiceImpl.findBuildDetailsById(buildId);
+
+    // then
+    AssertionsForClassTypes.assertThat(result).isEqualTo(buildDetailsDto);
+  }
+
+  @Test
+  @DisplayName(
+      "Given non-existing build id, when finding build details, then throw BuildNotFoundException")
+  void throwsWhenBuildMissingOnFindBuildDetailsById() {
+    // when / then
+    assertThrows(
+        BuildNotFoundException.class,
+        () -> buildServiceImpl.findBuildDetailsById(nonExistentBuildId));
   }
 }

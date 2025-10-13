@@ -14,11 +14,21 @@ public final class ProjectModel {
     project.setId(1L);
     project.setUsername("TomaszZiola");
     project.setRepositoryName("java-build-automaton");
-    project.setFullName("TomaszZiola/java-build-automaton");
+    project.setRepositoryFullName("TomaszZiola/java-build-automaton");
     project.setRepositoryUrl("https://github.com/TomaszZiola/java-build-automaton.git");
     project.setBuildTool(GRADLE);
     project.setCreatedAt(parse("2025-08-24T10:15:10Z"));
     project.setUpdatedAt(parse("2025-09-21T20:10:50Z"));
+    return project;
+  }
+
+  public static Project unpersisted() {
+    final var project = new Project();
+    project.setUsername("TomaszZiola");
+    project.setRepositoryName("java-build-automaton");
+    project.setRepositoryFullName("TomaszZiola/java-build-automaton");
+    project.setRepositoryUrl("https://github.com/TomaszZiola/java-build-automaton.git");
+    project.setBuildTool(GRADLE);
     return project;
   }
 }

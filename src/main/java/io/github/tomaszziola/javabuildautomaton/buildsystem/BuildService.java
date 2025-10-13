@@ -4,40 +4,29 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.F
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
 
+import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import jakarta.transaction.Transactional;
 import java.io.File;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class BuildService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildService.class);
 
   private final BuildExecutor buildExecutor;
   private final BuildLifecycleService buildLifecycleService;
+  private final BuildMapper buildMapper;
   private final BuildRepository buildRepository;
   private final GitCommandRunner gitCommandRunner;
   private final WorkingDirectoryValidator workingDirectoryValidator;
-
-  @Autowired
-  public BuildService(
-      final BuildExecutor buildExecutor,
-      final BuildLifecycleService buildLifecycleService,
-      final BuildRepository buildRepository,
-      final GitCommandRunner gitCommandRunner,
-      final WorkingDirectoryValidator workingDirectoryValidator) {
-    this.buildExecutor = buildExecutor;
-    this.buildLifecycleService = buildLifecycleService;
-    this.buildRepository = buildRepository;
-    this.gitCommandRunner = gitCommandRunner;
-    this.workingDirectoryValidator = workingDirectoryValidator;
-  }
 
   @Transactional
   public void executeBuild(final long buildId) {
@@ -53,6 +42,13 @@ public class BuildService {
     LOGGER.info("Starting build process for project: {}", project.getUsername());
     final var build = buildLifecycleService.createInProgress(project);
     executeBuildSteps(project, build);
+  }
+
+  public BuildDetailsDto findBuildDetailsById(final Long buildId) {
+    return buildRepository
+        .findById(buildId)
+        .map(buildMapper::toDetailsDto)
+        .orElseThrow(() -> new BuildNotFoundException(buildId));
   }
 
   private void executeBuildSteps(final Project project, final Build build) {

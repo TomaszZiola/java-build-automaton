@@ -42,7 +42,7 @@ class ProjectMapperTest extends BaseUnit {
     assertThat(result.getCreatedAt()).isNotNull();
     assertThat(result.getRepositoryName()).isEqualTo("java-build-automaton");
     assertThat(result.getUsername()).isEqualTo("TomaszZiola");
-    assertThat(result.getFullName()).isEqualTo("TomaszZiola/java-build-automaton");
+    assertThat(result.getRepositoryFullName()).isEqualTo("TomaszZiola/java-build-automaton");
     assertThat(result.getRepositoryUrl())
         .isEqualTo("https://github.com/TomaszZiola/java-build-automaton.git");
     assertThat(result.getBuildTool()).isEqualTo(GRADLE);

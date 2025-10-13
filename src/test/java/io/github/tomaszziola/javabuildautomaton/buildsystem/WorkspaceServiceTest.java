@@ -100,8 +100,8 @@ class WorkspaceServiceTest {
   }
 
   @Test
-  @DisplayName("Given missing slug, when resolving, then throw")
-  void missingSlugFails() {
+  @DisplayName("Given missing repository name, when resolving, then throw")
+  void missingRepositoryNameFails() {
     final Path base = new File(tempDir, "base3").toPath();
     assertThat(base.toFile().mkdirs()).isTrue();
     props.setBaseDir(base.toString());
@@ -111,7 +111,7 @@ class WorkspaceServiceTest {
 
     assertThatThrownBy(() -> service.resolve(project))
         .isInstanceOf(WorkspaceException.class)
-        .hasMessageContaining("slug is missing");
+        .hasMessageContaining("Repository Name is missing");
   }
 
   @Test

@@ -94,7 +94,6 @@
     <thead>
     <tr>
       <th>ID</th>
-      <th>Slug</th>
       <th>Created</th>
       <th>Updated</th>
       <th>Repository</th>
@@ -107,10 +106,8 @@
     <tbody>
     <tr th:each="project : ${projects}">
       <td th:text="${project.id()}">1</td>
-      <td th:text="${project.slug()}">1</td>
       <td th:text="${project.updatedAt()}">1</td>
       <td th:text="${project.createdAt()}">1</td>
-      <td th:text="${project.slug()}">1</td>
       <td th:text="${project.repositoryName()}">user/repo</td>
       <td th:text="${project.repositoryUrl()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>

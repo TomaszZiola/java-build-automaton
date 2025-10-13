@@ -49,8 +49,8 @@ public class Project {
   @Column(name = "repository_name")
   private String repositoryName;
 
-  @Column(name = "full_name")
-  private String fullName;
+  @Column(name = "repository_full_name")
+  private String repositoryFullName;
 
   @Column(name = "repository_url")
   private String repositoryUrl;

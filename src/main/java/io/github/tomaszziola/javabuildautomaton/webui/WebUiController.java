@@ -3,6 +3,7 @@ package io.github.tomaszziola.javabuildautomaton.webui;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.values;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class WebUiController {
 
+  private final BuildService buildService;
   private final ProjectService projectService;
 
   @GetMapping
@@ -46,7 +48,7 @@ public class WebUiController {
   public String showBuildDetails(
       @PathVariable final Long projectId, @PathVariable final Long buildId, final Model model) {
     final var project = projectService.findDetailsById(projectId);
-    final var build = projectService.findBuildDetailsById(buildId);
+    final var build = buildService.findBuildDetailsById(buildId);
 
     model.addAttribute("project", project);
     model.addAttribute("build", build);
