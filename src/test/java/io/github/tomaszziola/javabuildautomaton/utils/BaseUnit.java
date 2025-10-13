@@ -54,10 +54,10 @@ import io.github.tomaszziola.javabuildautomaton.webhook.BranchPolicy;
 import io.github.tomaszziola.javabuildautomaton.webhook.IdempotencyService;
 import io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard;
 import io.github.tomaszziola.javabuildautomaton.webhook.RequestHeaderAccessor;
-import io.github.tomaszziola.javabuildautomaton.webhook.WebhookController;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookDeliveryRepository;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookIngestionService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookProperties;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookRestController;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
@@ -139,7 +139,7 @@ public class BaseUnit {
   protected ProjectMapper projectMapperImpl;
   protected ProjectService projectServiceImpl;
   protected RequestHeaderAccessor requestHeaderAccessorImpl;
-  protected WebhookController webhookControllerImpl;
+  protected WebhookRestController webhookRestControllerImpl;
   protected WebUiController webUiControllerImpl;
   protected WebhookIngestionService webhookIngestionServiceImpl;
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
@@ -230,7 +230,7 @@ public class BaseUnit {
     projectServiceImpl =
         new ProjectService(buildMapper, buildRepository, projectMapper, projectRepository);
     requestHeaderAccessorImpl = new RequestHeaderAccessor();
-    webhookControllerImpl = new WebhookController(webhookIngestionService);
+    webhookRestControllerImpl = new WebhookRestController(webhookIngestionService);
     webhookIngestionServiceImpl =
         new WebhookIngestionService(buildOrchestrator, ingestionGuard, projectRepository);
     webhookConfiguration = new WebhookProperties();

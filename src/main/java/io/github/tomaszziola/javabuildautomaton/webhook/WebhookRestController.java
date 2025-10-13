@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class WebhookController {
+public class WebhookRestController {
 
   private final WebhookIngestionService webhookIngestionService;
 

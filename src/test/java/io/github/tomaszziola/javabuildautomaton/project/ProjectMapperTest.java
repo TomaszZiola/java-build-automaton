@@ -21,7 +21,7 @@ class ProjectMapperTest extends BaseUnit {
     assertThat(result.id()).isEqualTo(1L);
     assertThat(result.username()).isEqualTo("TomaszZiola");
     assertThat(result.repositoryName()).isEqualTo("java-build-automaton");
-    assertThat(result.fullName()).isEqualTo("TomaszZiola/java-build-automaton");
+    assertThat(result.repositoryFullName()).isEqualTo("TomaszZiola/java-build-automaton");
     assertThat(result.repositoryUrl())
         .isEqualTo("https://github.com/TomaszZiola/java-build-automaton.git");
     assertThat(result.createdAt()).isEqualTo(parse("2025-08-24T10:15:10Z"));

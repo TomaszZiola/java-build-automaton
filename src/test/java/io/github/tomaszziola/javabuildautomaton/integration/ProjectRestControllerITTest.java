@@ -16,7 +16,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
-class WebUiControllerITTest extends BaseIntegrationTest {
+class ProjectRestControllerITTest extends BaseIntegrationTest {
 
   @LocalServerPort int port;
 
@@ -47,7 +47,9 @@ class WebUiControllerITTest extends BaseIntegrationTest {
   @Test
   @DisplayName("GET / should return dashboard HTML with projects table")
   void get_shouldReturnDashboard() {
-    populateManyProjectsDatabase();
+    final var savedProjects = populateManyProjectsDatabase();
+    final var firstProject = savedProjects.getFirst();
+    final var secondProject = savedProjects.getLast();
 
     given()
         .when()
@@ -57,17 +59,17 @@ class WebUiControllerITTest extends BaseIntegrationTest {
         .contentType(HTML)
         .header("Content-Type", containsString("text/html"))
         .body(containsString("<!DOCTYPE html>"))
-        .body(containsString("java-build-automaton"))
-        .body(containsString("java-awsomeapp"))
-        .body(containsString("MAVEN"))
-        .body(containsString("GRADLE"))
-        .body(containsString("TomaszZiola"))
-        .body(containsString("RobertRoslik"))
-        .body(containsString("RobertRoslik/java-awsomeapp"))
-        .body(containsString("TomaszZiola/java-build-automaton"))
-        .body(containsString("https://github.com/TomaszZiola/java-build-automaton.git"))
-        .body(containsString("https://github.com/RobertRoslik/java-awsomeapp.git"))
-        .body(containsString("/projects/1"))
-        .body(containsString("/projects/2"));
+        .body(containsString(secondProject.getRepositoryFullName()))
+        .body(containsString(firstProject.getRepositoryFullName()))
+        .body(containsString(secondProject.getUsername()))
+        .body(containsString(firstProject.getUsername()))
+        .body(containsString(secondProject.getRepositoryName()))
+        .body(containsString(firstProject.getRepositoryName()))
+        .body(containsString(secondProject.getRepositoryUrl()))
+        .body(containsString(firstProject.getRepositoryUrl()))
+        .body(containsString(secondProject.getBuildTool().toString()))
+        .body(containsString(firstProject.getBuildTool().toString()))
+        .body(containsString("/projects/" + firstProject.getId()))
+        .body(containsString("/projects/" + secondProject.getId()));
   }
 }

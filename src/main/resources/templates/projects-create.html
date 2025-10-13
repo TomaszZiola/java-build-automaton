@@ -93,18 +93,6 @@
 
   <form th:action="@{/projects/create}" th:object="${request}" method="post">
     <div class="field">
-      <label for="name">Name</label>
-      <input id="name" type="text" th:field="*{name}" placeholder="Project name"/>
-      <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</div>
-    </div>
-
-    <div class="field">
-      <label for="repositoryName">Repository (owner/name)</label>
-      <input id="repositoryName" type="text" th:field="*{repositoryName}" placeholder="owner/repo"/>
-      <div class="error" th:if="${#fields.hasErrors('repositoryName')}" th:errors="*{repositoryName}">Repository name error</div>
-    </div>
-
-    <div class="field">
       <label for="repositoryUrl">Repository URL</label>
       <input id="repositoryUrl" type="url" th:field="*{repositoryUrl}" placeholder="https://github.com/owner/repo.git"/>
       <div class="error" th:if="${#fields.hasErrors('repositoryUrl')}" th:errors="*{repositoryUrl}">Repository URL error</div>

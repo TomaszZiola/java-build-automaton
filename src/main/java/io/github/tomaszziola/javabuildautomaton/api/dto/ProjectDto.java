@@ -9,6 +9,6 @@ public record ProjectDto(
     Instant updatedAt,
     String username,
     String repositoryName,
-    String fullName,
+    String repositoryFullName,
     String repositoryUrl,
     BuildTool buildTool) {}
