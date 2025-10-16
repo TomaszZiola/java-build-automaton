@@ -12,7 +12,9 @@ class WebhookRestControllerTest extends BaseUnit {
   @DisplayName("Given isValid payload, when handling webhook, then return OK response")
   void returnsOkResponseWhenPayloadValid() {
     // when
-    final var result = webhookRestControllerImpl.handleWebhook(payload);
+    var result =
+        webhookRestControllerImpl.handleWebhook(
+            "a65977c0-aa67-11f0-9e18-5a74c246d36d", "pull_request", payload);
 
     // then
     assertThat(result).isEqualTo(apiResponse);

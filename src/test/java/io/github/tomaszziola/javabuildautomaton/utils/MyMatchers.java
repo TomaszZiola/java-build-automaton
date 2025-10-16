@@ -8,7 +8,7 @@ import org.hamcrest.Matcher;
 public final class MyMatchers {
   private MyMatchers() {}
 
-  public static Matcher<String> containsWholeWordOutsideUrls(final String word) {
+  public static Matcher<String> containsWholeWordOutsideUrls(String word) {
     final var quote = quote(word);
     final var urlSegment = "[^\\s\"'>]*";
     final var notInUrlLookbehind = "(?<!https?://" + urlSegment + ")";

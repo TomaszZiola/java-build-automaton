@@ -21,7 +21,7 @@ class BuildExecutorTest extends BaseUnit {
       "Given Maven tool, when build invoked, then execute mvn clean install and propagate result")
   void executesMavenBuildWhenRequested() {
     // when
-    final var result = buildExecutorImpl.build(MAVEN, tempDir);
+    var result = buildExecutorImpl.build(MAVEN, tempDir);
 
     // then
     verify(processExecutor).execute(tempDir, "mvn", "clean", "install");
@@ -33,7 +33,7 @@ class BuildExecutorTest extends BaseUnit {
       "Given Gradle tool, when build invoked, then execute gradle clean build and propagate result")
   void executesGradleBuildWhenRequested() {
     // when
-    final var result = buildExecutorImpl.build(GRADLE, tempDir);
+    var result = buildExecutorImpl.build(GRADLE, tempDir);
 
     // then
     verify(processExecutor).execute(tempDir, "gradle", "clean", "build");
@@ -44,7 +44,7 @@ class BuildExecutorTest extends BaseUnit {
   @DisplayName("Given gradlew present and executable, when building, then use wrapper script path")
   void usesGradlewWhenPresentAndExecutable() throws Exception {
     // given
-    final File gradlew = new File(tempDir, "gradlew");
+    File gradlew = new File(tempDir, "gradlew");
     Files.writeString(gradlew.toPath(), "#!/bin/sh\necho gradle\n");
     assertThat(gradlew.setExecutable(true)).isTrue();
 

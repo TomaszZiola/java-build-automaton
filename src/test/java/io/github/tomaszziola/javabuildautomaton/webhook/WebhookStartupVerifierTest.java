@@ -22,7 +22,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
 
   @BeforeEach
   void setUp() {
-    final Logger logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
+    Logger logger = (Logger) LoggerFactory.getLogger(WebhookStartupVerifier.class);
     logAppender = new ListAppender<>();
     logAppender.start();
     logger.addAppender(logAppender);
@@ -35,7 +35,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic("");
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -51,7 +51,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic(null);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -65,7 +65,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic("   ");
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when & then
     assertThatThrownBy(() -> runner.run(null))
@@ -83,7 +83,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic("", true);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -105,7 +105,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic(null, true);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -124,7 +124,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
   @DisplayName("Given configured secret, when verifying, then log info and succeed")
   void logsInfoWhenSecretConfigured() throws Exception {
     // given
-    final ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    ApplicationRunner runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);
@@ -144,7 +144,7 @@ class WebhookStartupVerifierTest extends BaseUnit {
     // given
     webhookProperties = WebhookPropertiesModel.basic("my secret key", true);
     webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
-    final var runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
+    var runner = webhookStartupVerifierImpl.verifyWebhookSecretOnStartup();
 
     // when
     runner.run(null);

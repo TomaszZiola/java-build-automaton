@@ -31,27 +31,27 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
   private final WebhookSecurityService security;
 
   @Override
-  protected boolean shouldNotFilter(final HttpServletRequest request) {
+  protected boolean shouldNotFilter(HttpServletRequest request) {
     return !(HTTP_METHOD.equalsIgnoreCase(request.getMethod())
         && WEBHOOK_PATH.equals(request.getRequestURI()));
   }
 
   @Override
   protected void doFilterInternal(
-      @NonNull final HttpServletRequest request,
-      @NonNull final HttpServletResponse response,
-      @NonNull final FilterChain filterChain)
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-    final var bodyBytes = request.getInputStream().readAllBytes();
-    final var signature = request.getHeader(SIGNATURE_HEADER);
+    var bodyBytes = request.getInputStream().readAllBytes();
+    var signature = request.getHeader(SIGNATURE_HEADER);
 
     if (!security.isSignatureValid(signature, bodyBytes)) {
       response.sendError(SC_UNAUTHORIZED, "Invalid webhook signature");
       return;
     }
 
-    final var repeatable = new CachedBodyRequestWrapper(request, bodyBytes);
+    var repeatable = new CachedBodyRequestWrapper(request, bodyBytes);
     filterChain.doFilter(repeatable, response);
   }
 
@@ -59,20 +59,20 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
     private final byte[] cachedBody;
 
-    CachedBodyRequestWrapper(final HttpServletRequest request, final byte[] cachedBody) {
+    CachedBodyRequestWrapper(HttpServletRequest request, byte[] cachedBody) {
       super(request);
       this.cachedBody = (cachedBody != null) ? cachedBody : new byte[0];
     }
 
     @Override
     public ServletInputStream getInputStream() {
-      final ByteArrayInputStream bais = new ByteArrayInputStream(cachedBody);
+      ByteArrayInputStream bais = new ByteArrayInputStream(cachedBody);
       return new ServletInputStream() {
         private boolean isDone;
 
         @Override
         public int read() {
-          final int valueByte = bais.read();
+          int valueByte = bais.read();
           isDone = (bais.available() == 0);
           return valueByte;
         }

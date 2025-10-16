@@ -14,7 +14,7 @@ class ProjectServiceTest extends BaseUnit {
   @DisplayName("Given request, when finding all, then return list of ProjectDetailsDto")
   void returnsProjectsWhenFindAll() {
     // when
-    final var result = projectServiceImpl.findAll();
+    var result = projectServiceImpl.findAll();
 
     // then
     assertThat(result.getFirst()).isEqualTo(projectDto);
@@ -24,7 +24,7 @@ class ProjectServiceTest extends BaseUnit {
   @DisplayName("Given existing project id, when finding details, then return ProjectDetailsDto")
   void returnsProjectDetailsWhenFindDetailsById() {
     // when
-    final var result = projectServiceImpl.findDetailsById(projectId);
+    var result = projectServiceImpl.findDetailsById(projectId);
 
     // then
     assertThat(result).isEqualTo(projectDto);
@@ -45,7 +45,7 @@ class ProjectServiceTest extends BaseUnit {
       "Given existing project id, when finding project builds, then return list of BuildSummaryDto")
   void returnsBuildSummariesWhenFindProjectBuilds() {
     // when
-    final var result = projectServiceImpl.findProjectBuilds(projectId);
+    var result = projectServiceImpl.findProjectBuilds(projectId);
 
     // then
     assertThat(result.getFirst()).isEqualTo(buildSummaryDto);

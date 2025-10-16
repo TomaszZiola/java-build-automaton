@@ -14,7 +14,7 @@ class BuildMapperTest extends BaseUnit {
   @DisplayName("Given Build entity, when mapping to summary DTO, then map all fields")
   void mapsSummaryFieldsWhenBuildProvided() {
     // when
-    final var result = buildMapperImpl.toSummaryDto(build);
+    var result = buildMapperImpl.toSummaryDto(build);
 
     // then
     assertThat(result).isEqualTo(buildSummaryDto);
@@ -28,7 +28,7 @@ class BuildMapperTest extends BaseUnit {
     buildSummaryDto = BuildSummaryDtoModel.inProgress();
 
     // when
-    final var result = buildMapperImpl.toSummaryDto(build);
+    var result = buildMapperImpl.toSummaryDto(build);
 
     // then
     assertThat(result).isEqualTo(buildSummaryDto);
@@ -38,7 +38,7 @@ class BuildMapperTest extends BaseUnit {
   @DisplayName("Given Build entity, when mapping to details DTO, then map all fields")
   void mapsDetailsFieldsWhenBuildProvided() {
     // when
-    final var result = buildMapperImpl.toDetailsDto(build);
+    var result = buildMapperImpl.toDetailsDto(build);
 
     // then
     assertThat(result).isEqualTo(buildDetailsDto);

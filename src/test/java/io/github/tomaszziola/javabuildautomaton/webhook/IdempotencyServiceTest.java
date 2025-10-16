@@ -26,8 +26,8 @@ class IdempotencyServiceTest extends BaseUnit {
   @DisplayName("Given new delivery id, when checking firstSeen, then persist and return true")
   void shouldPersistAndReturnTrue_whenNewId() {
     // given
-    final var id = "abc";
-    final var result = idempotencyServiceImpl.isDuplicateWebhook(id);
+    var id = "abc";
+    var result = idempotencyServiceImpl.isDuplicateWebhook(id);
 
     // when & then
     assertThat(result).isFalse();
@@ -38,12 +38,12 @@ class IdempotencyServiceTest extends BaseUnit {
   @DisplayName("Given duplicate delivery id, when checking firstSeen, then return false")
   void shouldReturnFalse_whenDuplicate() {
     // given
-    final var id = "duplicated";
+    var id = "duplicated";
     doThrow(new DataIntegrityViolationException("duplicated"))
         .when(webhookDeliveryRepository)
         .save(any(WebhookDelivery.class));
 
-    final var result = idempotencyServiceImpl.isDuplicateWebhook(id);
+    var result = idempotencyServiceImpl.isDuplicateWebhook(id);
 
     // when & then
     assertThat(result).isTrue();

@@ -16,7 +16,7 @@ public final class BuildSummaryDtoModel {
         42L, SUCCESS, parse("2025-08-22T11:10:10Z"), parse("2025-08-22T11:20:10Z"));
   }
 
-  public static BuildSummaryDto basic(final BuildStatus status) {
+  public static BuildSummaryDto basic(BuildStatus status) {
     return new BuildSummaryDto(42L, status, parse("2025-08-22T11:10:10Z"), null);
   }
 

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 @Service
 public final class ProcessRunner {
 
-  public Process start(final File workingDir, final String... command) throws IOException {
-    final var processBuilder = new ProcessBuilder(command);
+  public Process start(File workingDir, String... command) throws IOException {
+    var processBuilder = new ProcessBuilder(command);
     processBuilder.directory(workingDir);
     processBuilder.redirectErrorStream(true);
     return processBuilder.start();

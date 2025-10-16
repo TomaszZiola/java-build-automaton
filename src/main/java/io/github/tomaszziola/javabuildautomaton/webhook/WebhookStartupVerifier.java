@@ -14,7 +14,7 @@ public class WebhookStartupVerifier {
   private final String secret;
   private final boolean allowMissing;
 
-  public WebhookStartupVerifier(final WebhookProperties properties) {
+  public WebhookStartupVerifier(WebhookProperties properties) {
     this.secret = properties.getWebhookSecret();
     this.allowMissing = properties.isAllowMissingSecret();
   }
@@ -23,7 +23,7 @@ public class WebhookStartupVerifier {
   ApplicationRunner verifyWebhookSecretOnStartup() {
     return _ -> {
       if ((secret == null || secret.isBlank()) && !allowMissing) {
-        final String msg =
+        String msg =
             "Application misconfiguration: webhook.webhook-secret is empty but "
                 + "webhook.allow-missing-webhook-secret=false. "
                 + "Set WEBHOOK_WEBHOOK_SECRET or explicitly allow missing (ONLY for local debug).";

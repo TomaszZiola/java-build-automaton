@@ -6,6 +6,8 @@ import static io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuardRes
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadModel;
+import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadWithHeadersModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,28 +18,29 @@ class IngestionGuardTest extends BaseUnit {
   @DisplayName("Given duplicate delivery, when checking, then return DUPLICATE")
   void shouldReturnDuplicate_whenNotFirstSeen() {
     // given
-    when(requestHeaderAccessor.deliveryId()).thenReturn("id");
-    when(idempotencyService.isDuplicateWebhook("id")).thenReturn(true);
+    when(idempotencyService.isDuplicateWebhook("a65977c0-aa67-11f0-9e18-5a74c246d36d"))
+        .thenReturn(true);
 
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion("refs/heads/main")).isEqualTo(DUPLICATE);
+    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(DUPLICATE);
   }
 
   @Test
   @DisplayName("Given non-trigger ref, when checking, then return NON_TRIGGER_REF")
   void shouldReturnNonTrigger_whenRefNotAllowed() {
     // given
-    when(requestHeaderAccessor.deliveryId()).thenReturn("id");
-    when(branchPolicy.isNonTriggerRef("refs/heads/feat")).thenReturn(true);
+    payload = WebhookPayloadModel.builder().ref("refs/heads/feature/abc").build();
+    payloadWithHeaders = WebhookPayloadWithHeadersModel.builder().payload(payload).build();
+    when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(false);
 
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion("refs/heads/feat")).isEqualTo(NON_TRIGGER_REF);
+    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(NON_TRIGGER_REF);
   }
 
   @Test
   @DisplayName("Given first-seen and trigger ref, when checking, then return ALLOW")
   void shouldReturnAllow_whenOk() {
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion("refs/heads/main")).isEqualTo(ALLOW);
+    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(ALLOW);
   }
 }

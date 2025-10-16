@@ -22,10 +22,10 @@ class WebhookIngestionServiceTest extends BaseUnit {
       "Given NON_TRIGGER_REF, when handling webhook, then return NOT_FOUND with ignore message")
   void shouldReturnNotFound_whenNonTriggerRef() {
     // given
-    when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(NON_TRIGGER_REF);
+    when(ingestionGuard.evaluateIngestion(payloadWithHeaders)).thenReturn(NON_TRIGGER_REF);
 
     // when
-    final var result = webhookIngestionServiceImpl.handleWebhook(payload);
+    var result = webhookIngestionServiceImpl.handleWebhook(payloadWithHeaders);
 
     // then
     assertThat(result.status()).isEqualTo(NOT_FOUND);
@@ -37,10 +37,10 @@ class WebhookIngestionServiceTest extends BaseUnit {
       "Given DUPLICATE, when handling webhook, then return NOT_FOUND with duplicate message")
   void shouldReturnNotFound_whenDuplicateDelivery() {
     // given
-    when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(DUPLICATE);
+    when(ingestionGuard.evaluateIngestion(payloadWithHeaders)).thenReturn(DUPLICATE);
 
     // when
-    final var result = webhookIngestionServiceImpl.handleWebhook(payload);
+    var result = webhookIngestionServiceImpl.handleWebhook(payloadWithHeaders);
 
     // then
     assertThat(result.status()).isEqualTo(NOT_FOUND);
@@ -51,10 +51,10 @@ class WebhookIngestionServiceTest extends BaseUnit {
   @DisplayName("Given existing project, when handling webhook, then enqueue build and return FOUND")
   void shouldEnqueueBuild_whenProjectFound() {
     // given
-    when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(ALLOW);
+    when(ingestionGuard.evaluateIngestion(payloadWithHeaders)).thenReturn(ALLOW);
 
     // when
-    final var result = webhookIngestionServiceImpl.handleWebhook(payload);
+    var result = webhookIngestionServiceImpl.handleWebhook(payloadWithHeaders);
 
     // then
     assertThat(result.status()).isEqualTo(FOUND);
@@ -65,12 +65,12 @@ class WebhookIngestionServiceTest extends BaseUnit {
   @DisplayName("Given missing project, when handling webhook, then return NOT_FOUND")
   void shouldReturnNotFound_whenProjectMissing() {
     // given
-    when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(ALLOW);
+    when(ingestionGuard.evaluateIngestion(payloadWithHeaders)).thenReturn(ALLOW);
     when(projectRepository.findByRepositoryFullName(payload.repository().fullName()))
         .thenReturn(empty());
 
     // when
-    final var result = webhookIngestionServiceImpl.handleWebhook(payload);
+    var result = webhookIngestionServiceImpl.handleWebhook(payloadWithHeaders);
 
     // then
     assertThat(result.status()).isEqualTo(NOT_FOUND);
@@ -82,10 +82,10 @@ class WebhookIngestionServiceTest extends BaseUnit {
   @DisplayName("Given Java version too old, when handling webhook, then return JAVA_OUTDATED")
   void shouldReturnNotFound_whenUnhandledOutcome() {
     // given
-    when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(JAVA_OUTDATED);
+    when(ingestionGuard.evaluateIngestion(payloadWithHeaders)).thenReturn(JAVA_OUTDATED);
 
     // when
-    final var result = webhookIngestionServiceImpl.handleWebhook(payload);
+    var result = webhookIngestionServiceImpl.handleWebhook(payloadWithHeaders);
 
     // then
     assertThat(result.status()).isEqualTo(NOT_FOUND);

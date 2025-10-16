@@ -29,39 +29,39 @@ public class BuildService {
   private final WorkingDirectoryValidator workingDirectoryValidator;
 
   @Transactional
-  public void executeBuild(final long buildId) {
-    final var build =
+  public void executeBuild(long buildId) {
+    var build =
         buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
-    final var project = build.getProject();
+    var project = build.getProject();
     LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getRepositoryName());
     buildLifecycleService.markInProgress(build);
     executeBuildSteps(project, build);
   }
 
-  public void startBuildProcess(final Project project) {
+  public void startBuildProcess(Project project) {
     LOGGER.info("Starting build process for project: {}", project.getUsername());
-    final var build = buildLifecycleService.createInProgress(project);
+    var build = buildLifecycleService.createInProgress(project);
     executeBuildSteps(project, build);
   }
 
-  public BuildDetailsDto findBuildDetailsById(final Long buildId) {
+  public BuildDetailsDto findBuildDetailsById(Long buildId) {
     return buildRepository
         .findById(buildId)
         .map(buildMapper::toDetailsDto)
         .orElseThrow(() -> new BuildNotFoundException(buildId));
   }
 
-  private void executeBuildSteps(final Project project, final Build build) {
-    final var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
+  private void executeBuildSteps(Project project, Build build) {
+    var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var workingDirectoryStatus =
+    var workingDirectoryStatus =
         workingDirectoryValidator.prepareWorkspace(project, build, logBuilder);
     if (!workingDirectoryStatus.isValid()) {
       return;
     }
-    final var workingDirectory = workingDirectoryStatus.workingDirectory();
+    var workingDirectory = workingDirectoryStatus.workingDirectory();
 
-    final var gitSyncStatus = runGitSync(project, build, workingDirectory, logBuilder);
+    var gitSyncStatus = runGitSync(project, build, workingDirectory, logBuilder);
     if (!gitSyncStatus.isSuccess()) {
       return;
     }
@@ -69,13 +69,10 @@ public class BuildService {
   }
 
   private ExecutionResult runGitSync(
-      final Project project,
-      final Build build,
-      final File workingDirectory,
-      final StringBuilder logBuilder) {
+      Project project, Build build, File workingDirectory, StringBuilder logBuilder) {
 
-    final var repoInitialized = new File(workingDirectory, ".git").isDirectory();
-    final var gitResult =
+    var repoInitialized = new File(workingDirectory, ".git").isDirectory();
+    var gitResult =
         repoInitialized
             ? gitCommandRunner.pull(workingDirectory)
             : gitCommandRunner.clone(project.getRepositoryUrl(), workingDirectory);
@@ -83,7 +80,7 @@ public class BuildService {
     logBuilder.append(gitResult.logs());
     if (!gitResult.isSuccess()) {
       buildLifecycleService.complete(build, FAILED, logBuilder);
-      final var action = repoInitialized ? "pull" : "clone";
+      var action = repoInitialized ? "pull" : "clone";
       LOGGER.error("Git {} failed for project: {}", action, project.getUsername());
       return gitResult;
     }
@@ -91,12 +88,9 @@ public class BuildService {
   }
 
   private void runProjectBuild(
-      final Project project,
-      final Build build,
-      final File workingDirectory,
-      final StringBuilder logBuilder) {
+      Project project, Build build, File workingDirectory, StringBuilder logBuilder) {
 
-    final var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory);
+    var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory);
     logBuilder.append(buildResult.logs());
     if (!buildResult.isSuccess()) {
       buildLifecycleService.complete(build, FAILED, logBuilder);

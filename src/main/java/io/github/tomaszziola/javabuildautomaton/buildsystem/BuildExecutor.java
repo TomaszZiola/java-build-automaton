@@ -21,19 +21,19 @@ public class BuildExecutor {
 
   private final ProcessExecutor processExecutor;
 
-  public ExecutionResult build(final BuildTool buildTool, final File workingDir) {
+  public ExecutionResult build(BuildTool buildTool, File workingDir) {
     return switch (buildTool) {
       case MAVEN -> runMaven(workingDir);
       case GRADLE -> runGradle(workingDir);
     };
   }
 
-  private ExecutionResult runMaven(final File workingDir) {
+  private ExecutionResult runMaven(File workingDir) {
     return processExecutor.execute(workingDir, CMD_MVN, ARG_CLEAN, ARG_INSTALL);
   }
 
-  private ExecutionResult runGradle(final File workingDir) {
-    final var gradlew = new File(workingDir, CMD_GRADLEW);
+  private ExecutionResult runGradle(File workingDir) {
+    var gradlew = new File(workingDir, CMD_GRADLEW);
     if (!gradlew.exists() || !gradlew.isFile()) {
       return processExecutor.execute(workingDir, CMD_GRADLE, ARG_CLEAN, ARG_BUILD);
     }
@@ -48,7 +48,7 @@ public class BuildExecutor {
       }
     }
 
-    final var cmd = executable ? gradlew.getAbsolutePath() : CMD_GRADLE;
+    var cmd = executable ? gradlew.getAbsolutePath() : CMD_GRADLE;
     return processExecutor.execute(workingDir, cmd, ARG_CLEAN, ARG_BUILD);
   }
 }

@@ -37,7 +37,7 @@ public class WorkspaceService {
     }
   }
 
-  private String requiresRepositoryName(final Project project) {
+  private String requiresRepositoryName(Project project) {
     final var repoName = project.getRepositoryName();
     if (!hasText(repoName)) {
       throw new WorkspaceException("Repository Name is missing; cannot resolve workspace path");
@@ -45,7 +45,7 @@ public class WorkspaceService {
     return repoName;
   }
 
-  public Path resolve(final Project project) {
+  public Path resolve(Project project) {
     final var base = requireExistingBase();
     final var repoName = requiresRepositoryName(project);
     final var projectDir = base.resolve(repoName).normalize();
@@ -55,7 +55,7 @@ public class WorkspaceService {
     return projectDir;
   }
 
-  public Path ensureExists(final Project project) {
+  public Path ensureExists(Project project) {
     final var workspacePath = resolve(project);
     try {
       if (!exists(workspacePath)) {
@@ -70,7 +70,7 @@ public class WorkspaceService {
     return canonical.project();
   }
 
-  private CanonicalPaths resolveCanonical(final Path workspacePath) {
+  private CanonicalPaths resolveCanonical(Path workspacePath) {
     try {
       final var canonicalBase = get(properties.getBaseDir()).toRealPath();
       final var canonicalProject = workspacePath.toRealPath();
@@ -81,7 +81,7 @@ public class WorkspaceService {
     }
   }
 
-  private void validateWithinBase(final Path canonicalBase, final Path canonicalProject) {
+  private void validateWithinBase(Path canonicalBase, final Path canonicalProject) {
     if (!isDirectory(canonicalProject)) {
       throw new WorkspaceException("Workspace path is not a directory: " + canonicalProject);
     }

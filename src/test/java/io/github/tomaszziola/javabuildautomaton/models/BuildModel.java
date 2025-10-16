@@ -11,7 +11,7 @@ public final class BuildModel {
   private BuildModel() {}
 
   public static Build basic() {
-    final var build = new Build();
+    var build = new Build();
     build.setId(42L);
     build.setStatus(SUCCESS);
     build.setStartTime(parse("2025-08-22T11:10:10Z"));
@@ -22,7 +22,7 @@ public final class BuildModel {
   }
 
   public static Build inProgress() {
-    final var build = basic();
+    var build = basic();
     build.setStatus(IN_PROGRESS);
     build.setEndTime(null);
     return build;

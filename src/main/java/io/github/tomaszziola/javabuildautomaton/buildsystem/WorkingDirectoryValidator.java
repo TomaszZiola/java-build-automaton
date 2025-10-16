@@ -32,7 +32,7 @@ public class WorkingDirectoryValidator {
     return validateWorkspace(workingDirectory, project, build, buildLog);
   }
 
-  private File resolveWorkspace(final Project project) {
+  private File resolveWorkspace(Project project) {
     final var projectWorkspace = workspaceService.ensureExists(project);
     return projectWorkspace.toFile();
   }
@@ -60,7 +60,7 @@ public class WorkingDirectoryValidator {
     }
   }
 
-  private void logWorkingDirError(final Project project, final String pathText) {
+  private void logWorkingDirError(Project project, final String pathText) {
     if (pathText != null) {
       LOGGER.error(
           "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",

@@ -6,7 +6,7 @@ public final class ExecutionResultModel {
 
   private ExecutionResultModel() {}
 
-  public static ExecutionResult basic(final String log) {
+  public static ExecutionResult basic(String log) {
     return new ExecutionResult(true, log + "'s ok\n");
   }
 }

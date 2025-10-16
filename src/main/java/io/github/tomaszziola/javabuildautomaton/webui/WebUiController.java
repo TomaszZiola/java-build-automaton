@@ -25,8 +25,8 @@ public class WebUiController {
   private final ProjectService projectService;
 
   @GetMapping
-  public String showDashboard(final Model model) {
-    final var projects = projectService.findAll();
+  public String showDashboard(Model model) {
+    var projects = projectService.findAll();
 
     model.addAttribute("projects", projects);
 
@@ -34,9 +34,9 @@ public class WebUiController {
   }
 
   @GetMapping("/projects/{projectId}")
-  public String showProjectDetails(@PathVariable final Long projectId, final Model model) {
-    final var project = projectService.findDetailsById(projectId);
-    final var builds = projectService.findProjectBuilds(projectId);
+  public String showProjectDetails(@PathVariable Long projectId, Model model) {
+    var project = projectService.findDetailsById(projectId);
+    var builds = projectService.findProjectBuilds(projectId);
 
     model.addAttribute("project", project);
     model.addAttribute("builds", builds);
@@ -46,9 +46,9 @@ public class WebUiController {
 
   @GetMapping("/projects/{projectId}/builds/{buildId}")
   public String showBuildDetails(
-      @PathVariable final Long projectId, @PathVariable final Long buildId, final Model model) {
-    final var project = projectService.findDetailsById(projectId);
-    final var build = buildService.findBuildDetailsById(buildId);
+      @PathVariable Long projectId, @PathVariable Long buildId, Model model) {
+    var project = projectService.findDetailsById(projectId);
+    var build = buildService.findBuildDetailsById(buildId);
 
     model.addAttribute("project", project);
     model.addAttribute("build", build);
@@ -57,7 +57,7 @@ public class WebUiController {
   }
 
   @GetMapping("/projects/create")
-  public String showCreateProjectForm(final Model model) {
+  public String showCreateProjectForm(Model model) {
     model.addAttribute("request", new PostProjectDto(null, null));
     model.addAttribute("buildTools", values());
     return "projects-create";
@@ -65,9 +65,9 @@ public class WebUiController {
 
   @PostMapping("/projects/create")
   public String createProject(
-      @ModelAttribute("request") @Valid final PostProjectDto request,
-      final BindingResult bindingResult,
-      final Model model) {
+      @ModelAttribute("request") @Valid PostProjectDto request,
+      BindingResult bindingResult,
+      Model model) {
     if (bindingResult.hasErrors()) {
       model.addAttribute("buildTools", values());
       return "projects-create";

@@ -18,8 +18,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(ProjectNotFoundException.class)
   public ResponseEntity<ErrorResponse> handleProjectNotFound(
-      final ProjectNotFoundException exception, final HttpServletRequest request) {
-    final var errorResponse =
+      ProjectNotFoundException exception, HttpServletRequest request) {
+    var errorResponse =
         new ErrorResponse(
             now(), NOT_FOUND.value(), "Not Found", exception.getMessage(), request.getRequestURI());
     return new ResponseEntity<>(errorResponse, NOT_FOUND);
@@ -27,8 +27,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BuildNotFoundException.class)
   public ResponseEntity<ErrorResponse> handleBuildNotFound(
-      final BuildNotFoundException exception, final HttpServletRequest request) {
-    final var errorResponse =
+      BuildNotFoundException exception, HttpServletRequest request) {
+    var errorResponse =
         new ErrorResponse(
             now(), NOT_FOUND.value(), "Not Found", exception.getMessage(), request.getRequestURI());
     return new ResponseEntity<>(errorResponse, NOT_FOUND);
@@ -36,8 +36,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(WorkspaceException.class)
   public ResponseEntity<ErrorResponse> handleWorkspaceException(
-      final WorkspaceException exception, final HttpServletRequest request) {
-    final var errorResponse =
+      WorkspaceException exception, HttpServletRequest request) {
+    var errorResponse =
         new ErrorResponse(
             now(),
             BAD_REQUEST.value(),

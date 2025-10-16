@@ -10,7 +10,7 @@ public final class ProjectModel {
   private ProjectModel() {}
 
   public static Project basic() {
-    final var project = new Project();
+    var project = new Project();
     project.setId(1L);
     project.setUsername("TomaszZiola");
     project.setRepositoryName("java-build-automaton");
@@ -23,7 +23,7 @@ public final class ProjectModel {
   }
 
   public static Project unpersisted() {
-    final var project = new Project();
+    var project = new Project();
     project.setUsername("TomaszZiola");
     project.setRepositoryName("java-build-automaton");
     project.setRepositoryFullName("TomaszZiola/java-build-automaton");

@@ -27,7 +27,7 @@ class WebUiControllerITTest extends BaseIntegrationTest {
       new PostgreSQLContainer<>("postgres:16-alpine");
 
   @DynamicPropertySource
-  static void registerProps(final DynamicPropertyRegistry registry) {
+  static void registerProps(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRESQL_CONTAINER::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRESQL_CONTAINER::getUsername);
     registry.add("spring.datasource.password", POSTGRESQL_CONTAINER::getPassword);

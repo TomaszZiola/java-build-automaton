@@ -56,7 +56,7 @@ public class Project {
   private String repositoryUrl;
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     }
@@ -64,12 +64,12 @@ public class Project {
       return false;
     }
 
-    final Class<?> otherEffectiveClass =
+    Class<?> otherEffectiveClass =
         other instanceof HibernateProxy
             ? ((HibernateProxy) other).getHibernateLazyInitializer().getPersistentClass()
             : other.getClass();
 
-    final Class<?> thisEffectiveClass =
+    Class<?> thisEffectiveClass =
         this instanceof HibernateProxy
             ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass()
             : this.getClass();
@@ -78,7 +78,7 @@ public class Project {
       return false;
     }
 
-    final Project entity = (Project) other;
+    Project entity = (Project) other;
     return this.id != null && this.id.equals(entity.id);
   }
 

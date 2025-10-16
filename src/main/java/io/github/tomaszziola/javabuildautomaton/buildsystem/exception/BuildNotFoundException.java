@@ -7,7 +7,7 @@ public class BuildNotFoundException extends RuntimeException implements Serializ
 
   @Serial private static final long serialVersionUID = 1L;
 
-  public BuildNotFoundException(final Long buildId) {
+  public BuildNotFoundException(Long buildId) {
     super("Build not found with id: " + buildId);
   }
 }

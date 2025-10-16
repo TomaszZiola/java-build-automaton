@@ -27,16 +27,16 @@ public class WebhookSecurityService {
   private final Optional<SecretKeySpec> hmacKey;
   private final boolean allowMissingSecret;
 
-  public WebhookSecurityService(final WebhookProperties properties) {
+  public WebhookSecurityService(WebhookProperties properties) {
     this.allowMissingSecret = properties.isAllowMissingSecret();
-    final var webhookSecret = properties.getWebhookSecret();
+    var webhookSecret = properties.getWebhookSecret();
     this.hmacKey =
         (webhookSecret == null || webhookSecret.isBlank())
             ? empty()
             : of(new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_SHA256));
   }
 
-  public boolean isSignatureValid(final String signatureHeader, final byte[] payloadBody) {
+  public boolean isSignatureValid(String signatureHeader, byte[] payloadBody) {
     if (hmacKey.isEmpty()) {
       if (allowMissingSecret) {
         LOGGER.warn(
@@ -56,8 +56,8 @@ public class WebhookSecurityService {
       return false;
     }
 
-    final var hexPart = signatureHeader.substring(SIGNATURE_PREFIX.length()).toLowerCase(ROOT);
-    final byte[] providedSigBytes;
+    var hexPart = signatureHeader.substring(SIGNATURE_PREFIX.length()).toLowerCase(ROOT);
+    byte[] providedSigBytes;
     try {
       providedSigBytes = HexFormat.of().parseHex(hexPart);
     } catch (IllegalArgumentException ex) {
@@ -74,12 +74,12 @@ public class WebhookSecurityService {
     }
 
     try {
-      final var mac = Mac.getInstance(HMAC_SHA256);
+      var mac = Mac.getInstance(HMAC_SHA256);
       mac.init(hmacKey.get());
-      final var expectedSigBytes = mac.doFinal(payloadBody);
+      var expectedSigBytes = mac.doFinal(payloadBody);
 
       return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
-    } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       LOGGER.error("Error while verifying webhook signature", e);
       return false;
     }

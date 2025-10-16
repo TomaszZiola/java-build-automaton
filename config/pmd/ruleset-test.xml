@@ -1,13 +1,19 @@
 <?xml version="1.0"?>
-<ruleset name="Java/Spring Main Rules"
+<ruleset name="Java/Spring Test Rules"
   xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2_0_0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
 
-  <rule ref="category/java/errorprone.xml"/>
+  <rule ref="category/java/errorprone.xml">
+    <exclude name="TestClassWithoutTestCases"/>
+    <exclude name="AvoidFieldNameMatchingMethodName"/>
+  </rule>
+
   <rule ref="category/java/performance.xml"/>
+
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
+    <exclude name="UnitTestContainsTooManyAsserts"/>
   </rule>
 
   <rule ref="category/java/codestyle.xml">
@@ -20,6 +26,7 @@
     <exclude name="LongVariable"/>
     <exclude name="MethodArgumentCouldBeFinal"/>
     <exclude name="TooManyStaticImports"/>
+    <exclude name="MethodNamingConventions"/>
     <exclude name="UnnecessaryConstructor"/>
     <exclude name="LocalVariableCouldBeFinal"/>
   </rule>
@@ -30,5 +37,8 @@
     <exclude name="UseUtilityClass"/>
     <exclude name="ExcessiveImports"/>
     <exclude name="LoosePackageCoupling"/>
+    <exclude name="NcssCount"/>
+    <exclude name="TooManyFields"/>
+    <exclude name="CouplingBetweenObjects"/>
   </rule>
 </ruleset>

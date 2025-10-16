@@ -71,7 +71,16 @@ pmd {
     isConsoleOutput = true
     toolVersion = "7.17.0"
     rulesMinimumPriority = 5
+}
+
+tasks.named<Pmd>("pmdMain") {
     ruleSetFiles = files("config/pmd/ruleset.xml")
+    ruleSets = emptyList() // wyłącz built-in
+}
+
+tasks.named<Pmd>("pmdTest") {
+    ruleSetFiles = files("config/pmd/ruleset-test.xml")
+    ruleSets = emptyList()
 }
 
 tasks.test {

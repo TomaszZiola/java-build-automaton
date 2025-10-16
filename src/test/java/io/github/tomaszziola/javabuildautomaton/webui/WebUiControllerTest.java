@@ -22,7 +22,7 @@ class WebUiControllerTest extends BaseUnit {
       "Given existing projects, when showing dashboard, then return dashboard view and projects in model")
   void returnsDashboardViewAndProjectsWhenShowDashboard() {
     // when
-    final var view = webUiControllerImpl.showDashboard(modelImpl);
+    var view = webUiControllerImpl.showDashboard(modelImpl);
 
     // then
     assertThat(view).isEqualTo("dashboard");
@@ -35,7 +35,7 @@ class WebUiControllerTest extends BaseUnit {
       "Given existing project, when showing project details, then return view and model attributes")
   void returnsProjectDetailsViewAndModelWhenShowProjectDetails() {
     // when
-    final var view = webUiControllerImpl.showProjectDetails(projectId, modelImpl);
+    var view = webUiControllerImpl.showProjectDetails(projectId, modelImpl);
 
     // then
     assertThat(view).isEqualTo("project-details");
@@ -62,7 +62,7 @@ class WebUiControllerTest extends BaseUnit {
       "Given existing project, when showing build details, then return view and model attributes")
   void returnsBuildDetailsViewAndModelWhenShowBuildDetails() {
     // when
-    final var view = webUiControllerImpl.showBuildDetails(projectId, buildId, modelImpl);
+    var view = webUiControllerImpl.showBuildDetails(projectId, buildId, modelImpl);
 
     // then
     assertThat(view).isEqualTo("build-details");
@@ -89,7 +89,7 @@ class WebUiControllerTest extends BaseUnit {
       "Given request to show create project form, then return form view and include empty request and build tools")
   void returnsFormViewAndModelWhenShowCreateProjectForm() {
     // when
-    final var view = webUiControllerImpl.showCreateProjectForm(modelImpl);
+    var view = webUiControllerImpl.showCreateProjectForm(modelImpl);
 
     // then
     assertThat(view).isEqualTo("projects-create");
@@ -103,11 +103,11 @@ class WebUiControllerTest extends BaseUnit {
       "Given invalid request, when creating project, then return form view and include build tools")
   void returnsFormViewAndBuildToolsWhenCreateProjectHasErrors() {
     // given
-    final var errors = new BeanPropertyBindingResult(postProjectDto, "request");
+    var errors = new BeanPropertyBindingResult(postProjectDto, "request");
     errors.reject("invalid");
 
     // when
-    final var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
+    var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
 
     // then
     assertThat(view).isEqualTo("projects-create");
@@ -119,10 +119,10 @@ class WebUiControllerTest extends BaseUnit {
   @DisplayName("Given valid request, when creating project, then save and redirect to dashboard")
   void savesProjectAndRedirectsWhenCreateProjectIsValid() {
     // given
-    final var errors = new BeanPropertyBindingResult(postProjectDto, "request");
+    var errors = new BeanPropertyBindingResult(postProjectDto, "request");
 
     // when
-    final var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
+    var view = webUiControllerImpl.createProject(postProjectDto, errors, modelImpl);
 
     // then
     assertThat(view).isEqualTo("redirect:/");

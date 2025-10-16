@@ -15,7 +15,7 @@ class ProjectMapperTest extends BaseUnit {
       "Given Project entity, when mapping to ProjectDto, then all fields are mapped correctly")
   void givenProjectEntity_whenMappingToProjectDto_thenAllFieldsMappedCorrectly() {
     // when
-    final var result = projectMapperImpl.toDetailsDto(project);
+    var result = projectMapperImpl.toDetailsDto(project);
 
     // then
     assertThat(result.id()).isEqualTo(1L);
@@ -36,7 +36,7 @@ class ProjectMapperTest extends BaseUnit {
       "Given PostProjectDto, when mapping to Project entity, then all fields are mapped correctly")
   void givenPostProjectDto_whenMappingToProject_thenAllFieldsMappedCorrectly() {
     // when
-    final var result = projectMapperImpl.toEntity(postProjectDto);
+    var result = projectMapperImpl.toEntity(postProjectDto);
 
     // then
     assertThat(result.getCreatedAt()).isNotNull();

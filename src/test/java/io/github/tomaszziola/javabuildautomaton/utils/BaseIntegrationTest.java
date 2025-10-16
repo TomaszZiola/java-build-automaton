@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class BaseIntegrationTest {
 
   @Autowired private ProjectRepository projectRepository;

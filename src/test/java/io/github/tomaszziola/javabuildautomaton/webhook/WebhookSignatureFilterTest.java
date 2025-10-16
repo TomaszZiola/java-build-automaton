@@ -30,7 +30,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
   void forwardsWithoutValidationForNonWebhookRequest() throws Exception {
     // given
     httpServletRequestImpl.setMethod("GET");
-    httpServletRequestImpl.setRequestURI(API_PATH);
+    httpServletRequestImpl.setRequestURI(apiPath);
 
     // when
     webhookSignatureFilterImpl.doFilter(
@@ -47,7 +47,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
   void forwardsWithoutValidationForGetWebhook() throws Exception {
     // given
     httpServletRequestImpl.setMethod("GET");
-    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setRequestURI(webhookPath);
 
     // when
     webhookSignatureFilterImpl.doFilter(
@@ -64,7 +64,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
   void forwardsWithoutValidationForPostNonWebhookPath() throws Exception {
     // given
     httpServletRequestImpl.setMethod(postMethod);
-    httpServletRequestImpl.setRequestURI(API_PATH);
+    httpServletRequestImpl.setRequestURI(apiPath);
 
     // when
     webhookSignatureFilterImpl.doFilter(
@@ -81,10 +81,10 @@ class WebhookSignatureFilterTest extends BaseUnit {
   @ValueSource(strings = {"sha1=abc", "sha256=zz", "sha256=12"})
   @DisplayName(
       "Given POST /webhook with invalid header {0}, when filtering, then return 401 and stop chain")
-  void returns401AndStopsChainForInvalidHeader(final String header) throws Exception {
+  void returns401AndStopsChainForInvalidHeader(String header) throws Exception {
     // given
     httpServletRequestImpl.setMethod(postMethod);
-    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setRequestURI(webhookPath);
     httpServletRequestImpl.setContent(bodyBytes);
     if (header != null) {
       httpServletRequestImpl.addHeader(validSha256HeaderName, header);
@@ -109,7 +109,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
   void forwardsAndWrapsForValidSignature() throws Exception {
     // given
     httpServletRequestImpl.setMethod(postMethod);
-    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setRequestURI(webhookPath);
     httpServletRequestImpl.setContent(bodyBytes);
     httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
@@ -121,9 +121,9 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    final var requestCaptor = forClass(HttpServletRequest.class);
+    var requestCaptor = forClass(HttpServletRequest.class);
     verify(filterChain, times(1)).doFilter(requestCaptor.capture(), eq(httpServletResponseImpl));
-    final HttpServletRequest wrapped = requestCaptor.getValue();
+    HttpServletRequest wrapped = requestCaptor.getValue();
     assertThat(wrapped).isNotSameAs(httpServletRequestImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
@@ -134,11 +134,11 @@ class WebhookSignatureFilterTest extends BaseUnit {
   void allowsDownstreamToReadBodyForValidSignature() throws Exception {
     // given
     httpServletRequestImpl.setMethod(postMethod);
-    httpServletRequestImpl.setRequestURI(WEBHOOK_PATH);
+    httpServletRequestImpl.setRequestURI(webhookPath);
     httpServletRequestImpl.setContent(bodyJson.getBytes(UTF_8));
     httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
-    final var chain = new BodyReadingChain();
+    var chain = new BodyReadingChain();
 
     // when
     webhookSignatureFilterImpl.doFilter(httpServletRequestImpl, httpServletResponseImpl, chain);
@@ -154,10 +154,9 @@ class WebhookSignatureFilterTest extends BaseUnit {
     String capturedBody;
 
     @Override
-    public void doFilter(final ServletRequest request, final ServletResponse response)
-        throws IOException {
+    public void doFilter(ServletRequest request, ServletResponse response) throws IOException {
       this.capturedRequest = request;
-      final var bytes = request.getInputStream().readAllBytes();
+      var bytes = request.getInputStream().readAllBytes();
       this.capturedBody = new String(bytes, UTF_8);
     }
   }

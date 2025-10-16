@@ -21,18 +21,18 @@ public class ProcessExecutor {
   private final ProcessRunner processRunner;
   private final OutputCollector outputCollector;
 
-  public ExecutionResult execute(final File workingDir, final String... command) {
+  public ExecutionResult execute(File workingDir, String... command) {
     LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));
 
-    final var logOutput = new StringBuilder(LOG_INITIAL_CAPACITY);
+    var logOutput = new StringBuilder(LOG_INITIAL_CAPACITY);
 
     try {
-      final var process = processRunner.start(workingDir, command);
+      var process = processRunner.start(workingDir, command);
 
       outputCollector.collect(process.getInputStream(), logOutput);
 
-      final var exitCode = process.waitFor();
-      final var isSuccess = exitCode == 0;
+      var exitCode = process.waitFor();
+      var isSuccess = exitCode == 0;
       if (!isSuccess) {
         logOutput.append("[[ERROR]] Command failed: ").append(join(" ", command));
       }

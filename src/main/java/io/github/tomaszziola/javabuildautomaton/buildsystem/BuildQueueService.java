@@ -32,18 +32,18 @@ public class BuildQueueService {
 
   private final BuildService buildService;
 
-  public BuildQueueService(final BuildService buildService, final BuildProperties props) {
+  public BuildQueueService(BuildService buildService, BuildProperties props) {
     this.buildService = buildService;
     this.permits = new Semaphore(props.getMaxParallel(), true);
     this.queue = new LinkedBlockingQueue<>(props.getQueue().getCapacity());
   }
 
-  public void enqueue(final Long buildId) {
+  public void enqueue(Long buildId) {
     if (buildId == null) {
       LOGGER.warn("Cannot enqueue null build id");
       return;
     }
-    final boolean offered = queue.offer(buildId);
+    boolean offered = queue.offer(buildId);
     if (offered) {
       LOGGER.info("Enqueued build id={}", buildId);
     } else {
@@ -60,7 +60,7 @@ public class BuildQueueService {
     workerExecutor =
         newSingleThreadExecutor(
             r -> {
-              final var thread = new Thread(r, "build-worker");
+              var thread = new Thread(r, "build-worker");
               thread.setDaemon(false);
               return thread;
             });
@@ -78,7 +78,7 @@ public class BuildQueueService {
     LOGGER.info("Build worker started");
     while (!currentThread().isInterrupted()) {
       try {
-        final var buildId = queue.poll(1, SECONDS);
+        var buildId = queue.poll(1, SECONDS);
         if (buildId == null) {
           continue;
         }
@@ -109,8 +109,8 @@ public class BuildQueueService {
   @SuppressWarnings("PMD.NullAssignment")
   void stopWorker() {
     LOGGER.info("Shutting down build worker");
-    final ExecutorService workerExec = workerExecutor;
-    final ExecutorService buildExec = buildExecutor;
+    ExecutorService workerExec = workerExecutor;
+    ExecutorService buildExec = buildExecutor;
 
     if (workerExec != null) {
       workerExec.shutdownNow();

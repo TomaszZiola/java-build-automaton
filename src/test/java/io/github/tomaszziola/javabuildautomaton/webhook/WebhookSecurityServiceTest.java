@@ -116,7 +116,7 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Given invalid key during mac init, when validating signature, then return false")
   void returnsFalseWhenInvalidKeyDuringInit() throws Exception {
     // given
-    final Mac macMock = mock(Mac.class);
+    Mac macMock = mock(Mac.class);
     try (MockedStatic<Mac> macStatic = mockStatic(Mac.class)) {
       macStatic.when(() -> getInstance(anyString())).thenReturn(macMock);
       doThrow(new InvalidKeyException("forced by test")).when(macMock).init(any());

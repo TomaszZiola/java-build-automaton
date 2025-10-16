@@ -28,7 +28,7 @@ class WorkspaceServiceTest {
     service = new WorkspaceService(props);
   }
 
-  private static Project projectWithRepoName(final String repoName) {
+  private static Project projectWithRepoName(String repoName) {
     final var project = new Project();
     project.setRepositoryName(repoName);
     return project;

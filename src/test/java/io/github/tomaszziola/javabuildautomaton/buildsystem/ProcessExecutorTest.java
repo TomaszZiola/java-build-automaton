@@ -21,7 +21,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(process.waitFor()).thenReturn(0);
 
     // when
-    final var result = processExecutorImpl.execute(workingDir, cmd);
+    var result = processExecutorImpl.execute(workingDir, cmd);
 
     // then
     assertThat(result.isSuccess()).isTrue();
@@ -36,7 +36,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(process.waitFor()).thenReturn(2);
 
     // when
-    final var result = processExecutorImpl.execute(workingDir, cmd);
+    var result = processExecutorImpl.execute(workingDir, cmd);
 
     // then
     assertThat(result.isSuccess()).isFalse();
@@ -55,7 +55,7 @@ class ProcessExecutorTest extends BaseUnit {
                     + "\"): Exec failed, error: 2 (No such file or directory)"));
 
     // when
-    final var result = processExecutorImpl.execute(workingDir, "__definitely_not_a_command__");
+    var result = processExecutorImpl.execute(workingDir, "__definitely_not_a_command__");
 
     // then
     assertThat(result.isSuccess()).isFalse();
@@ -74,7 +74,7 @@ class ProcessExecutorTest extends BaseUnit {
     when(processRunner.start(workingDir, "noop")).thenReturn(process);
 
     // when
-    final var result = processExecutorImpl.execute(workingDir, "noop");
+    var result = processExecutorImpl.execute(workingDir, "noop");
 
     // then
     assertThat(result.isSuccess()).isFalse();

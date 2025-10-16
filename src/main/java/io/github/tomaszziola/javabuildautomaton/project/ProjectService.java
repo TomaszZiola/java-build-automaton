@@ -23,26 +23,26 @@ public class ProjectService {
     return projectRepository.findAll().stream().map(projectMapper::toDetailsDto).toList();
   }
 
-  public ProjectDto findDetailsById(final Long projectId) {
+  public ProjectDto findDetailsById(Long projectId) {
     return projectRepository
         .findById(projectId)
         .map(projectMapper::toDetailsDto)
         .orElseThrow(() -> new ProjectNotFoundException(projectId));
   }
 
-  public List<BuildSummaryDto> findProjectBuilds(final Long projectId) {
-    final var project =
+  public List<BuildSummaryDto> findProjectBuilds(Long projectId) {
+    var project =
         projectRepository
             .findById(projectId)
             .orElseThrow(() -> new ProjectNotFoundException(projectId));
 
-    final var builds = buildRepository.findByProject(project);
+    var builds = buildRepository.findByProject(project);
     return builds.stream().map(buildMapper::toSummaryDto).toList();
   }
 
-  public ProjectDto saveProject(final PostProjectDto request) {
-    final var project = projectMapper.toEntity(request);
-    final var savedProject = projectRepository.save(project);
+  public ProjectDto saveProject(PostProjectDto request) {
+    var project = projectMapper.toEntity(request);
+    var savedProject = projectRepository.save(project);
     return projectMapper.toDetailsDto(savedProject);
   }
 }

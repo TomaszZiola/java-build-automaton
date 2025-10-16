@@ -11,14 +11,14 @@ public class WebhookPropertiesModel {
     return properties;
   }
 
-  public static WebhookProperties basic(final String secret) {
+  public static WebhookProperties basic(String secret) {
     final WebhookProperties properties = new WebhookProperties();
     properties.setAllowMissingSecret(false);
     properties.setWebhookSecret(secret);
     return properties;
   }
 
-  public static WebhookProperties basic(final String secret, final boolean allowMissing) {
+  public static WebhookProperties basic(String secret, final boolean allowMissing) {
     final WebhookProperties properties = new WebhookProperties();
     properties.setAllowMissingSecret(allowMissing);
     properties.setWebhookSecret(secret);
