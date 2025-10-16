@@ -270,7 +270,8 @@ public class BaseUnit {
     when(projectRepository.findAll()).thenReturn(of(project));
     when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
     when(projectRepository.findById(nonExistentProjectId)).thenReturn(empty());
-    when(projectRepository.findByRepositoryName(repositoryName)).thenReturn(Optional.of(project));
+    when(projectRepository.findByRepositoryFullName(repositoryName))
+        .thenReturn(Optional.of(project));
     when(projectService.saveProject(postProjectDto)).thenReturn(projectDto);
     when(projectService.findAll()).thenReturn(of(projectDto));
     when(buildService.findBuildDetailsById(buildId)).thenReturn(buildDetailsDto);

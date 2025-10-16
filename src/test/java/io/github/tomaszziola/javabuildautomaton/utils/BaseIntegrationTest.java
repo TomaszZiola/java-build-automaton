@@ -7,10 +7,12 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import io.restassured.RestAssured;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -18,15 +20,18 @@ public class BaseIntegrationTest {
 
   @Autowired private ProjectRepository projectRepository;
 
+  @LocalServerPort int port;
+
   @BeforeEach
   void cleanDb() {
     projectRepository.deleteAll();
+    RestAssured.port = port;
   }
 
   public List<Project> populateManyProjectsDatabase() {
     final Project first = unpersisted();
 
-    final Project second = unpersisted();
+    final var second = unpersisted();
     second.setUsername("RobertRoslik");
     second.setRepositoryName("java-awsomeapp");
     second.setRepositoryFullName("RobertRoslik/java-awsomeapp");
@@ -34,5 +39,10 @@ public class BaseIntegrationTest {
     second.setBuildTool(MAVEN);
 
     return projectRepository.saveAll(of(first, second));
+  }
+
+  public Project populateSingleProjectDatabase() {
+    final var project = unpersisted();
+    return projectRepository.save(project);
   }
 }

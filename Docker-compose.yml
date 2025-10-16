@@ -43,5 +43,3 @@ services:
 volumes:
   jba-db-data:
   jba-workspace:
-    external: true
-

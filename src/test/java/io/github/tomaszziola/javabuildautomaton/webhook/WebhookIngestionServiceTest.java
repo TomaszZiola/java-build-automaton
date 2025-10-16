@@ -66,7 +66,7 @@ class WebhookIngestionServiceTest extends BaseUnit {
   void shouldReturnNotFound_whenProjectMissing() {
     // given
     when(ingestionGuard.evaluateIngestion(payload.ref())).thenReturn(ALLOW);
-    when(projectRepository.findByRepositoryName(payload.repository().fullName()))
+    when(projectRepository.findByRepositoryFullName(payload.repository().fullName()))
         .thenReturn(empty());
 
     // when

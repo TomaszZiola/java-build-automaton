@@ -93,14 +93,13 @@
       <th>Repository URL</th>
       <th>Build Tool</th>
       <th>Actions</th>
-      <th>Builds</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="project : ${projects}">
       <td th:text="${project.id()}">1</td>
-      <td th:text="${project.createdAt()}">1</td>
-      <td th:text="${project.updatedAt()}">1</td>
+      <td th:text="${#temporals.format(project.createdAt(), 'yyyy-MM-dd HH:mm:ss')}">2025-10-15 08:39:40</td>
+      <td th:text="${#temporals.format(project.updatedAt(), 'yyyy-MM-dd HH:mm:ss')}">2025-10-15 08:39:40</td>
       <td th:text="${project.repositoryName()}">user/repo</td>
       <td th:text="${project.repositoryUrl()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>

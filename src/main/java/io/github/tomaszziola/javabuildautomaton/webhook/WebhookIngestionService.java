@@ -38,7 +38,7 @@ public class WebhookIngestionService {
       case ALLOW -> {
         final var repositoryFullName = payload.repository().fullName();
         return projectRepository
-            .findByRepositoryName(repositoryFullName)
+            .findByRepositoryFullName(repositoryFullName)
             .map(this::handleProjectFound)
             .orElseGet(() -> handleProjectMissing(repositoryFullName));
       }

@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-  Optional<Project> findByRepositoryName(String repositoryName);
+  Optional<Project> findByRepositoryFullName(String repositoryFullName);
 }

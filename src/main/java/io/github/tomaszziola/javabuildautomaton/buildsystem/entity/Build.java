@@ -12,7 +12,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
@@ -39,7 +38,6 @@ public class Build {
   @Enumerated(STRING)
   private BuildStatus status;
 
-  @Lob
   @Column(columnDefinition = "TEXT")
   private String logs;
 

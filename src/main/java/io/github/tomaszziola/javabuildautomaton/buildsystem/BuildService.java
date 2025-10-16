@@ -33,7 +33,7 @@ public class BuildService {
     final var build =
         buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
     final var project = build.getProject();
-    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getUsername());
+    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getRepositoryName());
     buildLifecycleService.markInProgress(build);
     executeBuildSteps(project, build);
   }
