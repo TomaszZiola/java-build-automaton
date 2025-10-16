@@ -10,23 +10,21 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseIntegrationTest;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers
 @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
 class WebUiControllerITTest extends BaseIntegrationTest {
 
+  @Container
   static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
       new PostgreSQLContainer<>("postgres:16-alpine");
-
-  @BeforeAll
-  static void startContainer() {
-    POSTGRESQL_CONTAINER.start();
-  }
 
   @DynamicPropertySource
   static void registerProps(final DynamicPropertyRegistry registry) {

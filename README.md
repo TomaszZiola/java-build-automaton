@@ -324,7 +324,29 @@ docker run -d --name jba-app --network jba-net -p 8080:8080 \
   java-build-automaton:latest
 ```
 
+Docker Compose (recommended for local dev):
+
+A ready-to-use Docker Compose file is provided at `Docker-compose.yml`.
+
+1. Build the application image first:
+   ```bash
+   docker build -t java-build-automaton:latest .
+   ```
+2. Create a `.env` file in the project root with minimal variables:
+   ```env
+   DB_USERNAME=jba
+   DB_PASSWORD=jba
+   DB_NAME=jba
+   WEBHOOK_WEBHOOK_SECRET=your-secret
+   ```
+3. Start the stack:
+   ```bash
+   docker compose -f Docker-compose.yml up -d
+   ```
+4. Open the app at http://localhost:8080/
+
 Notes:
 - In production, set a strong `WEBHOOK_WEBHOOK_SECRET`. The filter will reject unsigned/invalid webhook requests.
 - The app reads DB connection from `JDBC_CONNECTION_STRING`, `DB_USERNAME`, `DB_PASSWORD` (or standard Spring `SPRING_DATASOURCE_*` vars). See `src/main/resources/application.properties` for details.
+- To configure the workspace location inside the container, set `workspace.base-dir` (env `WORKSPACE_BASE_DIR`) or use `SPRING_APPLICATION_JSON`. The compose file example sets: `SPRING_APPLICATION_JSON='{"workspace":{"baseDir":"/workspaces"}}'` and mounts a named volume at `/workspaces`.
 - Health endpoints are exposed at `/actuator/health` and `/actuator/info`.
