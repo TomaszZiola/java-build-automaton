@@ -43,7 +43,7 @@ public class BuildQueueService {
       LOGGER.warn("Cannot enqueue null build id");
       return;
     }
-    boolean offered = queue.offer(buildId);
+    var offered = queue.offer(buildId);
     if (offered) {
       LOGGER.info("Enqueued build id={}", buildId);
     } else {

@@ -15,9 +15,9 @@ public class IngestionGuard {
   private final BranchPolicy branchPolicy;
   private final IdempotencyService idempotencyService;
 
-  public IngestionGuardResult evaluateIngestion(WebhookPayloadWithHeaders payload) {
+  public IngestionGuardResult evaluate(WebhookPayloadWithHeaders payload) {
     var deliveryId = payload.deliveryId();
-    if (idempotencyService.isDuplicateWebhook(deliveryId)) {
+    if (idempotencyService.isDuplicate(deliveryId)) {
       return DUPLICATE;
     }
     if (!branchPolicy.isTriggerRef(payload)) {

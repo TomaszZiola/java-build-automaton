@@ -18,11 +18,10 @@ class IngestionGuardTest extends BaseUnit {
   @DisplayName("Given duplicate delivery, when checking, then return DUPLICATE")
   void shouldReturnDuplicate_whenNotFirstSeen() {
     // given
-    when(idempotencyService.isDuplicateWebhook("a65977c0-aa67-11f0-9e18-5a74c246d36d"))
-        .thenReturn(true);
+    when(idempotencyService.isDuplicate("a65977c0-aa67-11f0-9e18-5a74c246d36d")).thenReturn(true);
 
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(DUPLICATE);
+    assertThat(ingestionGuardImpl.evaluate(payloadWithHeaders)).isEqualTo(DUPLICATE);
   }
 
   @Test
@@ -34,13 +33,13 @@ class IngestionGuardTest extends BaseUnit {
     when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(false);
 
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(NON_TRIGGER_REF);
+    assertThat(ingestionGuardImpl.evaluate(payloadWithHeaders)).isEqualTo(NON_TRIGGER_REF);
   }
 
   @Test
   @DisplayName("Given first-seen and trigger ref, when checking, then return ALLOW")
   void shouldReturnAllow_whenOk() {
     // when & then
-    assertThat(ingestionGuardImpl.evaluateIngestion(payloadWithHeaders)).isEqualTo(ALLOW);
+    assertThat(ingestionGuardImpl.evaluate(payloadWithHeaders)).isEqualTo(ALLOW);
   }
 }

@@ -22,14 +22,12 @@ public class BranchPolicy {
       var ref = dto.ref();
       return ref != null && ALLOWED_REFS.contains(ref);
     }
-
     if (PULL_REQUEST.equals(event)
         && dto.pullRequest() != null
         && dto.pullRequest().base() != null) {
       var baseBranch = dto.pullRequest().base().ref();
       return baseBranch != null && ALLOWED_BRANCHES.contains(baseBranch);
     }
-
     return false;
   }
 }

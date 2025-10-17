@@ -55,10 +55,10 @@ import io.github.tomaszziola.javabuildautomaton.webhook.BranchPolicy;
 import io.github.tomaszziola.javabuildautomaton.webhook.IdempotencyService;
 import io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookDeliveryRepository;
-import io.github.tomaszziola.javabuildautomaton.webhook.WebhookIngestionService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookProperties;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookRestController;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
+import io.github.tomaszziola.javabuildautomaton.webhook.WebhookService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayload;
@@ -108,7 +108,7 @@ public class BaseUnit {
   @Mock protected ProjectRepository projectRepository;
   @Mock protected ProjectService projectService;
   @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
-  @Mock protected WebhookIngestionService webhookIngestionService;
+  @Mock protected WebhookService webhookService;
   @Mock protected WebhookSecurityService webhookSecurityService;
   @Mock protected WorkingDirectoryValidator workingDirectoryValidator;
 
@@ -134,7 +134,7 @@ public class BaseUnit {
   protected ProjectService projectServiceImpl;
   protected WebhookRestController webhookRestControllerImpl;
   protected WebUiController webUiControllerImpl;
-  protected WebhookIngestionService webhookIngestionServiceImpl;
+  protected WebhookService webhookServiceImpl;
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
   protected WebhookSecurityService webhookSecurityServiceImpl;
   protected WebhookStartupVerifier webhookStartupVerifierImpl;
@@ -221,9 +221,8 @@ public class BaseUnit {
     projectMapperImpl = new ProjectMapper();
     projectServiceImpl =
         new ProjectService(buildMapper, buildRepository, projectMapper, projectRepository);
-    webhookRestControllerImpl = new WebhookRestController(webhookIngestionService);
-    webhookIngestionServiceImpl =
-        new WebhookIngestionService(buildOrchestrator, ingestionGuard, projectRepository);
+    webhookRestControllerImpl = new WebhookRestController(webhookService);
+    webhookServiceImpl = new WebhookService(buildOrchestrator, ingestionGuard, projectRepository);
     webhookConfiguration = new WebhookProperties();
     webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
@@ -248,7 +247,7 @@ public class BaseUnit {
     when(gitCommandRunner.clone(project.getRepositoryUrl(), workingDir))
         .thenReturn(cloneExecutionResult);
     when(httpServletRequest.getRequestURI()).thenReturn("/api/projects/123");
-    when(idempotencyService.isDuplicateWebhook("id")).thenReturn(false);
+    when(idempotencyService.isDuplicate("id")).thenReturn(false);
     when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
     when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
@@ -276,7 +275,7 @@ public class BaseUnit {
         .thenThrow(ProjectNotFoundException.class);
     when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
         .thenReturn(true);
-    when(webhookIngestionService.handleWebhook(payloadWithHeaders)).thenReturn(apiResponse);
+    when(webhookService.handle(payloadWithHeaders)).thenReturn(apiResponse);
     when(workingDirectoryValidator.prepareWorkspace(
             eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(true, workingDir));

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class WebhookRestController {
 
-  private final WebhookIngestionService webhookIngestionService;
+  private final WebhookService webhookService;
 
   @PostMapping("/webhook")
   public ApiResponse handleWebhook(
@@ -24,6 +24,6 @@ public class WebhookRestController {
       @RequestHeader(X_GITHUB_EVENT) String eventType,
       @RequestBody WebhookPayload payload) {
     var webhookRequest = new WebhookPayloadWithHeaders(payload, deliveryId, eventType);
-    return webhookIngestionService.handleWebhook(webhookRequest);
+    return webhookService.handle(webhookRequest);
   }
 }

@@ -2,6 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.FOUND;
 import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.NOT_FOUND;
+import static io.github.tomaszziola.javabuildautomaton.api.dto.ApiStatus.SKIPPED;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildOrchestrator;
@@ -15,39 +16,35 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class WebhookIngestionService {
+public class WebhookService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookIngestionService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookService.class);
   private final BuildOrchestrator buildOrchestrator;
   private final IngestionGuard ingestionGuard;
   private final ProjectRepository projectRepository;
 
-  public ApiResponse handleWebhook(WebhookPayloadWithHeaders payload) {
-    var ingestionGuardResult = ingestionGuard.evaluateIngestion(payload);
-    switch (ingestionGuardResult) {
-      case DUPLICATE -> {
-        var msg = "Duplicate delivery ignored";
-        LOGGER.info(msg);
-        return new ApiResponse(NOT_FOUND, msg);
-      }
-      case NON_TRIGGER_REF -> {
-        var msg = "Ignoring event for ref: " + payload.dto().ref();
-        LOGGER.info(msg);
-        return new ApiResponse(NOT_FOUND, msg);
-      }
+  public ApiResponse handle(WebhookPayloadWithHeaders payload) {
+    var result = ingestionGuard.evaluate(payload);
+    var dto = payload.dto();
+
+    return switch (result) {
+      case DUPLICATE ->
+          respondAndLog("Duplicate delivery ignored for Deliver ID: " + payload.deliveryId());
+      case NON_TRIGGER_REF ->
+          respondAndLog("Non triggered ref ignored for Deliver ID: " + payload.deliveryId());
       case ALLOW -> {
-        var repositoryFullName = payload.dto().repository().fullName();
-        return projectRepository
+        var repositoryFullName = dto.repository().fullName();
+        yield projectRepository
             .findByRepositoryFullName(repositoryFullName)
             .map(this::handleProjectFound)
             .orElseGet(() -> handleProjectMissing(repositoryFullName));
       }
-      default -> {
-        var msg = "Unhandled outcome: " + ingestionGuardResult;
-        LOGGER.warn(msg);
-        return new ApiResponse(NOT_FOUND, msg);
-      }
-    }
+    };
+  }
+
+  private ApiResponse respondAndLog(String message) {
+    LOGGER.info(message);
+    return new ApiResponse(SKIPPED, message);
   }
 
   private ApiResponse handleProjectFound(Project project) {

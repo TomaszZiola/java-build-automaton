@@ -11,7 +11,11 @@ public class IdempotencyService {
 
   private final WebhookDeliveryRepository repository;
 
-  private boolean registerIfFirstSeen(String deliveryId) {
+  public boolean isDuplicate(String deliveryId) {
+    return !tryRegisterFirstSeen(deliveryId);
+  }
+
+  private boolean tryRegisterFirstSeen(String deliveryId) {
     if (deliveryId == null || deliveryId.isBlank()) {
       return true;
     }
@@ -21,9 +25,5 @@ public class IdempotencyService {
     } catch (DataIntegrityViolationException exception) {
       return false;
     }
-  }
-
-  public boolean isDuplicateWebhook(String deliveryId) {
-    return !registerIfFirstSeen(deliveryId);
   }
 }
