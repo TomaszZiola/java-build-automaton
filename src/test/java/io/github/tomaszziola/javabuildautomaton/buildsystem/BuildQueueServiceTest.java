@@ -119,7 +119,7 @@ class BuildQueueServiceTest extends BaseUnit {
     final AtomicInteger max = new AtomicInteger();
     final CountDownLatch latch = new CountDownLatch(3);
     doAnswer(
-            inv -> {
+            _ -> {
               final int incremented = current.incrementAndGet();
               max.accumulateAndGet(incremented, Math::max);
               try {
@@ -194,7 +194,7 @@ class BuildQueueServiceTest extends BaseUnit {
 
     final CountDownLatch latch = new CountDownLatch(3);
     doAnswer(
-            inv -> {
+            _ -> {
               latch.countDown();
               return null;
             })
