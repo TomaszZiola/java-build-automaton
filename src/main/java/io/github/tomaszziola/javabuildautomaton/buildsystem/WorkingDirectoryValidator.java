@@ -16,60 +16,69 @@ import org.springframework.stereotype.Component;
 public class WorkingDirectoryValidator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WorkingDirectoryValidator.class);
+  private static final String GENERIC_FAILURE_LOG = "\nBUILD FAILED:\nNo such file or directory";
+  private static final String LOG_ERR_PREFIX =
+      "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory";
+  private static final String LOG_ERR_WITH_PATH = LOG_ERR_PREFIX + ": {}";
 
   private final BuildLifecycleService buildLifecycleService;
   private final WorkspaceService workspaceService;
 
-  public ValidationResult prepareWorkspace(
-      final Project project, final Build build, final StringBuilder buildLog) {
-    final File workingDirectory;
+  public ValidationResult validateAndPrepare(Project project, Build build, StringBuilder buildLog) {
+    File workingDirectory;
     try {
-      workingDirectory = resolveWorkspace(project);
+      var projectWorkspace = workspaceService.ensureWorkspaceFor(project);
+      workingDirectory = projectWorkspace.toFile();
     } catch (WorkspaceException ex) {
-      onResolveFailure(project, build, buildLog);
+      failBuildDueToInvalidWorkspace(project, build, buildLog, null);
       return new ValidationResult(false, null);
     }
-    return validateWorkspace(workingDirectory, project, build, buildLog);
+    return validateDirectory(workingDirectory, project, build, buildLog);
   }
 
-  private File resolveWorkspace(Project project) {
-    final var projectWorkspace = workspaceService.ensureExists(project);
-    return projectWorkspace.toFile();
-  }
-
-  private ValidationResult validateWorkspace(
-      final File dir, final Project project, final Build build, final StringBuilder buildLog) {
-    if (!dir.exists() || !dir.isDirectory()) {
-      buildLog.append("\nBUILD FAILED:\nNo such file or directory");
-      buildLifecycleService.complete(build, FAILED, buildLog);
-      logWorkingDirError(project, dir.getAbsolutePath());
+  private ValidationResult validateDirectory(
+      File dir, Project project, Build build, StringBuilder buildLog) {
+    if (dir == null || !dir.exists() || !dir.isDirectory()) {
+      failBuildDueToInvalidWorkspace(
+          project, build, buildLog, dir == null ? null : dir.getAbsolutePath());
       return new ValidationResult(false, null);
     }
     return new ValidationResult(true, dir);
   }
 
-  private void onResolveFailure(
-      final Project project, final Build build, final StringBuilder buildLog) {
-    buildLog.append("\nBUILD FAILED:\nNo such file or directory");
+  private void failBuildDueToInvalidWorkspace(
+      Project project, Build build, CharSequence buildLog, String pathText) {
+    appendGenericFailure(buildLog);
     buildLifecycleService.complete(build, FAILED, buildLog);
-    try {
-      final var workspacePath = workspaceService.resolve(project);
-      logWorkingDirError(project, workspacePath.toAbsolutePath().toString());
-    } catch (WorkspaceException inner) {
-      logWorkingDirError(project, null);
+    if (pathText != null) {
+      logWorkspaceError(project, pathText);
+      return;
+    }
+    logWorkspaceError(project, resolveWorkspacePathText(project));
+  }
+
+  private void appendGenericFailure(CharSequence buildLog) {
+    if (buildLog instanceof StringBuilder sb) {
+      sb.append(GENERIC_FAILURE_LOG);
+    } else {
+      new StringBuilder(buildLog).append(GENERIC_FAILURE_LOG);
     }
   }
 
-  private void logWorkingDirError(Project project, final String pathText) {
+  private void logWorkspaceError(Project project, String pathText) {
     if (pathText != null) {
-      LOGGER.error(
-          "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory: {}",
-          project.getUsername(),
-          pathText);
+      LOGGER.error(LOG_ERR_WITH_PATH, project.getUsername(), pathText);
     } else {
-      LOGGER.error(
-          "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory",
-          project.getUsername());
+      LOGGER.error(LOG_ERR_PREFIX, project.getUsername());
+    }
+  }
+
+  private String resolveWorkspacePathText(Project project) {
+    try {
+      var workspacePath = workspaceService.resolveWorkspacePath(project);
+      return workspacePath.toAbsolutePath().toString();
+    } catch (WorkspaceException inner) {
+      return null;
     }
   }
 }

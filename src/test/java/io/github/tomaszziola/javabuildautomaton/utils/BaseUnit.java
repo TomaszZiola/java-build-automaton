@@ -276,7 +276,7 @@ public class BaseUnit {
     when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
         .thenReturn(true);
     when(webhookService.handle(payloadWithHeaders)).thenReturn(apiResponse);
-    when(workingDirectoryValidator.prepareWorkspace(
+    when(workingDirectoryValidator.validateAndPrepare(
             eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(true, workingDir));
 

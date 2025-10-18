@@ -29,7 +29,7 @@ class WorkspaceServiceTest {
   }
 
   private static Project projectWithRepoName(String repoName) {
-    final var project = new Project();
+    var project = new Project();
     project.setRepositoryName(repoName);
     return project;
   }
@@ -37,9 +37,9 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given missing baseDir, when resolving, then throw WorkspaceException")
   void missingBaseDirFails() {
-    final var project = projectWithRepoName("p1");
+    var project = projectWithRepoName("p1");
     props.setBaseDir(null);
-    assertThatThrownBy(() -> service.resolve(project))
+    assertThatThrownBy(() -> service.resolveWorkspacePath(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("workspace.baseDir not configured");
   }
@@ -47,9 +47,9 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given blank baseDir, when resolving, then throw WorkspaceException")
   void blankBaseDirFails() {
-    final var project = projectWithRepoName("p1");
+    var project = projectWithRepoName("p1");
     props.setBaseDir("  ");
-    assertThatThrownBy(() -> service.resolve(project))
+    assertThatThrownBy(() -> service.resolveWorkspacePath(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("workspace.baseDir not configured");
   }
@@ -57,11 +57,11 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given baseDir is a file, when resolving, then throw")
   void baseDirIsFileFails() throws IOException {
-    final File baseFile = new File(tempDir, "base-file.txt");
+    File baseFile = new File(tempDir, "base-file.txt");
     Files.writeString(baseFile.toPath(), "x");
     props.setBaseDir(baseFile.getAbsolutePath());
 
-    assertThatThrownBy(() -> service.resolve(projectWithRepoName("p2")))
+    assertThatThrownBy(() -> service.resolveWorkspacePath(projectWithRepoName("p2")))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("does not exist or is not a directory");
   }
@@ -69,14 +69,14 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given projectDir exists as a file, when ensuring, then throw")
   void projectDirIsFileFails() throws IOException {
-    final Path base = new File(tempDir, "base").toPath();
+    Path base = new File(tempDir, "base").toPath();
     createDirectories(base);
     props.setBaseDir(base.toString());
 
-    final Path filePath = base.resolve("p3");
+    Path filePath = base.resolve("p3");
     Files.writeString(filePath, "x");
 
-    assertThatThrownBy(() -> service.ensureExists(projectWithRepoName("p3")))
+    assertThatThrownBy(() -> service.ensureWorkspaceFor(projectWithRepoName("p3")))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("not a directory");
   }
@@ -84,17 +84,16 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given symlink escape, when ensuring, then throw outside baseDir")
   void symlinkEscapeFails() throws IOException {
-    final Path base = new File(tempDir, "base2").toPath();
-    final Path outside = new File(tempDir, "outside").toPath();
+    Path base = new File(tempDir, "base2").toPath();
+    Path outside = new File(tempDir, "outside").toPath();
     createDirectories(base);
     createDirectories(outside);
     props.setBaseDir(base.toString());
 
-    // Create symlink inside base pointing to outside
-    final Path evil = base.resolve("evil");
+    Path evil = base.resolve("evil");
     Files.createSymbolicLink(evil, outside);
 
-    assertThatThrownBy(() -> service.ensureExists(projectWithRepoName("evil")))
+    assertThatThrownBy(() -> service.ensureWorkspaceFor(projectWithRepoName("evil")))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("outside of base directory");
   }
@@ -102,14 +101,14 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given missing repository name, when resolving, then throw")
   void missingRepositoryNameFails() {
-    final Path base = new File(tempDir, "base3").toPath();
+    Path base = new File(tempDir, "base3").toPath();
     assertThat(base.toFile().mkdirs()).isTrue();
     props.setBaseDir(base.toString());
 
-    final var project = new Project();
+    var project = new Project();
     project.setRepositoryName(null);
 
-    assertThatThrownBy(() -> service.resolve(project))
+    assertThatThrownBy(() -> service.resolveWorkspacePath(project))
         .isInstanceOf(WorkspaceException.class)
         .hasMessageContaining("Repository Name is missing");
   }
@@ -117,15 +116,15 @@ class WorkspaceServiceTest {
   @Test
   @DisplayName("Given isValid setup, ensureExists creates dir and returns canonical path")
   void ensureCreatesAndReturnsCanonical() throws IOException {
-    final Path base = new File(tempDir, "base4").toPath();
+    Path base = new File(tempDir, "base4").toPath();
     createDirectories(base);
     props.setBaseDir(base.toString());
 
-    final var project = projectWithRepoName("proj-1");
-    final Path result = service.ensureExists(project);
+    var project = projectWithRepoName("proj-1");
+    Path result = service.ensureWorkspaceFor(project);
 
     assertThat(Files.isDirectory(result)).isTrue();
-    final Path canonicalBase = base.toRealPath();
+    Path canonicalBase = base.toRealPath();
     assertThat(result.startsWith(canonicalBase)).isTrue();
     assertThat(result.getFileName().toString()).isEqualTo("proj-1");
   }

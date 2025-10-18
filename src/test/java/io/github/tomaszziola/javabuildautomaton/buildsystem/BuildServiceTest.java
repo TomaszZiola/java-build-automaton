@@ -28,7 +28,7 @@ class BuildServiceTest extends BaseUnit {
       "Given invalid workspace, when starting build process, then stop early and no git/build calls")
   void stopsEarlyWhenWorkspaceInvalid() {
     // given\
-    when(workingDirectoryValidator.prepareWorkspace(
+    when(workingDirectoryValidator.validateAndPrepare(
             eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(false, null));
 
@@ -136,9 +136,9 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given build id exists, when executing build by id, then mark in progress and run flow")
-  void executeBuildByIdMarksInProgress() {
+  void executeByIdMarksInProgress() {
     // when
-    buildServiceImpl.executeBuild(buildId);
+    buildServiceImpl.execute(buildId);
 
     // then
     verify(buildLifecycleService).markInProgress(build);
@@ -147,8 +147,8 @@ class BuildServiceTest extends BaseUnit {
   @Test
   @DisplayName(
       "Given missing build id, when executing build by id, then throw BuildNotFoundException")
-  void executeBuildByIdNotFound() {
-    assertThatThrownBy(() -> buildServiceImpl.executeBuild(nonExistentBuildId))
+  void executeByIdNotFound() {
+    assertThatThrownBy(() -> buildServiceImpl.execute(nonExistentBuildId))
         .isInstanceOf(BuildNotFoundException.class)
         .hasMessageContaining(nonExistentBuildId.toString());
   }

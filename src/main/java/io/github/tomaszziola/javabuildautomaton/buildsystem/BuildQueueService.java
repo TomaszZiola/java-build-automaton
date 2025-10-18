@@ -1,11 +1,13 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
 import static java.lang.Thread.currentThread;
+import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,13 +25,18 @@ import org.springframework.stereotype.Service;
 public class BuildQueueService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuildQueueService.class);
+
+  private static final Duration POLL_TIMEOUT = ofSeconds(1);
+  private static final Duration WORKER_SHUTDOWN_TIMEOUT = ofSeconds(10);
+  private static final Duration BUILD_SHUTDOWN_TIMEOUT = ofSeconds(60);
+  private static final Duration REJECT_BACKOFF = ofSeconds(1);
+
   private final Semaphore permits;
   private final BlockingQueue<Long> queue;
   private final AtomicBoolean started = new AtomicBoolean(false);
 
   private volatile ExecutorService buildExecutor;
   private volatile ExecutorService workerExecutor;
-
   private final BuildService buildService;
 
   public BuildQueueService(BuildService buildService, BuildProperties props) {
@@ -39,16 +46,23 @@ public class BuildQueueService {
   }
 
   public void enqueue(Long buildId) {
-    if (buildId == null) {
-      LOGGER.warn("Cannot enqueue null build id");
+    if (!validateAndOffer(buildId)) {
       return;
     }
-    var offered = queue.offer(buildId);
-    if (offered) {
-      LOGGER.info("Enqueued build id={}", buildId);
-    } else {
-      LOGGER.warn("Queue full, dropping build id={}", buildId);
+    LOGGER.info("Enqueued build id={}", buildId);
+  }
+
+  private boolean validateAndOffer(Long buildId) {
+    if (buildId == null) {
+      LOGGER.warn("Cannot enqueue null build id");
+      return false;
     }
+    boolean offered = queue.offer(buildId);
+    if (!offered) {
+      LOGGER.warn("Queue full, dropping build id={}", buildId);
+      return false;
+    }
+    return true;
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -67,36 +81,23 @@ public class BuildQueueService {
     buildExecutor = newVirtualThreadPerTaskExecutor();
 
     try {
-      workerExecutor.submit(this::runWorkerLoop);
+      workerExecutor.submit(this::runWorkerLoopBlocking);
       LOGGER.info("Build worker scheduled");
     } catch (RejectedExecutionException rex) {
       LOGGER.error("Failed to schedule worker loop", rex);
     }
   }
 
-  void runWorkerLoop() {
+  void runWorkerLoopBlocking() {
     LOGGER.info("Build worker started");
     while (!currentThread().isInterrupted()) {
       try {
-        var buildId = queue.poll(1, SECONDS);
+        var buildId = queue.poll(POLL_TIMEOUT.getSeconds(), SECONDS);
         if (buildId == null) {
           continue;
         }
         permits.acquire();
-        try {
-          buildExecutor.submit(
-              () -> {
-                try {
-                  buildService.executeBuild(buildId);
-                } finally {
-                  permits.release();
-                }
-              });
-        } catch (RejectedExecutionException rex) {
-          LOGGER.error("Build executor rejected task for id={}", buildId, rex);
-          permits.release();
-          SECONDS.sleep(1);
-        }
+        submitBuildTask(buildId);
       } catch (InterruptedException ie) {
         currentThread().interrupt();
         break;
@@ -105,17 +106,33 @@ public class BuildQueueService {
     LOGGER.info("Build worker stopped");
   }
 
+  private void submitBuildTask(Long buildId) throws InterruptedException {
+    try {
+      buildExecutor.submit(
+          () -> {
+            try {
+              buildService.execute(buildId);
+            } finally {
+              permits.release();
+            }
+          });
+    } catch (RejectedExecutionException rex) {
+      LOGGER.error("Build executor rejected task for id={}", buildId, rex);
+      permits.release();
+      SECONDS.sleep(REJECT_BACKOFF.getSeconds());
+    }
+  }
+
   @PreDestroy
   @SuppressWarnings("PMD.NullAssignment")
   void stopWorker() {
     LOGGER.info("Shutting down build worker");
-    ExecutorService workerExec = workerExecutor;
-    ExecutorService buildExec = buildExecutor;
-
+    var workerExec = workerExecutor;
+    var buildExec = buildExecutor;
     if (workerExec != null) {
       workerExec.shutdownNow();
       try {
-        if (!workerExec.awaitTermination(10, SECONDS)) {
+        if (!workerExec.awaitTermination(WORKER_SHUTDOWN_TIMEOUT.getSeconds(), SECONDS)) {
           LOGGER.warn("Worker executor did not terminate in time");
         }
       } catch (InterruptedException e) {
@@ -125,7 +142,7 @@ public class BuildQueueService {
     if (buildExec != null) {
       buildExec.shutdown();
       try {
-        if (!buildExec.awaitTermination(60, SECONDS)) {
+        if (!buildExec.awaitTermination(BUILD_SHUTDOWN_TIMEOUT.getSeconds(), SECONDS)) {
           LOGGER.warn("Build executor did not terminate in time, forcing shutdown");
           buildExec.shutdownNow();
         }
@@ -133,7 +150,6 @@ public class BuildQueueService {
         currentThread().interrupt();
       }
     }
-
     workerExecutor = null;
     buildExecutor = null;
     started.set(false);

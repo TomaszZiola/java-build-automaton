@@ -11,7 +11,7 @@ public class BuildOrchestrator {
   private final BuildQueueService buildQueueService;
   private final BuildLifecycleService buildLifecycleService;
 
-  public void enqueueBuild(Project project) {
+  public void enqueue(Project project) {
     var queued = buildLifecycleService.createQueued(project);
     buildQueueService.enqueue(queued.getId());
   }

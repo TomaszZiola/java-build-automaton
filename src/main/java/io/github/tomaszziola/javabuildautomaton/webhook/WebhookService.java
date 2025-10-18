@@ -36,7 +36,7 @@ public class WebhookService {
         var repositoryFullName = dto.repository().fullName();
         yield projectRepository
             .findByRepositoryFullName(repositoryFullName)
-            .map(this::handleProjectFound)
+            .map(this::handleProject)
             .orElseGet(() -> handleProjectMissing(repositoryFullName));
       }
     };
@@ -47,10 +47,10 @@ public class WebhookService {
     return new ApiResponse(SKIPPED, message);
   }
 
-  private ApiResponse handleProjectFound(Project project) {
+  private ApiResponse handleProject(Project project) {
     var message = "Project found in the database: " + project.getRepositoryName();
     LOGGER.info(message);
-    buildOrchestrator.enqueueBuild(project);
+    buildOrchestrator.enqueue(project);
     return new ApiResponse(FOUND, message + ". Build process started.");
   }
 

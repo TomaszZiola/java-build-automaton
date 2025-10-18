@@ -40,12 +40,12 @@ class WorkingDirectoryValidatorTest {
     final File workspaceDir = new File(tempDir, "proj-ok");
     assertThat(workspaceDir.mkdirs()).isTrue();
 
-    when(workspaceService.ensureExists(project)).thenReturn(workspaceDir.toPath());
+    when(workspaceService.ensureWorkspaceFor(project)).thenReturn(workspaceDir.toPath());
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.prepareWorkspace(project, build, logs);
+    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
 
     // then
     assertThat(result.isValid()).isTrue();
@@ -66,14 +66,13 @@ class WorkingDirectoryValidatorTest {
     final Project project = new Project();
     final Build build = new Build();
 
-    when(workspaceService.ensureExists(project)).thenThrow(new WorkspaceException("boom"));
-    // And resolving the path for error logging also fails -> triggers null path branch
-    when(workspaceService.resolve(project)).thenThrow(new WorkspaceException("boom2"));
+    when(workspaceService.ensureWorkspaceFor(project)).thenThrow(new WorkspaceException("boom"));
+    when(workspaceService.resolveWorkspacePath(project)).thenThrow(new WorkspaceException("boom2"));
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.prepareWorkspace(project, build, logs);
+    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
 
     // then
     assertThat(result.isValid()).isFalse();
@@ -100,13 +99,13 @@ class WorkingDirectoryValidatorTest {
     final Path filePath = new File(tempDir, "not-a-dir.txt").toPath();
     Files.writeString(filePath, "x");
 
-    when(workspaceService.ensureExists(project)).thenReturn(filePath);
-    when(workspaceService.resolve(project)).thenReturn(filePath);
+    when(workspaceService.ensureWorkspaceFor(project)).thenReturn(filePath);
+    when(workspaceService.resolveWorkspacePath(project)).thenReturn(filePath);
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.prepareWorkspace(project, build, logs);
+    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
 
     // then
     assertThat(result.isValid()).isFalse();

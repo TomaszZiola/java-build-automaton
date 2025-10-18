@@ -97,9 +97,7 @@ class BuildQueueServiceTest extends BaseUnit {
       "Given build service throws exception, when executing build, then exception is handled")
   void handlesExecutionExceptions() throws Exception {
     // given
-    doThrow(new RuntimeException("Build execution failed"))
-        .when(buildService)
-        .executeBuild(buildId);
+    doThrow(new RuntimeException("Build execution failed")).when(buildService).execute(buildId);
     buildQueueServiceImpl.startWorker();
 
     // when
@@ -108,7 +106,7 @@ class BuildQueueServiceTest extends BaseUnit {
     sleep(150);
 
     // then
-    verify(buildService, times(1)).executeBuild(buildId);
+    verify(buildService, times(1)).execute(buildId);
     assertDoesNotThrow(buildQueueServiceImpl::stopWorker);
   }
 
@@ -133,7 +131,7 @@ class BuildQueueServiceTest extends BaseUnit {
               return null;
             })
         .when(buildService)
-        .executeBuild(anyLong());
+        .execute(anyLong());
 
     buildQueueServiceImpl.startWorker();
 
@@ -201,7 +199,7 @@ class BuildQueueServiceTest extends BaseUnit {
               return null;
             })
         .when(buildService)
-        .executeBuild(anyLong());
+        .execute(anyLong());
 
     buildQueueServiceImpl.startWorker();
 
@@ -212,7 +210,7 @@ class BuildQueueServiceTest extends BaseUnit {
 
     // then
     assertThat(latch.await(1, SECONDS)).isTrue();
-    verify(buildService, times(3)).executeBuild(anyLong());
+    verify(buildService, times(3)).execute(anyLong());
   }
 
   @Test

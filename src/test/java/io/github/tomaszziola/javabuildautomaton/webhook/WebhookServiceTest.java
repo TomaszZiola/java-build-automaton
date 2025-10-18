@@ -59,7 +59,7 @@ class WebhookServiceTest extends BaseUnit {
 
     // then
     assertThat(result.status()).isEqualTo(FOUND);
-    verify(buildOrchestrator).enqueueBuild(project);
+    verify(buildOrchestrator).enqueue(project);
   }
 
   @Test
