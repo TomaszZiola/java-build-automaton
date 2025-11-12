@@ -2,14 +2,11 @@ package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Locale.ROOT;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
@@ -23,20 +20,21 @@ public class WebhookSecurityService {
   private static final String SIGNATURE_PREFIX = "sha256=";
   private static final int EXPECTED_SIGNATURE_BYTES = 32;
 
-  private final Optional<SecretKeySpec> hmacKey;
+  private final SecretKeySpec hmacKey;
   private final boolean allowMissingSecret;
 
   public WebhookSecurityService(WebhookProperties properties) {
     this.allowMissingSecret = properties.isAllowMissingSecret();
     var webhookSecret = properties.getWebhookSecret();
-    this.hmacKey =
-        (webhookSecret == null || webhookSecret.isBlank())
-            ? empty()
-            : of(new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_SHA256));
+    if (webhookSecret == null || webhookSecret.isBlank()) {
+      this.hmacKey = null;
+    } else {
+      this.hmacKey = new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_SHA256);
+    }
   }
 
   public boolean isSignatureValid(String signatureHeader, byte[] payloadBody) {
-    if (hmacKey.isEmpty()) {
+    if (hmacKey == null) {
       if (allowMissingSecret) {
         log.warn(
             "Webhook secret is not configured. Skipping signature validation (allowMissingSecret=true).");
@@ -46,10 +44,12 @@ public class WebhookSecurityService {
           "Webhook secret is not configured and allowMissingSecret=false. Rejecting request.");
       return false;
     }
+
     if (payloadBody == null) {
       log.warn("Received webhook with null payload body.");
       return false;
     }
+
     if (signatureHeader == null || !signatureHeader.startsWith(SIGNATURE_PREFIX)) {
       log.warn("Received webhook with missing or invalid signature header.");
       return false;
@@ -63,6 +63,7 @@ public class WebhookSecurityService {
       log.warn("Invalid signature hex in header.");
       return false;
     }
+
     if (providedSigBytes.length != EXPECTED_SIGNATURE_BYTES) {
       log.warn(
           "Invalid signature length: expected {} bytes ({} hex chars), got {}",
@@ -74,9 +75,8 @@ public class WebhookSecurityService {
 
     try {
       var mac = Mac.getInstance(HMAC_SHA256);
-      mac.init(hmacKey.get());
+      mac.init(hmacKey);
       var expectedSigBytes = mac.doFinal(payloadBody);
-
       return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       log.error("Error while verifying webhook signature", e);
