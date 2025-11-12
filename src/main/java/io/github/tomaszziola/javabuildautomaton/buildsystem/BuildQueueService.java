@@ -33,8 +33,8 @@ public class BuildQueueService {
   private final BlockingQueue<Long> queue;
   private final AtomicBoolean started = new AtomicBoolean(false);
 
-  private volatile ExecutorService buildExecutor;
-  private volatile ExecutorService workerExecutor;
+  private ExecutorService buildExecutor;
+  private ExecutorService workerExecutor;
   private final BuildService buildService;
 
   public BuildQueueService(BuildService buildService, BuildProperties props) {
