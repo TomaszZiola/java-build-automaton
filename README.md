@@ -102,7 +102,7 @@ See the full, living plan in [ROADMAP.md](./ROADMAP.md).
 -   [x] **Build History Module:** Persist every build (status, logs, commit hash) to the database.
 -   [x] **Basic Web UI:** Dashboard, project details, and build details pages.
 -   [ ] **Notification System:** Send email or Discord/Slack notifications about the build outcome.
--   [ ] **Docker Support:** Run builds in isolated Docker containers.
+-   [x] **Docker Support:** Run builds in isolated Docker containers.
 
 ---
 
@@ -350,3 +350,170 @@ Notes:
 - The app reads DB connection from `JDBC_CONNECTION_STRING`, `DB_USERNAME`, `DB_PASSWORD` (or standard Spring `SPRING_DATASOURCE_*` vars). See `src/main/resources/application.properties` for details.
 - To configure the workspace location inside the container, set `workspace.base-dir` (env `WORKSPACE_BASE_DIR`) or use `SPRING_APPLICATION_JSON`. The compose file example sets: `SPRING_APPLICATION_JSON='{"workspace":{"baseDir":"/workspaces"}}'` and mounts a named volume at `/workspaces`.
 - Health endpoints are exposed at `/actuator/health` and `/actuator/info`.
+
+# Java Build Automaton 🚀
+
+![Java](https://img.shields.io/badge/Java-25-orange.svg?style=for-the-badge&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.6-brightgreen.svg?style=for-the-badge&logo=spring)
+![Gradle](https://img.shields.io/badge/Gradle-Kotlin-blue.svg?style=for-the-badge&logo=gradle)
+![GitHub Actions](https://img.shields.io/badge/GitHub-Webhook-black?style=for-the-badge&logo=github)
+
+A simple, lightweight CI/CD server written in Spring Boot that automates the process of building and testing projects after every `push` to a GitHub repository.
+
+## 🎯 Project Description
+
+The goal of this project is to build a miniature Continuous Integration server from scratch to explore the fundamental principles of DevOps tools. The application listens for `push` events sent by GitHub webhooks, clones the repository if needed and then updates it via `git pull`, runs the build process (e.g., using Gradle/Maven), and reports on the outcome.
+
+This is not just another CRUD application—it's a practical tool that solves a real-world automation problem in the software development lifecycle.
+
+---
+
+## ✨ Key Features
+
+* **Webhook Reception:** Listens for GitHub `push` events via Webhooks.
+* **Dynamic Process Execution:** Runs system commands (`git`, `gradle`, `mvn`) using `ProcessBuilder`.
+* **Workspace Isolation:** Each project builds in its own working directory.
+* **Asynchronous Build Queue:** Enqueue builds and run them concurrently on virtual threads; limits via `build.max-parallel` and `build.queue.capacity`.
+* **Persisted Build History & UI:** Build results and logs are stored in PostgreSQL and visible in the Dashboard, Project, and Build Details pages.
+* **Logging:** Captures process output and stores it with the build (not streamed in real time yet).
+* **Robust Error Handling:** Detects failures via exit codes and exceptions.
+
+---
+
+## 🛠️ Tech Stack
+
+* Backend: Java 25, Spring Boot 3.5.6
+* Build Tool: Gradle (Kotlin DSL)
+* API: Spring Web (REST), Spring Boot Actuator
+* Frontend: Thymeleaf (dashboard and project details)
+* Data: Spring Data JPA; PostgreSQL with Flyway migrations
+* Integration: GitHub Webhooks with HMAC SHA-256 signature validation
+* Observability: CorrelationId filter, structured logging (logstash encoder)
+* Containerization: Docker (multi-stage Dockerfile)
+
+---
+
+## 🚀 Getting Started
+
+To run the project locally, follow the steps below.
+
+### Prerequisites
+
+* Java JDK 25 or newer
+* Git
+* [Ngrok](https://ngrok.com/) (for testing webhooks locally)
+* A configured test repository on GitHub
+
+### Installation and Launch
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/YourUsername/java-build-automaton.git](https://github.com/YourUsername/java-build-automaton.git)
+    cd java-build-automaton
+    ```
+
+2.  **Build the project using Gradle:**
+    ```bash
+    ./gradlew build
+    ```
+
+3.  **Run the Spring Boot application:**
+    ```bash
+    # Ensure DB env variables are set (see Configuration)
+    export JDBC_CONNECTION_STRING=jdbc:postgresql://localhost:5432/jba
+    export DB_USERNAME=jba
+    export DB_PASSWORD=jba
+
+    ./gradlew bootRun
+    ```
+    The application will start on port `8080`. Open http://localhost:8080/ to view the dashboard.
+
+4.  **Expose your local server with Ngrok:**
+    ```bash
+    ngrok http 8080
+    ```
+    Copy the public URL provided by Ngrok (e.g., `https://xxxx-xx-xxx.ngrok.io`).
+
+5.  **Configure the Webhook on GitHub:**
+    * In your test repository, go to `Settings` > `Webhooks` > `Add webhook`.
+    * **Payload URL:** Paste the URL from Ngrok, adding `/webhook` at the end.
+    * **Content type:** Change to `application/json`.
+    * **Secret:** Set a strong secret. Use the same value in the app via `webhook.webhook-secret` (or env `WEBHOOK_WEBHOOK_SECRET`).
+    * Save the webhook.
+
+6.  **Push a commit to your test repository and check the application logs; build output is captured and stored.**
+
+---
+
+## 🗺️ Roadmap
+
+This project is actively under development. Here are the planned features:
+
+See the full, living plan in [ROADMAP.md](./ROADMAP.md).
+
+-   [ ] **Configuration/Admin UI:** Manage projects via an admin UI (create/update/delete).
+-   [x] **Build History Module:** Persist every build (status, logs, commit hash) to the database.
+-   [x] **Basic Web UI:** Dashboard, project details, and build details pages.
+-   [ ] **Notification System:** Send email or Discord/Slack notifications about the build outcome.
+-   [x] **Docker Support:** Run builds in isolated Docker containers.
+
+---
+
+## ⚙️ Configuration
+
+Database (PostgreSQL + Flyway):
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/jba
+spring.datasource.username=jba
+spring.datasource.password=jba
+spring.jpa.hibernate.ddl-auto=none
+spring.flyway.enabled=true
+```
+
+Webhook:
+
+```properties
+# Secret must match GitHub Webhook configuration
+webhook.webhook-secret=<your-secret>
+webhook.allow-missing-secret=false
+```
+
+Build Queue:
+
+```properties
+build.max-parallel=3
+build.queue.capacity=100
+```
+
+Dockerized Build Execution:
+
+```properties
+# Enable running builds inside Docker containers (recommended)
+build.docker.enabled=true
+# Default images contain LTS JDK to avoid Java 25 mismatch with target projects
+build.docker.gradle-image=gradle:8.10.2-jdk17
+build.docker.maven-image=maven:3.9.9-eclipse-temurin-17
+# Mount SSH keys for private dependencies (optional)
+build.docker.pass-git-ssh=true
+```
+
+When the app runs in a container, ensure it can talk to the host Docker daemon and has the Docker CLI installed:
+
+- Dockerfile installs the Docker CLI package.
+- docker-compose mounts the Docker socket into the app container.
+
+Example docker-compose snippet:
+
+```yaml
+services:
+  app:
+    volumes:
+      - jba-workspace:/workspaces
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+Notes:
+- The app detects Gradle/Maven wrappers and prefers them inside the container.
+- If your project requires a different Java version, override the images via `build.docker.*` properties.
+- If you want to run builds directly on the host (not inside Docker), set `build.docker.enabled=false`.

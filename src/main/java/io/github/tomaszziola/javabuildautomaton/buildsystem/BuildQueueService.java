@@ -14,17 +14,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @SuppressWarnings("PMD.CloseResource")
 public class BuildQueueService {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(BuildQueueService.class);
 
   private static final Duration POLL_TIMEOUT = ofSeconds(1);
   private static final Duration WORKER_SHUTDOWN_TIMEOUT = ofSeconds(10);
@@ -46,29 +44,18 @@ public class BuildQueueService {
   }
 
   public void enqueue(Long buildId) {
-    if (!validateAndOffer(buildId)) {
+    var isEnqueued = queue.offer(buildId);
+    if (!isEnqueued) {
+      log.warn("Queue full, dropping build id={}", buildId);
       return;
     }
-    LOGGER.info("Enqueued build id={}", buildId);
-  }
-
-  private boolean validateAndOffer(Long buildId) {
-    if (buildId == null) {
-      LOGGER.warn("Cannot enqueue null build id");
-      return false;
-    }
-    boolean offered = queue.offer(buildId);
-    if (!offered) {
-      LOGGER.warn("Queue full, dropping build id={}", buildId);
-      return false;
-    }
-    return true;
+    log.info("Enqueued build id={}", buildId);
   }
 
   @EventListener(ApplicationReadyEvent.class)
   void startWorker() {
     if (!started.compareAndSet(false, true)) {
-      LOGGER.info("Build worker already started, skipping");
+      log.info("Build worker already started, skipping");
       return;
     }
     workerExecutor =
@@ -81,29 +68,29 @@ public class BuildQueueService {
     buildExecutor = newVirtualThreadPerTaskExecutor();
 
     try {
-      workerExecutor.submit(this::runWorkerLoopBlocking);
-      LOGGER.info("Build worker scheduled");
+      workerExecutor.submit(this::runWorkerLoop);
+      log.info("Build worker scheduled");
     } catch (RejectedExecutionException rex) {
-      LOGGER.error("Failed to schedule worker loop", rex);
+      log.error("Failed to schedule worker loop", rex);
     }
   }
 
-  void runWorkerLoopBlocking() {
-    LOGGER.info("Build worker started");
-    while (!currentThread().isInterrupted()) {
+  void runWorkerLoop() {
+    log.info("Build worker started");
+    boolean shouldRun = true;
+    while (shouldRun && !currentThread().isInterrupted()) {
       try {
         var buildId = queue.poll(POLL_TIMEOUT.getSeconds(), SECONDS);
-        if (buildId == null) {
-          continue;
+        if (buildId != null) {
+          permits.acquire();
+          submitBuildTask(buildId);
         }
-        permits.acquire();
-        submitBuildTask(buildId);
-      } catch (InterruptedException ie) {
+      } catch (InterruptedException _) {
         currentThread().interrupt();
-        break;
+        shouldRun = false;
       }
     }
-    LOGGER.info("Build worker stopped");
+    log.info("Build worker stopped");
   }
 
   private void submitBuildTask(Long buildId) throws InterruptedException {
@@ -117,7 +104,7 @@ public class BuildQueueService {
             }
           });
     } catch (RejectedExecutionException rex) {
-      LOGGER.error("Build executor rejected task for id={}", buildId, rex);
+      log.error("Build executor rejected task for id={}", buildId, rex);
       permits.release();
       SECONDS.sleep(REJECT_BACKOFF.getSeconds());
     }
@@ -126,16 +113,16 @@ public class BuildQueueService {
   @PreDestroy
   @SuppressWarnings("PMD.NullAssignment")
   void stopWorker() {
-    LOGGER.info("Shutting down build worker");
+    log.info("Shutting down build worker");
     var workerExec = workerExecutor;
     var buildExec = buildExecutor;
     if (workerExec != null) {
       workerExec.shutdownNow();
       try {
         if (!workerExec.awaitTermination(WORKER_SHUTDOWN_TIMEOUT.getSeconds(), SECONDS)) {
-          LOGGER.warn("Worker executor did not terminate in time");
+          log.warn("Worker executor did not terminate in time");
         }
-      } catch (InterruptedException e) {
+      } catch (InterruptedException _) {
         currentThread().interrupt();
       }
     }
@@ -143,10 +130,10 @@ public class BuildQueueService {
       buildExec.shutdown();
       try {
         if (!buildExec.awaitTermination(BUILD_SHUTDOWN_TIMEOUT.getSeconds(), SECONDS)) {
-          LOGGER.warn("Build executor did not terminate in time, forcing shutdown");
+          log.warn("Build executor did not terminate in time, forcing shutdown");
           buildExec.shutdownNow();
         }
-      } catch (InterruptedException e) {
+      } catch (InterruptedException _) {
         currentThread().interrupt();
       }
     }

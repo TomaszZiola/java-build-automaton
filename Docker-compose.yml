@@ -19,6 +19,7 @@ services:
   app:
     image: java-build-automaton:latest
     container_name: jba-app
+    user: root
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +34,7 @@ services:
       JAVA_OPTS: "-Dserver.address=0.0.0.0 -Dapp.build.timeout.seconds=600"
     volumes:
       - jba-workspace:/workspaces
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s

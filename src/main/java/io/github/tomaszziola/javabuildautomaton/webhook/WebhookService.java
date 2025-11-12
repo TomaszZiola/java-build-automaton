@@ -10,15 +10,14 @@ import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayloadWithHeaders;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WebhookService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookService.class);
   private final BuildOrchestrator buildOrchestrator;
   private final IngestionGuard ingestionGuard;
   private final ProjectRepository projectRepository;
@@ -43,20 +42,20 @@ public class WebhookService {
   }
 
   private ApiResponse respondAndLog(String message) {
-    LOGGER.info(message);
+    log.info(message);
     return new ApiResponse(SKIPPED, message);
   }
 
   private ApiResponse handleProject(Project project) {
     var message = "Project found in the database: " + project.getRepositoryName();
-    LOGGER.info(message);
+    log.info(message);
     buildOrchestrator.enqueue(project);
     return new ApiResponse(FOUND, message + ". Build process started.");
   }
 
   private ApiResponse handleProjectMissing(String repositoryFullName) {
     var message = "Project not found for repositoryFullName: " + repositoryFullName;
-    LOGGER.warn(message);
+    log.warn(message);
     return new ApiResponse(NOT_FOUND, message);
   }
 }

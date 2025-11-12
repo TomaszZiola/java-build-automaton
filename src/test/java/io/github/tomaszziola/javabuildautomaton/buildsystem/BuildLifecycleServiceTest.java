@@ -17,9 +17,9 @@ class BuildLifecycleServiceTest extends BaseUnit {
 
   @Test
   @DisplayName("createInProgress sets status and start time, then saves")
-  void createInProgressSetsFieldsAndSaves() {
+  void makeInProgressSetsFieldsAndSaves() {
     // when
-    final var build = buildLifecycleServiceImpl.createInProgress(project);
+    final var build = buildLifecycleServiceImpl.makeInProgress(project);
 
     // then
     assertThat(build.getProject()).isSameAs(project);

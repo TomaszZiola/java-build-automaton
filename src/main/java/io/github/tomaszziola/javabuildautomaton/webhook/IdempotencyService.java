@@ -22,7 +22,7 @@ public class IdempotencyService {
     try {
       repository.save(WebhookDelivery.builder().deliveryId(deliveryId).build());
       return true;
-    } catch (DataIntegrityViolationException exception) {
+    } catch (DataIntegrityViolationException _) {
       return false;
     }
   }

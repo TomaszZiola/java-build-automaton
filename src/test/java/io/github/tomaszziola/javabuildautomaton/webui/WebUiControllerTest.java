@@ -94,7 +94,7 @@ class WebUiControllerTest extends BaseUnit {
     // then
     assertThat(view).isEqualTo("projects-create");
     assertThat(modelImpl.asMap())
-        .containsEntry("request", new PostProjectDto(null, null))
+        .containsEntry("request", new PostProjectDto())
         .containsEntry("buildTools", BuildTool.values());
   }
 

@@ -1,52 +1,54 @@
-package io.github.tomaszziola.javabuildautomaton.buildsystem;
+package io.github.tomaszziola.javabuildautomaton.workspace;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildLifecycleService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.ValidationResult;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import java.io.File;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-public class WorkingDirectoryValidator {
+public class BuildWorkspaceGuard {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WorkingDirectoryValidator.class);
   private static final String GENERIC_FAILURE_LOG = "\nBUILD FAILED:\nNo such file or directory";
   private static final String LOG_ERR_PREFIX =
       "[[ERROR]] Build process failed for project: {} - working directory does not exist or is not a directory";
   private static final String LOG_ERR_WITH_PATH = LOG_ERR_PREFIX + ": {}";
 
   private final BuildLifecycleService buildLifecycleService;
-  private final WorkspaceService workspaceService;
+  private final WorkspaceManager workspaceManager;
 
-  public ValidationResult validateAndPrepare(Project project, Build build, StringBuilder buildLog) {
+  public ValidationResult prepareWorkspaceOrFail(
+      Project project, Build build, StringBuilder buildLog) {
     File workingDirectory;
     try {
-      var projectWorkspace = workspaceService.ensureWorkspaceFor(project);
+      var projectWorkspace = workspaceManager.ensureWorkspaceFor(project);
       workingDirectory = projectWorkspace.toFile();
-    } catch (WorkspaceException ex) {
-      failBuildDueToInvalidWorkspace(project, build, buildLog, null);
+    } catch (WorkspaceException _) {
+      failBuildForWorkspaceError(project, build, buildLog, null);
       return new ValidationResult(false, null);
     }
-    return validateDirectory(workingDirectory, project, build, buildLog);
+    return validateWorkspaceDir(workingDirectory, project, build, buildLog);
   }
 
-  private ValidationResult validateDirectory(
+  private ValidationResult validateWorkspaceDir(
       File dir, Project project, Build build, StringBuilder buildLog) {
     if (dir == null || !dir.exists() || !dir.isDirectory()) {
-      failBuildDueToInvalidWorkspace(
+      failBuildForWorkspaceError(
           project, build, buildLog, dir == null ? null : dir.getAbsolutePath());
       return new ValidationResult(false, null);
     }
     return new ValidationResult(true, dir);
   }
 
-  private void failBuildDueToInvalidWorkspace(
+  private void failBuildForWorkspaceError(
       Project project, Build build, CharSequence buildLog, String pathText) {
     appendGenericFailure(buildLog);
     buildLifecycleService.complete(build, FAILED, buildLog);
@@ -54,7 +56,7 @@ public class WorkingDirectoryValidator {
       logWorkspaceError(project, pathText);
       return;
     }
-    logWorkspaceError(project, resolveWorkspacePathText(project));
+    logWorkspaceError(project, resolveWorkspacePathString(project));
   }
 
   private void appendGenericFailure(CharSequence buildLog) {
@@ -67,17 +69,17 @@ public class WorkingDirectoryValidator {
 
   private void logWorkspaceError(Project project, String pathText) {
     if (pathText != null) {
-      LOGGER.error(LOG_ERR_WITH_PATH, project.getUsername(), pathText);
+      log.error(LOG_ERR_WITH_PATH, project.getUsername(), pathText);
     } else {
-      LOGGER.error(LOG_ERR_PREFIX, project.getUsername());
+      log.error(LOG_ERR_PREFIX, project.getUsername());
     }
   }
 
-  private String resolveWorkspacePathText(Project project) {
+  private String resolveWorkspacePathString(Project project) {
     try {
-      var workspacePath = workspaceService.resolveWorkspacePath(project);
+      var workspacePath = workspaceManager.resolveProjectWorkspacePath(project);
       return workspacePath.toAbsolutePath().toString();
-    } catch (WorkspaceException inner) {
+    } catch (WorkspaceException _) {
       return null;
     }
   }

@@ -8,21 +8,19 @@ import static java.lang.Thread.currentThread;
 import java.io.File;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProcessExecutor {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
 
   private final ProcessRunner processRunner;
   private final OutputCollector outputCollector;
 
   public ExecutionResult execute(File workingDir, String... command) {
-    LOGGER.info("Executing command in '{}': {}", workingDir, join(" ", command));
+    log.info("Executing command in '{}': {}", workingDir, join(" ", command));
 
     var logOutput = new StringBuilder(LOG_INITIAL_CAPACITY);
 
@@ -36,14 +34,15 @@ public class ProcessExecutor {
       if (!isSuccess) {
         logOutput.append("[[ERROR]] Command failed: ").append(join(" ", command));
       }
+
       return new ExecutionResult(isSuccess, logOutput.toString());
     } catch (IOException e) {
-      LOGGER.error("Process execution failed with IOException", e);
+      log.error("Process execution failed with IOException", e);
       logOutput.append("[[ERROR]] IO failure: ").append(e.getMessage()).append(lineSeparator());
       return new ExecutionResult(false, logOutput.toString());
     } catch (InterruptedException e) {
       currentThread().interrupt();
-      LOGGER.error("Process execution interrupted", e);
+      log.error("Process execution interrupted", e);
       logOutput.append("[[ERROR]] Interrupted: ").append(e.getMessage()).append(lineSeparator());
       return new ExecutionResult(false, logOutput.toString());
     }

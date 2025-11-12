@@ -17,17 +17,27 @@ RUN ./gradlew --no-daemon bootJar -x test
 FROM eclipse-temurin:25-jdk
 
 WORKDIR /app
-ENV SPRING_PROFILES_ACTIVE=prod
 ENV JAVA_OPTS=""
 
-# create app user
-RUN useradd -u 10001 -m appuser
-
-# install git in runtime image
 USER root
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get install -y \
+    ca-certificates \
+    curl \
+    git \
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /opt/jdks
 
-RUN mkdir -p /workspaces && chown -R 10001:10001 /workspaces
+# JDK 21
+ADD https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz /opt/jdks/jdk-21/
+
+# JDK 17
+ADD https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.12_7.tar.gz /opt/jdks/jdk-17/
+
+RUN useradd -u 10001 -m appuser \
+ && mkdir -p /workspaces \
+ && chown -R 10001:10001 /workspaces
+
 USER appuser
 
 COPY --from=builder /workspace/build/libs/*.jar /app/app.jar

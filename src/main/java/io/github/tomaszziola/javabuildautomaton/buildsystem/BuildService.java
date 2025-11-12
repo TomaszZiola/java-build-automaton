@@ -3,37 +3,41 @@ package io.github.tomaszziola.javabuildautomaton.buildsystem;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.FAILED;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildStatus.SUCCESS;
 import static io.github.tomaszziola.javabuildautomaton.constants.Constants.LOG_INITIAL_CAPACITY;
+import static java.util.Set.of;
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import io.github.tomaszziola.javabuildautomaton.workspace.BuildWorkspaceGuard;
 import jakarta.transaction.Transactional;
 import java.io.File;
+import java.util.Set;
+import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BuildService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(BuildService.class);
+  private final Set<Integer> allowedJavaVersions = of(21, 25);
 
   private final BuildExecutor buildExecutor;
   private final BuildLifecycleService buildLifecycleService;
   private final BuildMapper buildMapper;
   private final BuildRepository buildRepository;
   private final GitCommandRunner gitCommandRunner;
-  private final WorkingDirectoryValidator workingDirectoryValidator;
+  private final BuildWorkspaceGuard buildWorkspaceGuard;
 
   @Transactional
   public void execute(long buildId) {
     var build =
         buildRepository.findById(buildId).orElseThrow(() -> new BuildNotFoundException(buildId));
     var project = build.getProject();
-    LOGGER.info("Executing build #{} for project: {}", build.getId(), project.getRepositoryName());
+    log.info("Executing build #{} for project: {}", build.getId(), project.getRepositoryName());
     buildLifecycleService.markInProgress(build);
     executeBuildPipeline(project, build);
   }
@@ -41,12 +45,11 @@ public class BuildService {
   private void executeBuildPipeline(Project project, Build build) {
     var logBuilder = new StringBuilder(LOG_INITIAL_CAPACITY);
 
-    final var workingDirectoryStatus =
-        workingDirectoryValidator.validateAndPrepare(project, build, logBuilder);
+    var workingDirectoryStatus =
+        buildWorkspaceGuard.prepareWorkspaceOrFail(project, build, logBuilder);
     if (!workingDirectoryStatus.isValid()) {
-      completeBuildWithLogs(
+      failAndLog(
           build,
-          FAILED,
           logBuilder,
           "Workspace preparation failed for project: {}",
           project.getRepositoryName());
@@ -55,21 +58,22 @@ public class BuildService {
 
     var workingDirectory = workingDirectoryStatus.workingDirectory();
 
-    var gitResult = synchronizeRepository(project, workingDirectory, logBuilder);
-    if (!gitResult.isSuccess()) {
-      completeBuildWithLogs(
-          build,
-          FAILED,
-          logBuilder,
-          "Git synchronization failed for project: {}",
-          project.getRepositoryName());
+    if (failIfFalse(
+        () -> synchronizeRepository(project, workingDirectory, logBuilder).isSuccess(),
+        () ->
+            failAndLog(
+                build,
+                logBuilder,
+                "Git synchronization failed for project: {}",
+                project.getRepositoryName()))) {
       return;
     }
 
-    var buildResult = executeProjectBuild(project, workingDirectory, logBuilder);
-    if (!buildResult.isSuccess()) {
-      completeBuildWithLogs(
-          build, FAILED, logBuilder, "Build failed for project: {}", project.getRepositoryName());
+    if (failIfFalse(
+        () -> executeProjectBuild(project, workingDirectory, logBuilder).isSuccess(),
+        () ->
+            failAndLog(
+                build, logBuilder, "Build failed for project: {}", project.getRepositoryName()))) {
       return;
     }
 
@@ -77,9 +81,21 @@ public class BuildService {
         build, SUCCESS, logBuilder, "Build succeeded for project: {}", project.getRepositoryName());
   }
 
+  private boolean failIfFalse(BooleanSupplier step, Runnable onFailure) {
+    if (step.getAsBoolean()) {
+      return false;
+    }
+    onFailure.run();
+    return true;
+  }
+
+  private void failAndLog(Build build, StringBuilder logBuilder, String message, Object arg) {
+    completeBuildWithLogs(build, FAILED, logBuilder, message, arg);
+  }
+
   public void startBuildProcess(Project project) {
-    LOGGER.info("Starting build process for project: {}", project.getRepositoryName());
-    var build = buildLifecycleService.createInProgress(project);
+    log.info("Starting build process for project: {}", project.getRepositoryName());
+    var build = buildLifecycleService.makeInProgress(project);
     executeBuildPipeline(project, build);
   }
 
@@ -102,7 +118,7 @@ public class BuildService {
 
     if (!gitResult.isSuccess()) {
       var action = repoInitialized ? "pull" : "clone";
-      LOGGER.error("Git {} failed for project: {}", action, project.getRepositoryName());
+      log.error("Git {} failed for project: {}", action, project.getRepositoryName());
       return gitResult;
     }
 
@@ -111,7 +127,15 @@ public class BuildService {
 
   private ExecutionResult executeProjectBuild(
       Project project, File workingDirectory, StringBuilder logBuilder) {
-    var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory);
+    var javaVersion = project.getJavaVersion().getVersionNumber();
+    if (!allowedJavaVersions.contains(javaVersion)) {
+      log.error(
+          "Invalid javaVersion for project: {}. Provided: {}",
+          project.getRepositoryName(),
+          javaVersion);
+      return new ExecutionResult(false, "Invalid javaVersion\n");
+    }
+    var buildResult = buildExecutor.build(project.getBuildTool(), workingDirectory, javaVersion);
     appendLogs(logBuilder, buildResult.logs());
     return buildResult;
   }
@@ -119,7 +143,7 @@ public class BuildService {
   private void completeBuildWithLogs(
       Build build, BuildStatus status, StringBuilder logBuilder, String message, Object arg) {
     buildLifecycleService.complete(build, status, logBuilder);
-    LOGGER.info(message, arg);
+    log.info(message, arg);
   }
 
   private void appendLogs(StringBuilder logBuilder, String logs) {

@@ -4,6 +4,8 @@ import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.val
 
 import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
+import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
+import io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +60,9 @@ public class WebUiController {
 
   @GetMapping("/projects/create")
   public String showCreateProjectForm(Model model) {
-    model.addAttribute("request", new PostProjectDto(null, null));
-    model.addAttribute("buildTools", values());
+    model.addAttribute("request", new PostProjectDto());
+    model.addAttribute("buildTools", BuildTool.values());
+    model.addAttribute("javaVersions", ProjectJavaVersion.values());
     return "projects-create";
   }
 

@@ -1,15 +1,13 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class WebhookStartupVerifier {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(WebhookStartupVerifier.class);
 
   private final String secret;
   private final boolean allowMissing;
@@ -27,13 +25,13 @@ public class WebhookStartupVerifier {
             "Application misconfiguration: webhook.webhook-secret is empty but "
                 + "webhook.allow-missing-webhook-secret=false. "
                 + "Set WEBHOOK_WEBHOOK_SECRET or explicitly allow missing (ONLY for local debug).";
-        LOGGER.error(msg);
+        log.error(msg);
         throw new MissingWebhookSecretException(msg);
       }
       if ((secret == null || secret.isBlank()) && allowMissing) {
-        LOGGER.warn("Webhook secret is empty; validation is DISABLED (allow-missing=true).");
+        log.warn("Webhook secret is empty; validation is DISABLED (allow-missing=true).");
       } else {
-        LOGGER.info("Webhook secret is configured; signature validation ENABLED.");
+        log.info("Webhook secret is configured; signature validation ENABLED.");
       }
     };
   }

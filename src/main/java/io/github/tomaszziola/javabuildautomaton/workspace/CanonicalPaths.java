@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.buildsystem;
+package io.github.tomaszziola.javabuildautomaton.workspace;
 
 import java.nio.file.Path;
 

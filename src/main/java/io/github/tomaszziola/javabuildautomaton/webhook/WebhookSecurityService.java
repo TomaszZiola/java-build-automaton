@@ -4,7 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Locale.ROOT;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -13,13 +12,13 @@ import java.util.HexFormat;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class WebhookSecurityService {
 
-  private static final Logger LOGGER = getLogger(WebhookSecurityService.class);
   private static final String HMAC_SHA256 = "HmacSHA256";
   private static final String SIGNATURE_PREFIX = "sha256=";
   private static final int EXPECTED_SIGNATURE_BYTES = 32;
@@ -39,20 +38,20 @@ public class WebhookSecurityService {
   public boolean isSignatureValid(String signatureHeader, byte[] payloadBody) {
     if (hmacKey.isEmpty()) {
       if (allowMissingSecret) {
-        LOGGER.warn(
+        log.warn(
             "Webhook secret is not configured. Skipping signature validation (allowMissingSecret=true).");
         return true;
       }
-      LOGGER.error(
+      log.error(
           "Webhook secret is not configured and allowMissingSecret=false. Rejecting request.");
       return false;
     }
     if (payloadBody == null) {
-      LOGGER.warn("Received webhook with null payload body.");
+      log.warn("Received webhook with null payload body.");
       return false;
     }
     if (signatureHeader == null || !signatureHeader.startsWith(SIGNATURE_PREFIX)) {
-      LOGGER.warn("Received webhook with missing or invalid signature header.");
+      log.warn("Received webhook with missing or invalid signature header.");
       return false;
     }
 
@@ -60,12 +59,12 @@ public class WebhookSecurityService {
     byte[] providedSigBytes;
     try {
       providedSigBytes = HexFormat.of().parseHex(hexPart);
-    } catch (IllegalArgumentException ex) {
-      LOGGER.warn("Invalid signature hex in header.");
+    } catch (IllegalArgumentException _) {
+      log.warn("Invalid signature hex in header.");
       return false;
     }
     if (providedSigBytes.length != EXPECTED_SIGNATURE_BYTES) {
-      LOGGER.warn(
+      log.warn(
           "Invalid signature length: expected {} bytes ({} hex chars), got {}",
           EXPECTED_SIGNATURE_BYTES,
           EXPECTED_SIGNATURE_BYTES * 2,
@@ -80,7 +79,7 @@ public class WebhookSecurityService {
 
       return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      LOGGER.error("Error while verifying webhook signature", e);
+      log.error("Error while verifying webhook signature", e);
       return false;
     }
   }

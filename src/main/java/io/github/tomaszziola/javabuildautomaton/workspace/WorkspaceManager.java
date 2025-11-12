@@ -1,4 +1,4 @@
-package io.github.tomaszziola.javabuildautomaton.buildsystem;
+package io.github.tomaszziola.javabuildautomaton.workspace;
 
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.exists;
@@ -16,8 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class WorkspaceService {
-
+public class WorkspaceManager {
   private static final String ERR_BASEDIR_NOT_CONFIGURED = "workspace.baseDir not configured";
   private static final String ERR_BASEDIR_INVALID =
       "Workspace base directory does not exist or is not a directory: ";
@@ -33,28 +32,37 @@ public class WorkspaceService {
   private static final String ERR_TARGET_NOT_DIR = "Workspace path is not a directory: ";
   private static final String ERR_TARGET_OUTSIDE_BASE =
       "Workspace path resolved outside of base directory. baseDir=";
+  private static final String TARGET_EQ = " target=";
 
   private final WorkspaceProperties properties;
 
   public Path ensureWorkspaceFor(Project project) {
-    var workspacePath = resolveWorkspacePath(project);
-    createDirectoriesIfMissing(workspacePath);
-    var canonical = resolveCanonicalPaths(workspacePath);
-    validateProjectPathWithinBase(canonical.base(), canonical.project());
+    var projectDir = resolveProjectWorkspacePath(project);
+    ensureDirectoryExists(projectDir);
+    var canonical = resolveCanonicalBaseAndProject(projectDir);
+    assertProjectWithinBaseDir(canonical.base(), canonical.project());
     return canonical.project();
   }
 
-  public Path resolveWorkspacePath(Project project) {
-    var basePath = resolveConfiguredBaseDir();
-    var repoName = requireRepositoryName(project);
-    var projectDir = basePath.resolve(repoName).normalize();
+  public Path resolveProjectWorkspacePath(Project project) {
+    var repositoryName = requireRepositoryName(project);
+    var basePath = resolveAndValidateBaseDir();
+    var projectDir = basePath.resolve(repositoryName).normalize();
     if (exists(projectDir) && !isDirectory(projectDir)) {
       throw new WorkspaceException(ERR_WORKSPACE_NOT_DIR + projectDir);
     }
     return projectDir;
   }
 
-  private Path resolveConfiguredBaseDir() {
+  private String requireRepositoryName(Project project) {
+    var repo = project.getRepositoryName();
+    if (!hasText(repo)) {
+      throw new WorkspaceException(ERR_REPO_NAME_MISSING);
+    }
+    return repo;
+  }
+
+  private Path resolveAndValidateBaseDir() {
     var base = properties.getBaseDir();
     if (!hasText(base)) {
       throw new WorkspaceException(ERR_BASEDIR_NOT_CONFIGURED);
@@ -70,35 +78,27 @@ public class WorkspaceService {
     }
   }
 
-  private String requireRepositoryName(Project project) {
-    var repoName = project.getRepositoryName();
-    if (!hasText(repoName)) {
-      throw new WorkspaceException(ERR_REPO_NAME_MISSING);
-    }
-    return repoName;
-  }
-
-  private CanonicalPaths resolveCanonicalPaths(Path workspacePath) {
+  private CanonicalPaths resolveCanonicalBaseAndProject(Path workspacePath) {
     try {
-      var canonicalBase = get(properties.getBaseDir()).toRealPath(); // follow links
-      var canonicalProject = workspacePath.toRealPath(); // follow links
+      var canonicalBase = resolveAndValidateBaseDir();
+      var canonicalProject = workspacePath.toRealPath(NOFOLLOW_LINKS);
       return new CanonicalPaths(canonicalBase, canonicalProject);
     } catch (IOException e) {
       throw new WorkspaceException(ERR_CANONICAL_RESOLVE_FAILED + workspacePath, e);
     }
   }
 
-  private void validateProjectPathWithinBase(Path canonicalBase, Path canonicalProject) {
+  private void assertProjectWithinBaseDir(Path canonicalBase, Path canonicalProject) {
     if (!isDirectory(canonicalProject)) {
       throw new WorkspaceException(ERR_TARGET_NOT_DIR + canonicalProject);
     }
     if (!canonicalProject.startsWith(canonicalBase)) {
       throw new WorkspaceException(
-          ERR_TARGET_OUTSIDE_BASE + canonicalBase + " target=" + canonicalProject);
+          ERR_TARGET_OUTSIDE_BASE + canonicalBase + TARGET_EQ + canonicalProject);
     }
   }
 
-  private void createDirectoriesIfMissing(Path workspacePath) {
+  private void ensureDirectoryExists(Path workspacePath) {
     try {
       if (!exists(workspacePath)) {
         createDirectories(workspacePath);
@@ -107,6 +107,4 @@ public class WorkspaceService {
       throw new WorkspaceException(ERR_CREATE_DIR_FAILED + workspacePath, e);
     }
   }
-
-  private record CanonicalPaths(Path base, Path project) {}
 }

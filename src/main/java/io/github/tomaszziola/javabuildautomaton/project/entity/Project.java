@@ -4,6 +4,7 @@ import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
+import io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -41,6 +42,7 @@ public class Project {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Column(name = "build_tool")
   @Enumerated(STRING)
   private BuildTool buildTool;
 
@@ -55,6 +57,9 @@ public class Project {
   @Column(name = "repository_url")
   private String repositoryUrl;
 
+  @Column(name = "java_version_major", nullable = false)
+  private ProjectJavaVersion javaVersion;
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -64,15 +69,19 @@ public class Project {
       return false;
     }
 
-    Class<?> otherEffectiveClass =
-        other instanceof HibernateProxy
-            ? ((HibernateProxy) other).getHibernateLazyInitializer().getPersistentClass()
-            : other.getClass();
+    Class<?> otherEffectiveClass;
+    if (other instanceof HibernateProxy proxyOther) {
+      otherEffectiveClass = proxyOther.getHibernateLazyInitializer().getPersistentClass();
+    } else {
+      otherEffectiveClass = other.getClass();
+    }
 
-    Class<?> thisEffectiveClass =
-        this instanceof HibernateProxy
-            ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass()
-            : this.getClass();
+    Class<?> thisEffectiveClass;
+    if (this instanceof HibernateProxy proxyThis) {
+      thisEffectiveClass = proxyThis.getHibernateLazyInitializer().getPersistentClass();
+    } else {
+      thisEffectiveClass = this.getClass();
+    }
 
     if (!thisEffectiveClass.equals(otherEffectiveClass)) {
       return false;
@@ -84,8 +93,10 @@ public class Project {
 
   @Override
   public int hashCode() {
-    return (this instanceof HibernateProxy)
-        ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
-        : getClass().hashCode();
+    if (this instanceof HibernateProxy proxy) {
+      return proxy.getHibernateLazyInitializer().getPersistentClass().hashCode();
+    } else {
+      return getClass().hashCode();
+    }
   }
 }

@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.WorkspaceException;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
+import io.github.tomaszziola.javabuildautomaton.workspace.BuildWorkspaceGuard;
+import io.github.tomaszziola.javabuildautomaton.workspace.WorkspaceManager;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-class WorkingDirectoryValidatorTest {
+class BuildWorkspaceGuardTest {
 
   @TempDir File tempDir;
 
@@ -28,11 +30,10 @@ class WorkingDirectoryValidatorTest {
       "Given workspace resolves to existing directory, when preparing, then isValid and no lifecycle completion")
   void returnsValidWhenWorkspaceExists() {
     // given
-    final WorkspaceService workspaceService = Mockito.mock(WorkspaceService.class);
+    final WorkspaceManager workspaceManager = Mockito.mock(WorkspaceManager.class);
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
 
-    final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(lifecycle, workspaceService);
+    final BuildWorkspaceGuard validator = new BuildWorkspaceGuard(lifecycle, workspaceManager);
 
     final Project project = new Project();
     final Build build = new Build();
@@ -40,12 +41,12 @@ class WorkingDirectoryValidatorTest {
     final File workspaceDir = new File(tempDir, "proj-ok");
     assertThat(workspaceDir.mkdirs()).isTrue();
 
-    when(workspaceService.ensureWorkspaceFor(project)).thenReturn(workspaceDir.toPath());
+    when(workspaceManager.ensureWorkspaceFor(project)).thenReturn(workspaceDir.toPath());
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
+    final ValidationResult result = validator.prepareWorkspaceOrFail(project, build, logs);
 
     // then
     assertThat(result.isValid()).isTrue();
@@ -58,21 +59,21 @@ class WorkingDirectoryValidatorTest {
       "Given ensureExists throws, when preparing, then complete FAILED and include failure logs")
   void completesFailedWhenEnsureThrows() {
     // given
-    final WorkspaceService workspaceService = Mockito.mock(WorkspaceService.class);
+    final WorkspaceManager workspaceManager = Mockito.mock(WorkspaceManager.class);
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
-    final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(lifecycle, workspaceService);
+    final BuildWorkspaceGuard validator = new BuildWorkspaceGuard(lifecycle, workspaceManager);
 
     final Project project = new Project();
     final Build build = new Build();
 
-    when(workspaceService.ensureWorkspaceFor(project)).thenThrow(new WorkspaceException("boom"));
-    when(workspaceService.resolveWorkspacePath(project)).thenThrow(new WorkspaceException("boom2"));
+    when(workspaceManager.ensureWorkspaceFor(project)).thenThrow(new WorkspaceException("boom"));
+    when(workspaceManager.resolveProjectWorkspacePath(project))
+        .thenThrow(new WorkspaceException("boom2"));
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
+    final ValidationResult result = validator.prepareWorkspaceOrFail(project, build, logs);
 
     // then
     assertThat(result.isValid()).isFalse();
@@ -88,10 +89,9 @@ class WorkingDirectoryValidatorTest {
   @DisplayName("Given ensureExists returns non-directory, when preparing, then complete FAILED")
   void completesFailedWhenPathIsNotDirectory() throws Exception {
     // given
-    final WorkspaceService workspaceService = Mockito.mock(WorkspaceService.class);
+    final WorkspaceManager workspaceManager = Mockito.mock(WorkspaceManager.class);
     final BuildLifecycleService lifecycle = Mockito.mock(BuildLifecycleService.class);
-    final WorkingDirectoryValidator validator =
-        new WorkingDirectoryValidator(lifecycle, workspaceService);
+    final BuildWorkspaceGuard validator = new BuildWorkspaceGuard(lifecycle, workspaceManager);
 
     final Project project = new Project();
     final Build build = new Build();
@@ -99,13 +99,13 @@ class WorkingDirectoryValidatorTest {
     final Path filePath = new File(tempDir, "not-a-dir.txt").toPath();
     Files.writeString(filePath, "x");
 
-    when(workspaceService.ensureWorkspaceFor(project)).thenReturn(filePath);
-    when(workspaceService.resolveWorkspacePath(project)).thenReturn(filePath);
+    when(workspaceManager.ensureWorkspaceFor(project)).thenReturn(filePath);
+    when(workspaceManager.resolveProjectWorkspacePath(project)).thenReturn(filePath);
 
     final StringBuilder logs = new StringBuilder();
 
     // when
-    final ValidationResult result = validator.validateAndPrepare(project, build, logs);
+    final ValidationResult result = validator.prepareWorkspaceOrFail(project, build, logs);
 
     // then
     assertThat(result.isValid()).isFalse();

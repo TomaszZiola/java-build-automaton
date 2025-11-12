@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.never;
@@ -28,7 +29,7 @@ class BuildServiceTest extends BaseUnit {
       "Given invalid workspace, when starting build process, then stop early and no git/build calls")
   void stopsEarlyWhenWorkspaceInvalid() {
     // given\
-    when(workingDirectoryValidator.validateAndPrepare(
+    when(buildWorkspaceGuard.prepareWorkspaceOrFail(
             eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(false, null));
 
@@ -38,7 +39,7 @@ class BuildServiceTest extends BaseUnit {
     // then
     verify(gitCommandRunner, never()).pull(any());
     verify(gitCommandRunner, never()).clone(any(), any());
-    verify(buildExecutor, never()).build(any(), any());
+    verify(buildExecutor, never()).build(any(), any(), anyInt());
   }
 
   @Test
@@ -53,7 +54,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(gitCommandRunner).clone(project.getRepositoryUrl(), workingDir);
-    verify(buildExecutor).build(project.getBuildTool(), workingDir);
+    verify(buildExecutor).build(project.getBuildTool(), workingDir, javaVersion);
     verify(buildLifecycleService).complete(any(Build.class), eq(SUCCESS), logsCaptor.capture());
 
     final String logs = logsCaptor.getValue().toString();
@@ -74,7 +75,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(buildLifecycleService).complete(any(Build.class), eq(FAILED), any(CharSequence.class));
-    verify(buildExecutor, never()).build(any(), any());
+    verify(buildExecutor, never()).build(any(), any(), anyInt());
   }
 
   @Test
@@ -92,7 +93,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(buildLifecycleService).complete(any(Build.class), eq(FAILED), any(CharSequence.class));
-    verify(buildExecutor, never()).build(any(), any());
+    verify(buildExecutor, never()).build(any(), any(), anyInt());
   }
 
   @Test
@@ -100,7 +101,7 @@ class BuildServiceTest extends BaseUnit {
       "Given repo initialized and pull succeeds but build fails, when building, then complete FAILED")
   void buildFailureAfterSuccessfulPull() {
     // given
-    when(buildExecutor.build(project.getBuildTool(), workingDir))
+    when(buildExecutor.build(project.getBuildTool(), workingDir, javaVersion))
         .thenReturn(new ExecutionResult(false, "build failed\n"));
 
     // when
@@ -125,7 +126,7 @@ class BuildServiceTest extends BaseUnit {
 
     // then
     verify(gitCommandRunner).pull(workingDir);
-    verify(buildExecutor).build(project.getBuildTool(), workingDir);
+    verify(buildExecutor).build(project.getBuildTool(), workingDir, javaVersion);
     verify(buildLifecycleService).complete(any(Build.class), eq(SUCCESS), logsCaptor.capture());
 
     final String logs = logsCaptor.getValue().toString();

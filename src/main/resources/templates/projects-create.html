@@ -95,7 +95,10 @@
     <div class="field">
       <label for="repositoryUrl">Repository URL</label>
       <input id="repositoryUrl" type="url" th:field="*{repositoryUrl}" placeholder="https://github.com/owner/repo.git"/>
-      <div class="error" th:if="${#fields.hasErrors('repositoryUrl')}" th:errors="*{repositoryUrl}">Repository URL error</div>
+
+      <div th:if="${#fields.hasErrors('repositoryUrl')}" class="error">
+        <span th:errors="*{repositoryUrl}"></span>
+      </div>
     </div>
 
     <div class="field">
@@ -104,7 +107,23 @@
         <option value="" disabled selected>Select a build tool</option>
         <option th:each="bt : ${buildTools}" th:value="${bt}" th:text="${bt}"></option>
       </select>
-      <div class="error" th:if="${#fields.hasErrors('buildTool')}" th:errors="*{buildTool}">Build tool error</div>
+      <div class="error" th:if="${#fields.hasErrors('buildTool')}" th:errors="*{buildTool}">Build
+        tool error
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="javaVersion">Java Version</label>
+      <select id="javaVersion" th:field="*{javaVersion}">
+        <option value="" disabled selected>Select Java version</option>
+        <option th:each="version : ${javaVersions}"
+                th:value="${version.versionNumber}"
+                th:text="'Java ' + ${version.versionNumber} + ' (LTS)'">
+        </option>
+      </select>
+      <div class="error" th:if="${#fields.hasErrors('javaVersion')}" th:errors="*{javaVersion}">Java
+        version error
+      </div>
     </div>
 
     <div class="actions">

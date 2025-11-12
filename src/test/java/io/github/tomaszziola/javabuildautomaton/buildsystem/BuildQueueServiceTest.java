@@ -10,7 +10,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -142,17 +141,7 @@ class BuildQueueServiceTest extends BaseUnit {
 
     // then
     assertThat(latch.await(2, SECONDS)).isTrue();
-    assertThat(max.get() <= buildProperties.getMaxParallel()).isTrue();
-  }
-
-  @Test
-  @DisplayName("Given null build id, when enqueuing, then handles gracefully")
-  void handlesNullBuildId() {
-    // when
-    assertDoesNotThrow(() -> buildQueueServiceImpl.enqueue(null));
-
-    // then
-    verifyNoInteractions(buildService);
+    assertThat(max.get()).isLessThanOrEqualTo(buildProperties.getMaxParallel());
   }
 
   @Test

@@ -29,7 +29,6 @@ import io.github.tomaszziola.javabuildautomaton.buildsystem.OutputCollector;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessExecutor;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ProcessRunner;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.ValidationResult;
-import io.github.tomaszziola.javabuildautomaton.buildsystem.WorkingDirectoryValidator;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.entity.Build;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.exception.BuildNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.config.CorrelationIdFilter;
@@ -64,6 +63,7 @@ import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayloadWithHeaders;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
+import io.github.tomaszziola.javabuildautomaton.workspace.BuildWorkspaceGuard;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -110,7 +110,7 @@ public class BaseUnit {
   @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
   @Mock protected WebhookService webhookService;
   @Mock protected WebhookSecurityService webhookSecurityService;
-  @Mock protected WorkingDirectoryValidator workingDirectoryValidator;
+  @Mock protected BuildWorkspaceGuard buildWorkspaceGuard;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
@@ -164,6 +164,7 @@ public class BaseUnit {
   protected String expectedHex = "447455f04bc3e4c84f552ab236138532bece9ec6e47e813d8e1fd42094bb544e";
   protected String invalidSha256HeaderValue = "sha256=xD";
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
+  protected int javaVersion = 21;
   protected Long projectId = 1L;
   protected Long nonExistentProjectId = 9L;
   protected Long nonExistentBuildId = 9L;
@@ -207,7 +208,7 @@ public class BaseUnit {
             buildMapper,
             buildRepository,
             gitCommandRunner,
-            workingDirectoryValidator);
+            buildWorkspaceGuard);
     correlationIdFilterImpl = new CorrelationIdFilter();
     gitCommandRunnerImpl = new GitCommandRunner(processExecutor);
     httpServletRequestImpl = new MockHttpServletRequest();
@@ -230,10 +231,10 @@ public class BaseUnit {
     webUiControllerImpl = new WebUiController(buildService, projectService);
 
     when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(true);
-    when(buildExecutor.build(project.getBuildTool(), workingDir))
+    when(buildExecutor.build(project.getBuildTool(), workingDir, javaVersion))
         .thenReturn(buildExecutionResult)
         .thenReturn(buildExecutionResult);
-    when(buildLifecycleService.createInProgress(project)).thenReturn(build);
+    when(buildLifecycleService.makeInProgress(project)).thenReturn(build);
     when(buildLifecycleService.createQueued(project)).thenReturn(build);
     when(buildMapper.toSummaryDto(build)).thenReturn(buildSummaryDto);
     when(buildMapper.toDetailsDto(build)).thenReturn(buildDetailsDto);
@@ -276,7 +277,7 @@ public class BaseUnit {
     when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
         .thenReturn(true);
     when(webhookService.handle(payloadWithHeaders)).thenReturn(apiResponse);
-    when(workingDirectoryValidator.validateAndPrepare(
+    when(buildWorkspaceGuard.prepareWorkspaceOrFail(
             eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(true, workingDir));
 

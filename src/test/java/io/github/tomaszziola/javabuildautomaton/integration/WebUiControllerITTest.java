@@ -1,6 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.integration;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.MAVEN;
+import static io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion.JAVA_21;
 import static io.github.tomaszziola.javabuildautomaton.utils.MyMatchers.containsWholeWordOutsideUrls;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.port;
@@ -123,6 +124,7 @@ class WebUiControllerITTest extends BaseIntegrationTest {
             .relaxedHTTPSValidation()
             .formParam("repositoryUrl", url)
             .formParam("buildTool", MAVEN)
+            .formParam("javaVersion", JAVA_21)
             .when()
             .post("/projects/create")
             .then()
