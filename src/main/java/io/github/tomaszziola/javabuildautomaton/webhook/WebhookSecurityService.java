@@ -34,8 +34,8 @@ public class WebhookSecurityService {
       return false;
     }
 
-    String hexSignature = signatureHeader.substring(SIGNATURE_PREFIX.length());
-    byte[] providedSignature = hexToBytes(hexSignature);
+    var hexSignature = signatureHeader.substring(SIGNATURE_PREFIX.length());
+    var providedSignature = hexToBytes(hexSignature);
 
     if (providedSignature == null || providedSignature.length != 32) {
       log.warn("Invalid signature length");
@@ -43,13 +43,13 @@ public class WebhookSecurityService {
     }
 
     try {
-      SecretKeySpec key = new SecretKeySpec(
+      var key = new SecretKeySpec(
           webhookSecret.getBytes(UTF_8),
           HMAC_ALGORITHM
       );
       var mac = Mac.getInstance(HMAC_ALGORITHM);
       mac.init(key);
-      byte[] computedSignature = mac.doFinal(payloadBody);
+      var computedSignature = mac.doFinal(payloadBody);
 
       return MessageDigest.isEqual(computedSignature, providedSignature);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
@@ -63,8 +63,7 @@ public class WebhookSecurityService {
       return HexFormat.of().parseHex(hex);
     } catch (IllegalArgumentException e) {
       log.warn("Invalid hex string in signature: {}", e.getMessage());
-      return null;
+      return new byte[0];
     }
   }
 }
-

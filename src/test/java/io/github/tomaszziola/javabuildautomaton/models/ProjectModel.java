@@ -21,6 +21,7 @@ public final class ProjectModel {
     project.setJavaVersion(JAVA_21);
     project.setCreatedAt(parse("2025-08-24T10:15:10Z"));
     project.setUpdatedAt(parse("2025-09-21T20:10:50Z"));
+    project.setWebhookSecret("secret");
     return project;
   }
 

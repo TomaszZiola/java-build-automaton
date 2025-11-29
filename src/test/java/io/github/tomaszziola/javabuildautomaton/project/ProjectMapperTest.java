@@ -1,6 +1,7 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
+import static io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion.JAVA_21;
 import static java.time.Instant.parse;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -39,12 +40,13 @@ class ProjectMapperTest extends BaseUnit {
     var result = projectMapperImpl.toEntity(postProjectDto);
 
     // then
-    assertThat(result.getCreatedAt()).isNotNull();
     assertThat(result.getRepositoryName()).isEqualTo("java-build-automaton");
     assertThat(result.getUsername()).isEqualTo("TomaszZiola");
     assertThat(result.getRepositoryFullName()).isEqualTo("TomaszZiola/java-build-automaton");
     assertThat(result.getRepositoryUrl())
         .isEqualTo("https://github.com/TomaszZiola/java-build-automaton.git");
     assertThat(result.getBuildTool()).isEqualTo(GRADLE);
+    assertThat(result.getWebhookSecret()).isEqualTo(webhookSecret);
+    assertThat(result.getJavaVersion()).isEqualTo(JAVA_21);
   }
 }

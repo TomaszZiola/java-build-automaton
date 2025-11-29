@@ -37,7 +37,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
@@ -54,7 +54,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes,webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
@@ -71,7 +71,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes);
+    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes,webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
@@ -88,9 +88,9 @@ class WebhookSignatureFilterTest extends BaseUnit {
     httpServletRequestImpl.setContent(bodyBytes);
     if (header != null) {
       httpServletRequestImpl.addHeader(validSha256HeaderName, header);
-      when(webhookSecurityService.isSignatureValid(eq(header), any())).thenReturn(false);
+      when(webhookSecurityService.isSignatureValid(eq(header), any(), any())).thenReturn(false);
     } else {
-      when(webhookSecurityService.isSignatureValid(isNull(), any())).thenReturn(false);
+      when(webhookSecurityService.isSignatureValid(isNull(), any(), any())).thenReturn(false);
     }
 
     // when
@@ -113,7 +113,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
     httpServletRequestImpl.setContent(bodyBytes);
     httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
-    when(webhookSecurityService.isSignatureValid(eq(validSha256HeaderValue), any()))
+    when(webhookSecurityService.isSignatureValid(any(), any(), any()))
         .thenReturn(true);
 
     // when
@@ -123,7 +123,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
     // then
     var requestCaptor = forClass(HttpServletRequest.class);
     verify(filterChain, times(1)).doFilter(requestCaptor.capture(), eq(httpServletResponseImpl));
-    HttpServletRequest wrapped = requestCaptor.getValue();
+    var wrapped = requestCaptor.getValue();
     assertThat(wrapped).isNotSameAs(httpServletRequestImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }

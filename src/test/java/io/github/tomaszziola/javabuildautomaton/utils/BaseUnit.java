@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ApiResponse;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildDetailsDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.BuildSummaryDto;
@@ -83,31 +84,55 @@ import org.springframework.web.context.request.RequestContextHolder;
 @MockitoSettings(strictness = LENIENT)
 public class BaseUnit {
 
-  @TempDir protected File tempDir;
+  @TempDir
+  protected File tempDir;
 
-  @Mock protected BranchPolicy branchPolicy;
-  @Mock protected BuildExecutor buildExecutor;
-  @Mock protected BuildLifecycleService buildLifecycleService;
-  @Mock protected BuildMapper buildMapper;
-  @Mock protected BuildOrchestrator buildOrchestrator;
-  @Mock protected BuildQueueService buildQueueService;
-  @Mock protected BuildRepository buildRepository;
-  @Mock protected BuildService buildService;
-  @Mock protected FilterChain filterChain;
-  @Mock protected GitCommandRunner gitCommandRunner;
-  @Mock protected HttpServletRequest httpServletRequest;
-  @Mock protected IdempotencyService idempotencyService;
-  @Mock protected IngestionGuard ingestionGuard;
-  @Mock protected Process process;
-  @Mock protected ProcessExecutor processExecutor;
-  @Mock protected ProcessRunner processRunner;
-  @Mock protected ProjectMapper projectMapper;
-  @Mock protected ProjectRepository projectRepository;
-  @Mock protected ProjectService projectService;
-  @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
-  @Mock protected WebhookService webhookService;
-  @Mock protected WebhookSecurityService webhookSecurityService;
-  @Mock protected BuildWorkspaceGuard buildWorkspaceGuard;
+  @Mock
+  protected BranchPolicy branchPolicy;
+  @Mock
+  protected BuildExecutor buildExecutor;
+  @Mock
+  protected BuildLifecycleService buildLifecycleService;
+  @Mock
+  protected BuildMapper buildMapper;
+  @Mock
+  protected BuildOrchestrator buildOrchestrator;
+  @Mock
+  protected BuildQueueService buildQueueService;
+  @Mock
+  protected BuildRepository buildRepository;
+  @Mock
+  protected BuildService buildService;
+  @Mock
+  protected BuildWorkspaceGuard buildWorkspaceGuard;
+  @Mock
+  protected FilterChain filterChain;
+  @Mock
+  protected GitCommandRunner gitCommandRunner;
+  @Mock
+  protected HttpServletRequest httpServletRequest;
+  @Mock
+  protected IdempotencyService idempotencyService;
+  @Mock
+  protected IngestionGuard ingestionGuard;
+  @Mock
+  protected Process process;
+  @Mock
+  protected ProcessExecutor processExecutor;
+  @Mock
+  protected ProcessRunner processRunner;
+  @Mock
+  protected ProjectMapper projectMapper;
+  @Mock
+  protected ProjectRepository projectRepository;
+  @Mock
+  protected ProjectService projectService;
+  @Mock
+  protected WebhookDeliveryRepository webhookDeliveryRepository;
+  @Mock
+  protected WebhookService webhookService;
+  @Mock
+  protected WebhookSecurityService webhookSecurityService;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
@@ -151,11 +176,18 @@ public class BaseUnit {
   protected File workingDir;
 
   protected String apiPath = "/api/projects";
-  protected String bodyJson = "{\"msg\":\"hi\"}";
+  protected String bodyJson = """
+             {
+            "repository": {
+          "full_name" : "TomaszZiola/test"
+              }
+             }
+      """;
+
   protected byte[] bodyBytes = bodyJson.getBytes(UTF_8);
   protected Long buildId = 1L;
   protected String[] cmd = {"git", "pull"};
-  protected String expectedHex = "447455f04bc3e4c84f552ab236138532bece9ec6e47e813d8e1fd42094bb544e";
+  protected String expectedHex = "d78215365b21d18f0d44b2058e973d1f563bc6e5a0be1e115b19f79e4a8064c0";
   protected String invalidSha256HeaderValue = "sha256=xD";
   protected String incomingId = "123e4567-e89b-12d3-a456-426614174000";
   protected int javaVersion = 21;
@@ -168,6 +200,7 @@ public class BaseUnit {
   protected String validSha256HeaderValue = "sha256=" + expectedHex;
   protected String validSha256HeaderName = "X-Hub-Signature-256";
   protected String webhookPath = "/webhook";
+  protected String webhookSecret = "secret";
 
   @BeforeEach
   void mockResponses() throws IOException {
@@ -218,7 +251,8 @@ public class BaseUnit {
     webhookRestControllerImpl = new WebhookRestController(webhookService);
     webhookServiceImpl = new WebhookService(buildOrchestrator, ingestionGuard, projectRepository);
     webhookSecurityServiceImpl = new WebhookSecurityService();
-    webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
+    webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService,
+        projectRepository, new ObjectMapper());
     webUiControllerImpl = new WebUiController(buildService, projectService);
 
     when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(true);
@@ -265,11 +299,11 @@ public class BaseUnit {
     when(projectService.findProjectBuilds(projectId)).thenReturn(of(buildSummaryDto));
     when(projectService.findProjectBuilds(nonExistentProjectId))
         .thenThrow(ProjectNotFoundException.class);
-    when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes))
+    when(webhookSecurityService.isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret))
         .thenReturn(true);
     when(webhookService.handle(payloadWithHeaders)).thenReturn(apiResponse);
     when(buildWorkspaceGuard.prepareWorkspaceOrFail(
-            eq(project), eq(build), isA(StringBuilder.class)))
+        eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(true, workingDir));
 
     RequestContextHolder.resetRequestAttributes();

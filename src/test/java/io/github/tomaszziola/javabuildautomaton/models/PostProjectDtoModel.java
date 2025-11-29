@@ -14,6 +14,7 @@ public final class PostProjectDtoModel {
     postProjectDto.setBuildTool(GRADLE);
     postProjectDto.setJavaVersion(JAVA_21);
     postProjectDto.setRepositoryUrl("https://github.com/TomaszZiola/java-build-automaton.git");
+    postProjectDto.setWebhookSecret("secret");
     return postProjectDto;
   }
 }
