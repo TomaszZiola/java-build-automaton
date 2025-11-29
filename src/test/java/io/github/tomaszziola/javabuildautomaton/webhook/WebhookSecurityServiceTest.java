@@ -8,7 +8,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
-import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

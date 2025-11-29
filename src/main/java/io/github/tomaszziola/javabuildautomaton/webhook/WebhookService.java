@@ -23,10 +23,10 @@ public class WebhookService {
   private final ProjectRepository projectRepository;
 
   public ApiResponse handle(WebhookPayloadWithHeaders payload) {
-    var result = ingestionGuard.evaluate(payload);
+    var guardResult = ingestionGuard.evaluate(payload);
     var dto = payload.dto();
 
-    return switch (result) {
+    return switch (guardResult) {
       case DUPLICATE ->
           respondAndLog("Duplicate delivery ignored for Deliver ID: " + payload.deliveryId());
       case NON_TRIGGER_REF ->

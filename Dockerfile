@@ -29,10 +29,14 @@ RUN apt-get update \
  && mkdir -p /opt/jdks
 
 # JDK 21
-ADD https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz /opt/jdks/jdk-21/
+RUN curl -fsSL https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz \
+    | tar -xz -C /opt/jdks \
+ && mv /opt/jdks/jdk-21.0.4+7 /opt/jdks/jdk-21
 
 # JDK 17
-ADD https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.12_7.tar.gz /opt/jdks/jdk-17/
+RUN curl -fsSL https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.12_7.tar.gz \
+    | tar -xz -C /opt/jdks \
+ && mv /opt/jdks/jdk-17.0.12+7 /opt/jdks/jdk-17
 
 RUN useradd -u 10001 -m appuser \
  && mkdir -p /workspaces \

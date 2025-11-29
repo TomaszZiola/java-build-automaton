@@ -1,7 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Locale.ROOT;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -16,71 +15,56 @@ import org.springframework.stereotype.Service;
 @Service
 public class WebhookSecurityService {
 
-  private static final String HMAC_SHA256 = "HmacSHA256";
+  private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String SIGNATURE_PREFIX = "sha256=";
-  private static final int EXPECTED_SIGNATURE_BYTES = 32;
 
-  private final SecretKeySpec hmacKey;
-  private final boolean allowMissingSecret;
+  public boolean isSignatureValid(String signatureHeader, byte[] payloadBody,
+      String webhookSecret) {
 
-  public WebhookSecurityService(WebhookProperties properties) {
-    this.allowMissingSecret = properties.isAllowMissingSecret();
-    var webhookSecret = properties.getWebhookSecret();
+    if (payloadBody == null) {
+      log.warn("Payload body is null");
+      return false;
+    }
     if (webhookSecret == null || webhookSecret.isBlank()) {
-      this.hmacKey = null;
-    } else {
-      this.hmacKey = new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_SHA256);
+      log.warn("Webhook secret is null or blank");
+      return false;
+    }
+    if (signatureHeader == null || !signatureHeader.startsWith(SIGNATURE_PREFIX)) {
+      log.warn("Missing or invalid signature header format");
+      return false;
+    }
+
+    String hexSignature = signatureHeader.substring(SIGNATURE_PREFIX.length());
+    byte[] providedSignature = hexToBytes(hexSignature);
+
+    if (providedSignature == null || providedSignature.length != 32) {
+      log.warn("Invalid signature length");
+      return false;
+    }
+
+    try {
+      SecretKeySpec key = new SecretKeySpec(
+          webhookSecret.getBytes(UTF_8),
+          HMAC_ALGORITHM
+      );
+      var mac = Mac.getInstance(HMAC_ALGORITHM);
+      mac.init(key);
+      byte[] computedSignature = mac.doFinal(payloadBody);
+
+      return MessageDigest.isEqual(computedSignature, providedSignature);
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+      log.error("HMAC computation failed", e);
+      return false;
     }
   }
 
-  public boolean isSignatureValid(String signatureHeader, byte[] payloadBody) {
-    if (hmacKey == null) {
-      if (allowMissingSecret) {
-        log.warn(
-            "Webhook secret is not configured. Skipping signature validation (allowMissingSecret=true).");
-        return true;
-      }
-      log.error(
-          "Webhook secret is not configured and allowMissingSecret=false. Rejecting request.");
-      return false;
-    }
-
-    if (payloadBody == null) {
-      log.warn("Received webhook with null payload body.");
-      return false;
-    }
-
-    if (signatureHeader == null || !signatureHeader.startsWith(SIGNATURE_PREFIX)) {
-      log.warn("Received webhook with missing or invalid signature header.");
-      return false;
-    }
-
-    var hexPart = signatureHeader.substring(SIGNATURE_PREFIX.length()).toLowerCase(ROOT);
-    byte[] providedSigBytes;
+  private byte[] hexToBytes(String hex) {
     try {
-      providedSigBytes = HexFormat.of().parseHex(hexPart);
-    } catch (IllegalArgumentException _) {
-      log.warn("Invalid signature hex in header.");
-      return false;
-    }
-
-    if (providedSigBytes.length != EXPECTED_SIGNATURE_BYTES) {
-      log.warn(
-          "Invalid signature length: expected {} bytes ({} hex chars), got {}",
-          EXPECTED_SIGNATURE_BYTES,
-          EXPECTED_SIGNATURE_BYTES * 2,
-          providedSigBytes.length);
-      return false;
-    }
-
-    try {
-      var mac = Mac.getInstance(HMAC_SHA256);
-      mac.init(hmacKey);
-      var expectedSigBytes = mac.doFinal(payloadBody);
-      return MessageDigest.isEqual(expectedSigBytes, providedSigBytes);
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      log.error("Error while verifying webhook signature", e);
-      return false;
+      return HexFormat.of().parseHex(hex);
+    } catch (IllegalArgumentException e) {
+      log.warn("Invalid hex string in signature: {}", e.getMessage());
+      return null;
     }
   }
 }
+

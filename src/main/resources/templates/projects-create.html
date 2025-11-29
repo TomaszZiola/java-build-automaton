@@ -117,12 +117,21 @@
       <select id="javaVersion" th:field="*{javaVersion}">
         <option value="" disabled selected>Select Java version</option>
         <option th:each="version : ${javaVersions}"
-                th:value="${version.versionNumber}"
+                th:value="${version}"
                 th:text="'Java ' + ${version.versionNumber} + ' (LTS)'">
         </option>
       </select>
       <div class="error" th:if="${#fields.hasErrors('javaVersion')}" th:errors="*{javaVersion}">Java
         version error
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="webhookSecret">Webhook Secret</label>
+      <input id="webhookSecret" type="text" th:field="*{webhookSecret}" placeholder="Leave empty to auto-generate"/>
+
+      <div th:if="${#fields.hasErrors('webhookSecret')}" class="error">
+        <span th:errors="*{webhookSecret}"></span>
       </div>
     </div>
 

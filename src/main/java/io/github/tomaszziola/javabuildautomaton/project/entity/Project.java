@@ -60,6 +60,9 @@ public class Project {
   @Column(name = "java_version_major", nullable = false)
   private ProjectJavaVersion javaVersion;
 
+  @Column(name = "webhook_secret", nullable = false)
+  private String webhookSecret;
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {

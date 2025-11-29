@@ -43,7 +43,6 @@ import io.github.tomaszziola.javabuildautomaton.models.ProjectDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadWithHeadersModel;
-import io.github.tomaszziola.javabuildautomaton.models.WebhookPropertiesModel;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
 import io.github.tomaszziola.javabuildautomaton.project.ProjectRestController;
@@ -54,12 +53,10 @@ import io.github.tomaszziola.javabuildautomaton.webhook.BranchPolicy;
 import io.github.tomaszziola.javabuildautomaton.webhook.IdempotencyService;
 import io.github.tomaszziola.javabuildautomaton.webhook.IngestionGuard;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookDeliveryRepository;
-import io.github.tomaszziola.javabuildautomaton.webhook.WebhookProperties;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookRestController;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSecurityService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookService;
 import io.github.tomaszziola.javabuildautomaton.webhook.WebhookSignatureFilter;
-import io.github.tomaszziola.javabuildautomaton.webhook.WebhookStartupVerifier;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayloadWithHeaders;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
@@ -137,8 +134,6 @@ public class BaseUnit {
   protected WebhookService webhookServiceImpl;
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
   protected WebhookSecurityService webhookSecurityServiceImpl;
-  protected WebhookStartupVerifier webhookStartupVerifierImpl;
-  protected WebhookProperties webhookConfiguration;
 
   protected ApiResponse apiResponse;
   protected Build build;
@@ -153,7 +148,6 @@ public class BaseUnit {
   protected PostProjectDto postProjectDto;
   protected Project project;
   protected ProjectDto projectDto;
-  protected WebhookProperties webhookProperties;
   protected File workingDir;
 
   protected String apiPath = "/api/projects";
@@ -191,7 +185,6 @@ public class BaseUnit {
     project = ProjectModel.basic();
     projectDto = ProjectDetailsDtoModel.basic();
     pullExecutionResult = ExecutionResultModel.basic("pull");
-    webhookProperties = WebhookPropertiesModel.basic();
     workingDir = createTempDirectory(tempPrefix).toFile();
 
     buildCaptor = ArgumentCaptor.forClass(Build.class);
@@ -224,10 +217,8 @@ public class BaseUnit {
         new ProjectService(buildMapper, buildRepository, projectMapper, projectRepository);
     webhookRestControllerImpl = new WebhookRestController(webhookService);
     webhookServiceImpl = new WebhookService(buildOrchestrator, ingestionGuard, projectRepository);
-    webhookConfiguration = new WebhookProperties();
-    webhookSecurityServiceImpl = new WebhookSecurityService(webhookProperties);
+    webhookSecurityServiceImpl = new WebhookSecurityService();
     webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService);
-    webhookStartupVerifierImpl = new WebhookStartupVerifier(webhookProperties);
     webUiControllerImpl = new WebUiController(buildService, projectService);
 
     when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(true);
