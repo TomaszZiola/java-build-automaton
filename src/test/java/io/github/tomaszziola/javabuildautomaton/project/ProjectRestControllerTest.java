@@ -1,9 +1,8 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDto;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +17,8 @@ class ProjectRestControllerTest extends BaseUnit {
     final var result = projectRestControllerImpl.getAllProjects();
 
     // then
-    assertThat(result.size()).isEqualTo(1);
-    final ProjectDto first = result.getFirst();
+    assertThat(result).hasSize(1);
+    final var first = result.getFirst();
     assertThat(first).isEqualTo(projectDto);
   }
 
@@ -30,7 +29,7 @@ class ProjectRestControllerTest extends BaseUnit {
     final var result = projectRestControllerImpl.getProjectBuilds(project.getId());
 
     // then
-    assertThat(result.size()).isEqualTo(1);
+    assertThat(result).hasSize(1);
     assertThat(result.getFirst()).isEqualTo(buildSummaryDto);
   }
 
@@ -38,7 +37,7 @@ class ProjectRestControllerTest extends BaseUnit {
   @DisplayName("Given non-existing project, when getting builds, then throw ProjectNotFound")
   void givenNonExistingProject_whenGetProjectBuilds_thenThrowProjectNotFound() {
     // given
-    final long missingId = 9L;
+    final var missingId = 9L;
 
     // when / then
     assertThrows(

@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class BuildMapper {
 
-  public BuildSummaryDto toSummaryDto(final Build build) {
+  public BuildSummaryDto toSummaryDto(Build build) {
     return new BuildSummaryDto(
         build.getId(), build.getStatus(), build.getStartTime(), build.getEndTime());
   }
 
-  public BuildDetailsDto toDetailsDto(final Build build) {
+  public BuildDetailsDto toDetailsDto(Build build) {
     return new BuildDetailsDto(
         build.getId(),
         build.getStatus(),

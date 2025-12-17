@@ -24,12 +24,12 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      @NonNull final HttpServletRequest request,
-      @NonNull final HttpServletResponse response,
-      @NonNull final FilterChain filterChain)
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-    final var correlationId = getCorrelationId(request);
+    var correlationId = getCorrelationId(request);
 
     put(MDC_KEY, correlationId);
     response.setHeader(CORRELATION_ID_HEADER, correlationId);
@@ -41,8 +41,8 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     }
   }
 
-  private String getCorrelationId(final HttpServletRequest request) {
-    final var headerValue = request.getHeader(CORRELATION_ID_HEADER);
+  private String getCorrelationId(HttpServletRequest request) {
+    var headerValue = request.getHeader(CORRELATION_ID_HEADER);
     if (headerValue != null && !headerValue.isBlank()) {
       return headerValue;
     }

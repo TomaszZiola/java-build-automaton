@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Project</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 2em;
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #343a40;
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 0.5em;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .error {
+      color: #dc3545;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a href="/">&larr; Back to Dashboard</a>
+  <h1>Create Project</h1>
+
+  <form th:action="@{/projects/create}" th:object="${request}" method="post">
+    <div class="field">
+      <label for="repositoryUrl">Repository URL</label>
+      <input id="repositoryUrl" type="url" th:field="*{repositoryUrl}" placeholder="https://github.com/owner/repo.git"/>
+
+      <div th:if="${#fields.hasErrors('repositoryUrl')}" class="error">
+        <span th:errors="*{repositoryUrl}"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="buildTool">Build Tool</label>
+      <select id="buildTool" th:field="*{buildTool}">
+        <option value="" disabled selected>Select a build tool</option>
+        <option th:each="bt : ${buildTools}" th:value="${bt}" th:text="${bt}"></option>
+      </select>
+      <div class="error" th:if="${#fields.hasErrors('buildTool')}" th:errors="*{buildTool}">Build
+        tool error
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="javaVersion">Java Version</label>
+      <select id="javaVersion" th:field="*{javaVersion}">
+        <option value="" disabled selected>Select Java version</option>
+        <option th:each="version : ${javaVersions}"
+                th:value="${version}"
+                th:text="'Java ' + ${version.versionNumber} + ' (LTS)'">
+        </option>
+      </select>
+      <div class="error" th:if="${#fields.hasErrors('javaVersion')}" th:errors="*{javaVersion}">Java
+        version error
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="webhookSecret">Webhook Secret</label>
+      <input id="webhookSecret" type="text" th:field="*{webhookSecret}" placeholder="Leave empty to auto-generate"/>
+
+      <div th:if="${#fields.hasErrors('webhookSecret')}" class="error">
+        <span th:errors="*{webhookSecret}"></span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary">Create</button>
+      <a href="/" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+</body>
+</html>

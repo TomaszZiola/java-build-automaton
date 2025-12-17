@@ -14,8 +14,9 @@ import org.junit.jupiter.api.Test;
 class ProcessRunnerTest extends BaseUnit {
 
   @Test
-  @DisplayName("start merges stderr into stdout (e.g., 'java -version' outputs to stderr)")
-  void startMergesErrorStreamIntoStdout() throws Exception {
+  @DisplayName(
+      "Given 'java -version' writes to stderr, when starting process, then stderr is merged into stdout")
+  void mergesStderrIntoStdoutWhenStartingJavaVersion() throws Exception {
     // when
     final var process = processRunnerImpl.start(workingDir, "java", "-version");
 
@@ -28,8 +29,8 @@ class ProcessRunnerTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("start throws IOException when executable is not found")
-  void startThrowsIOExceptionWhenCommandNotFound() {
+  @DisplayName("Given non-existing executable, when starting process, then throw IOException")
+  void throwsIOExceptionWhenCommandNotFoundOnStart() {
     // when / then
     assertThrows(
         IOException.class,

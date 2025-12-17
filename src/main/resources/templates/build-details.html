@@ -2,7 +2,7 @@
 <html lang="pl" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:text="|Build #${build.id()} - ${project.name()}|">Build Details</title>
+  <title th:text="|Build #${build.id()} - ${project.repositoryName()}|">Build Details</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -48,8 +48,8 @@
       padding: 1.5em;
       border-radius: 5px;
       margin-top: 1.5em;
-      white-space: pre-wrap; /* This preserves line breaks and spaces */
-      word-wrap: break-word; /* This wraps long lines */
+      white-space: pre-wrap;
+      word-wrap: break-word;
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
       font-size: 0.9em;
       line-height: 1.5;

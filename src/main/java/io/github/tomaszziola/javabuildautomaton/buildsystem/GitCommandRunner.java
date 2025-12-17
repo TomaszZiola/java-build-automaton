@@ -11,15 +11,15 @@ public class GitCommandRunner {
   private static final String GIT = "git";
   private static final String ARG_PULL = "pull";
   private static final String ARG_CLONE = "clone";
-  private static final String ARG_DOTE = ".";
+  private static final String ARG_DOT = ".";
 
   private final ProcessExecutor processExecutor;
 
-  public ExecutionResult pull(final File workingDir) {
+  public ExecutionResult pull(File workingDir) {
     return processExecutor.execute(workingDir, GIT, ARG_PULL);
   }
 
-  public ExecutionResult clone(final String repositoryUrl, final File targetDir) {
-    return processExecutor.execute(targetDir, GIT, ARG_CLONE, repositoryUrl, ARG_DOTE);
+  public ExecutionResult clone(String repositoryUrl, File targetDir) {
+    return processExecutor.execute(targetDir, GIT, ARG_CLONE, repositoryUrl, ARG_DOT);
   }
 }

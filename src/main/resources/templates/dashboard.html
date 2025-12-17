@@ -74,17 +74,17 @@
 <div class="container">
   <h1>Project Dashboard</h1>
 
-  <div style="margin: 1em 0;">
-    <a href="/projects/new"
+  <div style="margin-top: 1rem;">
+    <a href="/projects/create"
        style="display:inline-block;background:#28a745;color:#fff;padding:10px 14px;border-radius:6px;font-weight:600;">
-      + New Project
+      + Create new project
     </a>
   </div>
 
   <div th:if="${projects.isEmpty()}" class="no-projects">
     <p>No projects have been configured yet.</p>
     <p>
-      <a href="/projects/new"
+      <a href="/projects/create"
          style="display:inline-block;background:#28a745;color:#fff;padding:10px 14px;border-radius:6px;font-weight:600;">
         + Create your first project
       </a>
@@ -94,26 +94,28 @@
     <thead>
     <tr>
       <th>ID</th>
-      <th>Slug</th>
       <th>Created</th>
       <th>Updated</th>
-      <th>Repository</th>
+      <th>Repository Name</th>
       <th>Repository URL</th>
       <th>Build Tool</th>
+      <th>Java Version</th>
       <th>Actions</th>
-      <th>Builds</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="project : ${projects}">
       <td th:text="${project.id()}">1</td>
-      <td th:text="${project.slug()}">1</td>
-      <td th:text="${project.updatedAt()}">1</td>
-      <td th:text="${project.createdAt()}">1</td>
-      <td th:text="${project.slug()}">1</td>
+      <td th:text="${#temporals.format(project.createdAt(), 'yyyy-MM-dd HH:mm:ss')}">2025-10-15
+        08:39:40
+      </td>
+      <td th:text="${#temporals.format(project.updatedAt(), 'yyyy-MM-dd HH:mm:ss')}">2025-10-15
+        08:39:40
+      </td>
       <td th:text="${project.repositoryName()}">user/repo</td>
       <td th:text="${project.repositoryUrl()}">user/repo</td>
       <td th:text="${project.buildTool()}">MAVEN</td>
+      <td th:text="${project.javaVersion()}">21</td>
       <td>
         <a th:href="@{/projects/{id}(id=${project.id()})}">View Builds</a>
       </td>

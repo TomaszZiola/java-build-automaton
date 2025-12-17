@@ -1,8 +1,9 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
+import static io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion.JAVA_21;
 import static java.time.Instant.parse;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;
@@ -15,13 +16,13 @@ class ProjectMapperTest extends BaseUnit {
       "Given Project entity, when mapping to ProjectDto, then all fields are mapped correctly")
   void givenProjectEntity_whenMappingToProjectDto_thenAllFieldsMappedCorrectly() {
     // when
-    final var result = projectMapperImpl.toDetailsDto(project);
+    var result = projectMapperImpl.toDetailsDto(project);
 
     // then
     assertThat(result.id()).isEqualTo(1L);
     assertThat(result.username()).isEqualTo("TomaszZiola");
     assertThat(result.repositoryName()).isEqualTo("java-build-automaton");
-    assertThat(result.fullName()).isEqualTo("TomaszZiola/java-build-automaton");
+    assertThat(result.repositoryFullName()).isEqualTo("TomaszZiola/java-build-automaton");
     assertThat(result.repositoryUrl())
         .isEqualTo("https://github.com/TomaszZiola/java-build-automaton.git");
     assertThat(result.createdAt()).isEqualTo(parse("2025-08-24T10:15:10Z"));
@@ -36,15 +37,16 @@ class ProjectMapperTest extends BaseUnit {
       "Given PostProjectDto, when mapping to Project entity, then all fields are mapped correctly")
   void givenPostProjectDto_whenMappingToProject_thenAllFieldsMappedCorrectly() {
     // when
-    final var result = projectMapperImpl.toEntity(postProjectDto);
+    var result = projectMapperImpl.toEntity(postProjectDto);
 
     // then
-    assertThat(result.getCreatedAt()).isNotNull();
     assertThat(result.getRepositoryName()).isEqualTo("java-build-automaton");
     assertThat(result.getUsername()).isEqualTo("TomaszZiola");
-    assertThat(result.getFullName()).isEqualTo("TomaszZiola/java-build-automaton");
+    assertThat(result.getRepositoryFullName()).isEqualTo("TomaszZiola/java-build-automaton");
     assertThat(result.getRepositoryUrl())
         .isEqualTo("https://github.com/TomaszZiola/java-build-automaton.git");
     assertThat(result.getBuildTool()).isEqualTo(GRADLE);
+    assertThat(result.getWebhookSecret()).isEqualTo(webhookSecret);
+    assertThat(result.getJavaVersion()).isEqualTo(JAVA_21);
   }
 }

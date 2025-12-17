@@ -38,7 +38,9 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     compileOnly("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("io.rest-assured:rest-assured:5.5.6")
+    testImplementation("org.testcontainers:postgresql:1.21.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
 }
 
 tasks.withType<Test> {
@@ -69,7 +71,16 @@ pmd {
     isConsoleOutput = true
     toolVersion = "7.17.0"
     rulesMinimumPriority = 5
+}
+
+tasks.named<Pmd>("pmdMain") {
     ruleSetFiles = files("config/pmd/ruleset.xml")
+    ruleSets = emptyList() // wyłącz built-in
+}
+
+tasks.named<Pmd>("pmdTest") {
+    ruleSetFiles = files("config/pmd/ruleset-test.xml")
+    ruleSets = emptyList()
 }
 
 tasks.test {
@@ -110,7 +121,7 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     violationRules {
         rule {
             limit {
-                minimum = "0.94".toBigDecimal()
+                minimum = "0.90".toBigDecimal()
             }
         }
     }

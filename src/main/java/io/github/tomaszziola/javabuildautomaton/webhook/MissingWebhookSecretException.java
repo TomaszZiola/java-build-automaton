@@ -7,7 +7,7 @@ public class MissingWebhookSecretException extends RuntimeException implements S
 
   @Serial private static final long serialVersionUID = 1L;
 
-  public MissingWebhookSecretException(final String message) {
+  public MissingWebhookSecretException(String message) {
     super(message);
   }
 }

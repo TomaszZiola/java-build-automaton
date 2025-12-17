@@ -12,12 +12,13 @@ import org.springframework.stereotype.Service;
 @Service
 public final class OutputCollector {
 
-  public void collect(final InputStream inputStream, final StringBuilder target)
-      throws IOException {
+  public void collect(InputStream inputStream, StringBuilder target) throws IOException {
     try (var reader = new BufferedReader(new InputStreamReader(inputStream, UTF_8))) {
       String line;
-      while ((line = reader.readLine()) != null) {
+      line = reader.readLine();
+      while (line != null) {
         target.append(line).append(lineSeparator());
+        line = reader.readLine();
       }
     }
   }

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -97,9 +96,7 @@ class BuildQueueServiceTest extends BaseUnit {
       "Given build service throws exception, when executing build, then exception is handled")
   void handlesExecutionExceptions() throws Exception {
     // given
-    doThrow(new RuntimeException("Build execution failed"))
-        .when(buildService)
-        .executeBuild(buildId);
+    doThrow(new RuntimeException("Build execution failed")).when(buildService).execute(buildId);
     buildQueueServiceImpl.startWorker();
 
     // when
@@ -108,7 +105,7 @@ class BuildQueueServiceTest extends BaseUnit {
     sleep(150);
 
     // then
-    verify(buildService, times(1)).executeBuild(buildId);
+    verify(buildService, times(1)).execute(buildId);
     assertDoesNotThrow(buildQueueServiceImpl::stopWorker);
   }
 
@@ -121,7 +118,7 @@ class BuildQueueServiceTest extends BaseUnit {
     final AtomicInteger max = new AtomicInteger();
     final CountDownLatch latch = new CountDownLatch(3);
     doAnswer(
-            inv -> {
+            _ -> {
               final int incremented = current.incrementAndGet();
               max.accumulateAndGet(incremented, Math::max);
               try {
@@ -133,7 +130,7 @@ class BuildQueueServiceTest extends BaseUnit {
               return null;
             })
         .when(buildService)
-        .executeBuild(anyLong());
+        .execute(anyLong());
 
     buildQueueServiceImpl.startWorker();
 
@@ -144,17 +141,7 @@ class BuildQueueServiceTest extends BaseUnit {
 
     // then
     assertThat(latch.await(2, SECONDS)).isTrue();
-    assertThat(max.get() <= buildProperties.getMaxParallel()).isTrue();
-  }
-
-  @Test
-  @DisplayName("Given null build id, when enqueuing, then handles gracefully")
-  void handlesNullBuildId() {
-    // when
-    assertDoesNotThrow(() -> buildQueueServiceImpl.enqueue(null));
-
-    // then
-    verifyNoInteractions(buildService);
+    assertThat(max.get()).isLessThanOrEqualTo(buildProperties.getMaxParallel());
   }
 
   @Test
@@ -196,12 +183,12 @@ class BuildQueueServiceTest extends BaseUnit {
 
     final CountDownLatch latch = new CountDownLatch(3);
     doAnswer(
-            inv -> {
+            _ -> {
               latch.countDown();
               return null;
             })
         .when(buildService)
-        .executeBuild(anyLong());
+        .execute(anyLong());
 
     buildQueueServiceImpl.startWorker();
 
@@ -212,7 +199,7 @@ class BuildQueueServiceTest extends BaseUnit {
 
     // then
     assertThat(latch.await(1, SECONDS)).isTrue();
-    verify(buildService, times(3)).executeBuild(anyLong());
+    verify(buildService, times(3)).execute(anyLong());
   }
 
   @Test

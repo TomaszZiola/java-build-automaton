@@ -19,6 +19,7 @@ services:
   app:
     image: java-build-automaton:latest
     container_name: jba-app
+    user: root
     depends_on:
       db:
         condition: service_healthy
@@ -28,11 +29,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      WEBHOOK_WEBHOOK_SECRET: ${WEBHOOK_WEBHOOK_SECRET}
       SPRING_APPLICATION_JSON: '{"workspace":{"baseDir":"/workspaces"}}'
       JAVA_OPTS: "-Dserver.address=0.0.0.0 -Dapp.build.timeout.seconds=600"
     volumes:
       - jba-workspace:/workspaces
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s
@@ -43,5 +44,3 @@ services:
 volumes:
   jba-db-data:
   jba-workspace:
-    external: true
-

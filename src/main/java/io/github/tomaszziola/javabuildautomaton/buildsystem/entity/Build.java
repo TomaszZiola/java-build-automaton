@@ -12,7 +12,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
@@ -39,7 +38,6 @@ public class Build {
   @Enumerated(STRING)
   private BuildStatus status;
 
-  @Lob
   @Column(columnDefinition = "TEXT")
   private String logs;
 
@@ -53,7 +51,7 @@ public class Build {
   private Instant endTime;
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     }
@@ -61,12 +59,12 @@ public class Build {
       return false;
     }
 
-    final Class<?> otherEffectiveClass =
+    Class<?> otherEffectiveClass =
         other instanceof HibernateProxy
             ? ((HibernateProxy) other).getHibernateLazyInitializer().getPersistentClass()
             : other.getClass();
 
-    final Class<?> thisEffectiveClass =
+    Class<?> thisEffectiveClass =
         this instanceof HibernateProxy
             ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass()
             : this.getClass();
@@ -75,7 +73,7 @@ public class Build {
       return false;
     }
 
-    final Build build = (Build) other;
+    Build build = (Build) other;
     return this.id != null && this.id.equals(build.id);
   }
 

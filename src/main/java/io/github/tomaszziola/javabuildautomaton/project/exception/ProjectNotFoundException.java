@@ -7,7 +7,7 @@ public class ProjectNotFoundException extends RuntimeException implements Serial
 
   @Serial private static final long serialVersionUID = 1L;
 
-  public ProjectNotFoundException(final Long projectId) {
+  public ProjectNotFoundException(Long projectId) {
     super("Project not found with id: " + projectId);
   }
 }

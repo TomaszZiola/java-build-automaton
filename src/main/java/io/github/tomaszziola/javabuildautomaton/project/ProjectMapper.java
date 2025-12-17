@@ -1,7 +1,5 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import static java.time.Instant.now;
-
 import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
 import io.github.tomaszziola.javabuildautomaton.api.dto.ProjectDto;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
@@ -10,45 +8,59 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProjectMapper {
 
-  public ProjectDto toDetailsDto(final Project project) {
+  private static final String GITHUB_BASE_URL = "https://github.com/";
+  private static final int MIN_GITHUB_PATH_SEGMENTS = 2;
+
+  public ProjectDto toDetailsDto(Project project) {
     return new ProjectDto(
         project.getId(),
         project.getCreatedAt(),
         project.getUpdatedAt(),
         project.getUsername(),
         project.getRepositoryName(),
-        project.getFullName(),
+        project.getRepositoryFullName(),
         project.getRepositoryUrl(),
-        project.getBuildTool());
+        project.getBuildTool(),
+        project.getJavaVersion());
   }
 
-  public Project toEntity(final PostProjectDto request) {
-    final Project project = new Project();
-    project.setCreatedAt(now());
-    project.setRepositoryName(extractRepositoryName(request.repositoryUrl()));
-    project.setUsername(extractUsername(request.repositoryUrl()));
-    project.setFullName(extractUserAndRepo(request.repositoryUrl()));
-    project.setRepositoryUrl(request.repositoryUrl());
-    project.setBuildTool(request.buildTool());
+  public Project toEntity(PostProjectDto request) {
+    var url = request.getRepositoryUrl();
+    var project = new Project();
+    project.setRepositoryName(extractRepositoryName(url));
+    project.setUsername(extractUsername(url));
+    project.setRepositoryFullName(extractUserAndRepo(url));
+    project.setRepositoryUrl(url);
+    project.setBuildTool(request.getBuildTool());
+    project.setJavaVersion(request.getJavaVersion());
+    project.setWebhookSecret(request.getWebhookSecret());
     return project;
   }
 
-  private static String extractUsername(final String url) {
-    final var parts = url.replace("https://github.com/", "").split("/");
-    return parts.length >= 2 ? parts[0] : null;
+  private static String extractUsername(String url) {
+    var path = stripGitHubPrefix(url);
+    var parts = path.split("/");
+    return parts.length >= 1 ? parts[0] : null;
   }
 
-  private static String extractRepositoryName(final String url) {
-    final var parts = url.replace("https://github.com/", "").split("/");
-    final var repo = parts[1];
-    return repo.endsWith(".git") ? repo.substring(0, repo.length() - 4) : repo;
-  }
-
-  public static String extractUserAndRepo(final String url) {
-    var trimmed = url.substring("https://github.com/".length());
-    if (trimmed.endsWith(".git")) {
-      trimmed = trimmed.substring(0, trimmed.length() - 4);
+  private static String extractRepositoryName(String url) {
+    var path = stripGitHubPrefix(url);
+    var parts = path.split("/");
+    if (parts.length < MIN_GITHUB_PATH_SEGMENTS) {
+      return null;
     }
-    return trimmed;
+    return stripGitSuffix(parts[1]);
+  }
+
+  public static String extractUserAndRepo(String url) {
+    return stripGitSuffix(stripGitHubPrefix(url));
+  }
+
+  private static String stripGitHubPrefix(String url) {
+    return url.startsWith(GITHUB_BASE_URL) ? url.substring(GITHUB_BASE_URL.length()) : url;
+  }
+
+  private static String stripGitSuffix(String path) {
+    return path.endsWith(".git") ? path.substring(0, path.length() - 4) : path;
   }
 }
