@@ -43,10 +43,14 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
-      @NonNull FilterChain filterChain) throws ServletException, IOException {
+      @NonNull FilterChain filterChain)
+      throws ServletException, IOException {
 
-    log.info("Request method: {}, URI: {}, content-length: {}",
-        request.getMethod(), request.getRequestURI(), request.getContentLength());
+    log.info(
+        "Request method: {}, URI: {}, content-length: {}",
+        request.getMethod(),
+        request.getRequestURI(),
+        request.getContentLength());
 
     if (!isWebhookRequest(request)) {
       filterChain.doFilter(request, response);
@@ -75,8 +79,8 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
     if (webhookSecret == null || webhookSecret.isBlank()) {
       log.error("Project {} has no webhook secret configured", project.getId());
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-          "Webhook secret not configured");
+      response.sendError(
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Webhook secret not configured");
       return;
     }
 
@@ -91,8 +95,7 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
   }
 
   private boolean isWebhookRequest(HttpServletRequest request) {
-    return POST.matches(request.getMethod())
-        && WEBHOOK_PATH.equals(request.getRequestURI());
+    return POST.matches(request.getMethod()) && WEBHOOK_PATH.equals(request.getRequestURI());
   }
 
   private String extractRepositoryFullName(byte[] bodyBytes) {
@@ -118,7 +121,7 @@ public class WebhookSignatureFilter extends OncePerRequestFilter {
 
     CachedBodyHttpServletRequest(HttpServletRequest request, byte[] body) {
       super(request);
-      this.cachedBody = body;
+      this.cachedBody = body.clone();
     }
 
     @Override

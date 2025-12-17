@@ -16,10 +16,10 @@ class GitCommandRunnerTest extends BaseUnit {
       "Given working directory, when pulling, then delegate to process executor and propagate result")
   void delegatesToProcessExecutorWhenPulling() {
     // when
-    var result = gitCommandRunnerImpl.pull(tempDir);
+    var result = gitCommandRunnerImpl.pull(workingDir);
 
     // then
-    verify(processExecutor).execute(tempDir, "git", "pull");
+    verify(processExecutor).execute(workingDir, "git", "pull");
     assertThat(result).isSameAs(pullExecutionResult);
   }
 
@@ -28,10 +28,10 @@ class GitCommandRunnerTest extends BaseUnit {
       "Given repository and target dir, when cloning, then delegate to process executor and propagate result")
   void delegatesToProcessExecutorWhenCloning() {
     // when
-    var result = gitCommandRunnerImpl.clone(project.getRepositoryUrl(), tempDir);
+    var result = gitCommandRunnerImpl.clone(project.getRepositoryUrl(), workingDir);
 
     // then
-    verify(processExecutor).execute(tempDir, "git", "clone", project.getRepositoryUrl(), ".");
+    verify(processExecutor).execute(workingDir, "git", "clone", project.getRepositoryUrl(), ".");
     assertThat(result).isSameAs(cloneExecutionResult);
   }
 }

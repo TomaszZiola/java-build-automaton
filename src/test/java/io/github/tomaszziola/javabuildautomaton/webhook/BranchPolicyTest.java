@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.webhook;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadWithHeadersModel;

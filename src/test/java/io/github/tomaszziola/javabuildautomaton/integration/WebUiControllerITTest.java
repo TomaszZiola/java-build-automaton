@@ -2,7 +2,7 @@ package io.github.tomaszziola.javabuildautomaton.integration;
 
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.MAVEN;
 import static io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion.JAVA_21;
-import static io.github.tomaszziola.javabuildautomaton.utils.MyMatchers.containsWholeWordOutsideUrls;
+import static io.github.tomaszziola.javabuildautomaton.utils.CustomMatchers.containsWholeWordOutsideUrls;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.port;
 import static io.restassured.http.ContentType.HTML;
@@ -13,27 +13,9 @@ import static org.hamcrest.Matchers.not;
 import io.github.tomaszziola.javabuildautomaton.utils.BaseIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
 class WebUiControllerITTest extends BaseIntegrationTest {
-
-  @Container
-  static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
-      new PostgreSQLContainer<>("postgres:16-alpine");
-
-  @DynamicPropertySource
-  static void registerProps(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", POSTGRESQL_CONTAINER::getJdbcUrl);
-    registry.add("spring.datasource.username", POSTGRESQL_CONTAINER::getUsername);
-    registry.add("spring.datasource.password", POSTGRESQL_CONTAINER::getPassword);
-    registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-  }
 
   @Test
   @DisplayName("GET / should return dashboard HTML with projects table")
@@ -125,6 +107,7 @@ class WebUiControllerITTest extends BaseIntegrationTest {
             .formParam("repositoryUrl", url)
             .formParam("buildTool", MAVEN)
             .formParam("javaVersion", JAVA_21)
+            .formParam("webhookSecret", "TopSecret")
             .when()
             .post("/projects/create")
             .then()

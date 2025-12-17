@@ -3,7 +3,7 @@ package io.github.tomaszziola.javabuildautomaton.project;
 import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.GRADLE;
 import static io.github.tomaszziola.javabuildautomaton.project.ProjectJavaVersion.JAVA_21;
 import static java.time.Instant.parse;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.tomaszziola.javabuildautomaton.utils.BaseUnit;
 import org.junit.jupiter.api.DisplayName;

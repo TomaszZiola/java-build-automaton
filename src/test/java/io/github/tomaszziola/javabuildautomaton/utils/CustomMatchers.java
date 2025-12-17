@@ -5,8 +5,8 @@ import static org.hamcrest.text.MatchesPattern.matchesPattern;
 
 import org.hamcrest.Matcher;
 
-public final class MyMatchers {
-  private MyMatchers() {}
+public final class CustomMatchers {
+  private CustomMatchers() {}
 
   public static Matcher<String> containsWholeWordOutsideUrls(String word) {
     final var quote = quote(word);

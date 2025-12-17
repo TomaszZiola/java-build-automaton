@@ -16,14 +16,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-@SuppressWarnings("PMD.TooManyMethods")
 class WebhookSecurityServiceTest extends BaseUnit {
 
   @Test
   @DisplayName("Given valid signature, when validating signature, then return true")
   void returnsTrueForValidSignature() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret))
+    assertThat(
+            webhookSecurityServiceImpl.isSignatureValid(
+                validSha256HeaderValue, bodyBytes, webhookSecret))
         .isTrue();
   }
 
@@ -31,7 +32,9 @@ class WebhookSecurityServiceTest extends BaseUnit {
   @DisplayName("Given invalid signature, when validating signature, then return false")
   void returnsFalseForInvalidSignature() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidSha256HeaderValue, bodyBytes, webhookSecret))
+    assertThat(
+            webhookSecurityServiceImpl.isSignatureValid(
+                invalidSha256HeaderValue, bodyBytes, webhookSecret))
         .isFalse();
   }
 
@@ -40,7 +43,9 @@ class WebhookSecurityServiceTest extends BaseUnit {
       "Given header not starting with sha256=, when validating signature, then return false")
   void returnsFalseWhenHeaderNotStartingWithSha256Prefix() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(invalidSha256HeaderValue, bodyBytes, webhookSecret))
+    assertThat(
+            webhookSecurityServiceImpl.isSignatureValid(
+                invalidSha256HeaderValue, bodyBytes, webhookSecret))
         .isFalse();
   }
 
@@ -49,15 +54,18 @@ class WebhookSecurityServiceTest extends BaseUnit {
       "Given configured secret and null header, when validating signature, then return false")
   void returnsFalseWhenHeaderNullAndSecretConfigured() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes, webhookSecret)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid(null, bodyBytes, webhookSecret))
+        .isFalse();
   }
 
   @Test
   @DisplayName("Given invalid hex or length, when validating signature, then return false")
   void returnsFalseForInvalidHexOrLength() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=zz", bodyBytes, webhookSecret)).isFalse();
-    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=aa", bodyBytes, webhookSecret)).isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=zz", bodyBytes, webhookSecret))
+        .isFalse();
+    assertThat(webhookSecurityServiceImpl.isSignatureValid("sha256=aa", bodyBytes, webhookSecret))
+        .isFalse();
   }
 
   @Test
@@ -65,7 +73,10 @@ class WebhookSecurityServiceTest extends BaseUnit {
       "Given configured secret and null payload, when validating signature, then return false")
   void returnsFalseWhenPayloadNullAndSecretConfigured() {
     // when && then
-    assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, null, webhookSecret)).isFalse();
+    assertThat(
+            webhookSecurityServiceImpl.isSignatureValid(
+                validSha256HeaderValue, null, webhookSecret))
+        .isFalse();
   }
 
   @Test
@@ -77,7 +88,9 @@ class WebhookSecurityServiceTest extends BaseUnit {
           .thenThrow(new NoSuchAlgorithmException("forced by test"));
 
       // when && then
-      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret))
+      assertThat(
+              webhookSecurityServiceImpl.isSignatureValid(
+                  validSha256HeaderValue, bodyBytes, webhookSecret))
           .isFalse();
     }
   }
@@ -92,7 +105,9 @@ class WebhookSecurityServiceTest extends BaseUnit {
       doThrow(new InvalidKeyException("forced by test")).when(macMock).init(any());
 
       // when && then
-      assertThat(webhookSecurityServiceImpl.isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret))
+      assertThat(
+              webhookSecurityServiceImpl.isSignatureValid(
+                  validSha256HeaderValue, bodyBytes, webhookSecret))
           .isFalse();
     }
   }

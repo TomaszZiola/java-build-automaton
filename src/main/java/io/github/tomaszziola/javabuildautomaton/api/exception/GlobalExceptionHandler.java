@@ -37,12 +37,9 @@ public class GlobalExceptionHandler {
 
   private ResponseEntity<ErrorResponse> buildErrorResponse(
       HttpStatus status, String error, Exception exception, HttpServletRequest request) {
-    var errorResponse = new ErrorResponse(
-        now(),
-        status.value(),
-        error,
-        exception.getMessage(),
-        request.getRequestURI());
+    var errorResponse =
+        new ErrorResponse(
+            now(), status.value(), error, exception.getMessage(), request.getRequestURI());
     return new ResponseEntity<>(errorResponse, status);
   }
 }

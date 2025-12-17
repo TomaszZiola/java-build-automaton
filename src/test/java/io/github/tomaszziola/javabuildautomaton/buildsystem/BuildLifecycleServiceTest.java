@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 class BuildLifecycleServiceTest extends BaseUnit {
 
   @Test
-  @DisplayName("createInProgress sets status and start time, then saves")
-  void makeInProgressSetsFieldsAndSaves() {
+  @DisplayName("Given project, when makeInProgress, then set IN_PROGRESS and start time and save")
+  void makeInProgressSetsStatusAndStartTimeThenSaves() {
     // when
     final var build = buildLifecycleServiceImpl.makeInProgress(project);
 
@@ -29,8 +29,8 @@ class BuildLifecycleServiceTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("createQueued sets status QUEUED and start time, then saves")
-  void createQueuedSetsFieldsAndSaves() {
+  @DisplayName("Given project, when createQueued, then set QUEUED and start time and save")
+  void createQueuedSetsStatusQueuedAndStartTimeThenSaves() {
     // when
     final var build = buildLifecycleServiceImpl.createQueued(project);
 
@@ -42,8 +42,8 @@ class BuildLifecycleServiceTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("complete sets status, end time and logs, then saves")
-  void completeSetsFieldsAndSaves() {
+  @DisplayName("Given build and logs, when complete, then set status, end time and logs and save")
+  void completeSetsStatusEndTimeAndLogsThenSaves() {
     // when
     buildLifecycleServiceImpl.complete(build, SUCCESS, new StringBuilder("all good\n"));
 
@@ -55,8 +55,8 @@ class BuildLifecycleServiceTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("markInProgress sets status and saves")
-  void markInProgressSetsStatusAndSaves() {
+  @DisplayName("Given build, when markInProgress, then set status and save")
+  void markInProgressSetsStatusThenSaves() {
     // when
     buildLifecycleServiceImpl.markInProgress(build);
 
@@ -66,8 +66,8 @@ class BuildLifecycleServiceTest extends BaseUnit {
   }
 
   @Test
-  @DisplayName("complete with null logs sets status and end time and keeps logs null")
-  void completeWithNullLogsSetsFieldsAndSaves() {
+  @DisplayName("Given null logs, when complete, then set status and end time and keep logs null")
+  void completeWithNullLogsSetsStatusAndEndTimeKeepsLogsNullThenSaves() {
     // when
     buildLifecycleServiceImpl.complete(build, SUCCESS, null);
 

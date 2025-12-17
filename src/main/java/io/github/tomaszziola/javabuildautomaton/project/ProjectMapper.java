@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class ProjectMapper {
 
   private static final String GITHUB_BASE_URL = "https://github.com/";
+  private static final int MIN_GITHUB_PATH_SEGMENTS = 2;
 
   public ProjectDto toDetailsDto(Project project) {
     return new ProjectDto(
@@ -45,7 +46,7 @@ public class ProjectMapper {
   private static String extractRepositoryName(String url) {
     var path = stripGitHubPrefix(url);
     var parts = path.split("/");
-    if (parts.length < 2) {
+    if (parts.length < MIN_GITHUB_PATH_SEGMENTS) {
       return null;
     }
     return stripGitSuffix(parts[1]);
@@ -56,14 +57,10 @@ public class ProjectMapper {
   }
 
   private static String stripGitHubPrefix(String url) {
-    return url.startsWith(GITHUB_BASE_URL)
-        ? url.substring(GITHUB_BASE_URL.length())
-        : url;
+    return url.startsWith(GITHUB_BASE_URL) ? url.substring(GITHUB_BASE_URL.length()) : url;
   }
 
   private static String stripGitSuffix(String path) {
-    return path.endsWith(".git")
-        ? path.substring(0, path.length() - 4)
-        : path;
+    return path.endsWith(".git") ? path.substring(0, path.length() - 4) : path;
   }
 }

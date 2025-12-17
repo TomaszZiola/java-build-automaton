@@ -23,10 +23,10 @@ class BuildExecutorTest extends BaseUnit {
       "Given Maven tool, when build invoked, then execute mvn clean install and propagate result")
   void executesMavenBuildWhenRequested() {
     // when
-    var result = buildExecutorImpl.build(MAVEN, tempDir, javaVersion);
+    var result = buildExecutorImpl.build(MAVEN, workingDir, javaVersion);
 
     // then
-    verify(processExecutor).execute(tempDir, "mvn", "clean", "install");
+    verify(processExecutor).execute(workingDir, "mvn", "clean", "install");
     assertThat(result).isSameAs(pullExecutionResult);
   }
 
@@ -35,10 +35,10 @@ class BuildExecutorTest extends BaseUnit {
       "Given Gradle tool, when build invoked, then execute gradle clean build and propagate result")
   void executesGradleBuildWhenRequested() {
     // when
-    var result = buildExecutorImpl.build(GRADLE, tempDir, javaVersion);
+    var result = buildExecutorImpl.build(GRADLE, workingDir, javaVersion);
 
     // then
-    verify(processExecutor).execute(tempDir, "gradle", "clean", "build");
+    verify(processExecutor).execute(workingDir, "gradle", "clean", "build");
     assertThat(result).isSameAs(pullExecutionResult);
   }
 
@@ -46,15 +46,16 @@ class BuildExecutorTest extends BaseUnit {
   @DisplayName("Given gradlew present and executable, when building, then use wrapper script path")
   void usesGradlewWhenPresentAndExecutable() throws Exception {
     // given
-    var gradlew = new File(tempDir, "gradlew");
+    var gradlew = new File(workingDir, "gradlew");
     Files.writeString(gradlew.toPath(), "#!/bin/sh\necho gradle\n");
     assertThat(gradlew.setExecutable(true)).isTrue();
 
     // when
-    buildExecutorImpl.build(GRADLE, tempDir, javaVersion);
+    buildExecutorImpl.build(GRADLE, workingDir, javaVersion);
 
     // then
     verify(processExecutor)
-        .execute(eq(tempDir), eq("sh"), eq("-c"), argThat(cmd -> cmd.contains(gradlew.getPath())));
+        .execute(
+            eq(workingDir), eq("sh"), eq("-c"), argThat(cmd -> cmd.contains(gradlew.getPath())));
   }
 }

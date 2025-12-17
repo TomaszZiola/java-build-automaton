@@ -33,6 +33,7 @@ public final class ProjectModel {
     project.setRepositoryUrl("https://github.com/TomaszZiola/java-build-automaton.git");
     project.setBuildTool(GRADLE);
     project.setJavaVersion(JAVA_21);
+    project.setWebhookSecret("secret");
     return project;
   }
 }

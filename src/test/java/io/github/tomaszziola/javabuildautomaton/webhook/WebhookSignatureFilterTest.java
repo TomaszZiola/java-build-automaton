@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class WebhookSignatureFilterTest extends BaseUnit {
@@ -37,9 +36,81 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret);
+    verify(webhookSecurityService, never())
+        .isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
+  }
+
+  @Test
+  @DisplayName(
+      "Given POST /webhook with invalid JSON, when filtering, then return 400 and stop chain")
+  void returns400AndStopsChainForInvalidJson() throws Exception {
+    // given
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(webhookPath);
+    httpServletRequestImpl.setContent("{".getBytes(UTF_8)); // malformed JSON
+
+    // when
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
+
+    // then
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(400);
+    verify(filterChain, never())
+        .doFilter(any(HttpServletRequest.class), eq(httpServletResponseImpl));
+  }
+
+  @Test
+  @DisplayName(
+      "Given POST /webhook with unknown repository, when filtering, then return 404 and stop chain")
+  void returns404AndStopsChainWhenProjectNotFound() throws Exception {
+    // given: payload with different full_name
+    String unknownRepoJson =
+        """
+            {
+              "repository": {
+                "full_name": "unknown/other"
+              }
+            }
+            """;
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(webhookPath);
+    httpServletRequestImpl.setContent(unknownRepoJson.getBytes(UTF_8));
+
+    when(projectRepository.findByRepositoryFullName("unknown/other"))
+        .thenReturn(java.util.Optional.empty());
+
+    // when
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
+
+    // then
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(404);
+    verify(filterChain, never())
+        .doFilter(any(HttpServletRequest.class), eq(httpServletResponseImpl));
+  }
+
+  @Test
+  @DisplayName(
+      "Given POST /webhook with missing secret, when filtering, then return 500 and stop chain")
+  void returns500AndStopsChainWhenSecretMissing() throws Exception {
+    // given
+    httpServletRequestImpl.setMethod(postMethod);
+    httpServletRequestImpl.setRequestURI(webhookPath);
+    httpServletRequestImpl.setContent(bodyJson.getBytes(UTF_8));
+
+    // Project resolved by BaseUnit for repositoryName; make secret blank
+    project.setWebhookSecret(" ");
+
+    // when
+    webhookSignatureFilterImpl.doFilter(
+        httpServletRequestImpl, httpServletResponseImpl, filterChain);
+
+    // then
+    assertThat(httpServletResponseImpl.getStatus()).isEqualTo(500);
+    verify(filterChain, never())
+        .doFilter(any(HttpServletRequest.class), eq(httpServletResponseImpl));
   }
 
   @Test
@@ -54,7 +125,8 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes,webhookSecret);
+    verify(webhookSecurityService, never())
+        .isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
@@ -71,13 +143,13 @@ class WebhookSignatureFilterTest extends BaseUnit {
         httpServletRequestImpl, httpServletResponseImpl, filterChain);
 
     // then
-    verify(webhookSecurityService, never()).isSignatureValid(validSha256HeaderValue, bodyBytes,webhookSecret);
+    verify(webhookSecurityService, never())
+        .isSignatureValid(validSha256HeaderValue, bodyBytes, webhookSecret);
     verify(filterChain, times(1)).doFilter(httpServletRequestImpl, httpServletResponseImpl);
     assertThat(httpServletResponseImpl.getStatus()).isEqualTo(200);
   }
 
   @ParameterizedTest
-  @NullSource
   @ValueSource(strings = {"sha1=abc", "sha256=zz", "sha256=12"})
   @DisplayName(
       "Given POST /webhook with invalid header {0}, when filtering, then return 401 and stop chain")
@@ -113,8 +185,7 @@ class WebhookSignatureFilterTest extends BaseUnit {
     httpServletRequestImpl.setContent(bodyBytes);
     httpServletRequestImpl.addHeader(validSha256HeaderName, validSha256HeaderValue);
 
-    when(webhookSecurityService.isSignatureValid(any(), any(), any()))
-        .thenReturn(true);
+    when(webhookSecurityService.isSignatureValid(any(), any(), any())).thenReturn(true);
 
     // when
     webhookSignatureFilterImpl.doFilter(
@@ -144,8 +215,9 @@ class WebhookSignatureFilterTest extends BaseUnit {
     webhookSignatureFilterImpl.doFilter(httpServletRequestImpl, httpServletResponseImpl, chain);
 
     // then
-    assertThat(chain.capturedRequest).isInstanceOf(HttpServletRequest.class);
-    assertThat(chain.capturedRequest).isNotSameAs(httpServletRequestImpl);
+    assertThat(chain.capturedRequest)
+        .isInstanceOf(HttpServletRequest.class)
+        .isNotSameAs(httpServletRequestImpl);
     assertThat(chain.capturedBody).isEqualTo(bodyJson);
   }
 

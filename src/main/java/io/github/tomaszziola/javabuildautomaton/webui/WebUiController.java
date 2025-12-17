@@ -1,7 +1,5 @@
 package io.github.tomaszziola.javabuildautomaton.webui;
 
-import static io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool.values;
-
 import io.github.tomaszziola.javabuildautomaton.api.dto.PostProjectDto;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildService;
 import io.github.tomaszziola.javabuildautomaton.buildsystem.BuildTool;
@@ -72,7 +70,7 @@ public class WebUiController {
       BindingResult bindingResult,
       Model model) {
     if (bindingResult.hasErrors()) {
-      model.addAttribute("buildTools", values());
+      model.addAttribute("buildTools", BuildTool.values());
       return "projects-create";
     }
 

@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.buildsystem;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.tomaszziola.javabuildautomaton.models.BuildModel;
 import io.github.tomaszziola.javabuildautomaton.models.BuildSummaryDtoModel;

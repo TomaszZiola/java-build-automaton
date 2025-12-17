@@ -18,8 +18,8 @@ public class WebhookSecurityService {
   private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String SIGNATURE_PREFIX = "sha256=";
 
-  public boolean isSignatureValid(String signatureHeader, byte[] payloadBody,
-      String webhookSecret) {
+  public boolean isSignatureValid(
+      String signatureHeader, byte[] payloadBody, String webhookSecret) {
 
     if (payloadBody == null) {
       log.warn("Payload body is null");
@@ -43,10 +43,7 @@ public class WebhookSecurityService {
     }
 
     try {
-      var key = new SecretKeySpec(
-          webhookSecret.getBytes(UTF_8),
-          HMAC_ALGORITHM
-      );
+      var key = new SecretKeySpec(webhookSecret.getBytes(UTF_8), HMAC_ALGORITHM);
       var mac = Mac.getInstance(HMAC_ALGORITHM);
       mac.init(key);
       var computedSignature = mac.doFinal(payloadBody);

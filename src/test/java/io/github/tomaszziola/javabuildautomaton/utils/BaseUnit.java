@@ -44,10 +44,7 @@ import io.github.tomaszziola.javabuildautomaton.models.ProjectDetailsDtoModel;
 import io.github.tomaszziola.javabuildautomaton.models.ProjectModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadModel;
 import io.github.tomaszziola.javabuildautomaton.models.WebhookPayloadWithHeadersModel;
-import io.github.tomaszziola.javabuildautomaton.project.ProjectMapper;
-import io.github.tomaszziola.javabuildautomaton.project.ProjectRepository;
-import io.github.tomaszziola.javabuildautomaton.project.ProjectRestController;
-import io.github.tomaszziola.javabuildautomaton.project.ProjectService;
+import io.github.tomaszziola.javabuildautomaton.project.*;
 import io.github.tomaszziola.javabuildautomaton.project.entity.Project;
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
 import io.github.tomaszziola.javabuildautomaton.webhook.BranchPolicy;
@@ -62,10 +59,13 @@ import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayload;
 import io.github.tomaszziola.javabuildautomaton.webhook.dto.WebhookPayloadWithHeaders;
 import io.github.tomaszziola.javabuildautomaton.webui.WebUiController;
 import io.github.tomaszziola.javabuildautomaton.workspace.BuildWorkspaceGuard;
+import io.github.tomaszziola.javabuildautomaton.workspace.WorkspaceManager;
+import io.github.tomaszziola.javabuildautomaton.workspace.WorkspaceProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,55 +84,31 @@ import org.springframework.web.context.request.RequestContextHolder;
 @MockitoSettings(strictness = LENIENT)
 public class BaseUnit {
 
-  @TempDir
-  protected File tempDir;
+  @TempDir protected Path tempDir;
 
-  @Mock
-  protected BranchPolicy branchPolicy;
-  @Mock
-  protected BuildExecutor buildExecutor;
-  @Mock
-  protected BuildLifecycleService buildLifecycleService;
-  @Mock
-  protected BuildMapper buildMapper;
-  @Mock
-  protected BuildOrchestrator buildOrchestrator;
-  @Mock
-  protected BuildQueueService buildQueueService;
-  @Mock
-  protected BuildRepository buildRepository;
-  @Mock
-  protected BuildService buildService;
-  @Mock
-  protected BuildWorkspaceGuard buildWorkspaceGuard;
-  @Mock
-  protected FilterChain filterChain;
-  @Mock
-  protected GitCommandRunner gitCommandRunner;
-  @Mock
-  protected HttpServletRequest httpServletRequest;
-  @Mock
-  protected IdempotencyService idempotencyService;
-  @Mock
-  protected IngestionGuard ingestionGuard;
-  @Mock
-  protected Process process;
-  @Mock
-  protected ProcessExecutor processExecutor;
-  @Mock
-  protected ProcessRunner processRunner;
-  @Mock
-  protected ProjectMapper projectMapper;
-  @Mock
-  protected ProjectRepository projectRepository;
-  @Mock
-  protected ProjectService projectService;
-  @Mock
-  protected WebhookDeliveryRepository webhookDeliveryRepository;
-  @Mock
-  protected WebhookService webhookService;
-  @Mock
-  protected WebhookSecurityService webhookSecurityService;
+  @Mock protected BranchPolicy branchPolicy;
+  @Mock protected BuildExecutor buildExecutor;
+  @Mock protected BuildLifecycleService buildLifecycleService;
+  @Mock protected BuildMapper buildMapper;
+  @Mock protected BuildOrchestrator buildOrchestrator;
+  @Mock protected BuildQueueService buildQueueService;
+  @Mock protected BuildRepository buildRepository;
+  @Mock protected BuildService buildService;
+  @Mock protected BuildWorkspaceGuard buildWorkspaceGuard;
+  @Mock protected FilterChain filterChain;
+  @Mock protected GitCommandRunner gitCommandRunner;
+  @Mock protected HttpServletRequest httpServletRequest;
+  @Mock protected IdempotencyService idempotencyService;
+  @Mock protected IngestionGuard ingestionGuard;
+  @Mock protected Process process;
+  @Mock protected ProcessExecutor processExecutor;
+  @Mock protected ProcessRunner processRunner;
+  @Mock protected ProjectMapper projectMapper;
+  @Mock protected ProjectRepository projectRepository;
+  @Mock protected ProjectService projectService;
+  @Mock protected WebhookDeliveryRepository webhookDeliveryRepository;
+  @Mock protected WebhookService webhookService;
+  @Mock protected WebhookSecurityService webhookSecurityService;
 
   protected ArgumentCaptor<Build> buildCaptor;
   protected BranchPolicy branchPolicyImpl;
@@ -150,6 +126,7 @@ public class BaseUnit {
   protected MockHttpServletRequest httpServletRequestImpl;
   protected MockHttpServletResponse httpServletResponseImpl;
   protected ProcessExecutor processExecutorImpl;
+  protected ProjectJavaVersionConverter projectJavaVersionConverterImpl;
   protected ProcessRunner processRunnerImpl;
   protected ProjectRestController projectRestControllerImpl;
   protected ProjectMapper projectMapperImpl;
@@ -159,6 +136,8 @@ public class BaseUnit {
   protected WebhookService webhookServiceImpl;
   protected WebhookSignatureFilter webhookSignatureFilterImpl;
   protected WebhookSecurityService webhookSecurityServiceImpl;
+  protected WorkspaceManager workspaceManagerImpl;
+  protected WorkspaceProperties workspacePropertiesImpl;
 
   protected ApiResponse apiResponse;
   protected Build build;
@@ -176,7 +155,8 @@ public class BaseUnit {
   protected File workingDir;
 
   protected String apiPath = "/api/projects";
-  protected String bodyJson = """
+  protected String bodyJson =
+      """
              {
             "repository": {
           "full_name" : "TomaszZiola/test"
@@ -243,6 +223,7 @@ public class BaseUnit {
     ingestionGuardImpl = new IngestionGuard(branchPolicy, idempotencyService);
     modelImpl = new ExtendedModelMap();
     processExecutorImpl = new ProcessExecutor(processRunner, new OutputCollector());
+    projectJavaVersionConverterImpl = new ProjectJavaVersionConverter();
     processRunnerImpl = new ProcessRunner();
     projectRestControllerImpl = new ProjectRestController(projectService);
     projectMapperImpl = new ProjectMapper();
@@ -251,9 +232,12 @@ public class BaseUnit {
     webhookRestControllerImpl = new WebhookRestController(webhookService);
     webhookServiceImpl = new WebhookService(buildOrchestrator, ingestionGuard, projectRepository);
     webhookSecurityServiceImpl = new WebhookSecurityService();
-    webhookSignatureFilterImpl = new WebhookSignatureFilter(webhookSecurityService,
-        projectRepository, new ObjectMapper());
+    webhookSignatureFilterImpl =
+        new WebhookSignatureFilter(webhookSecurityService, projectRepository, new ObjectMapper());
     webUiControllerImpl = new WebUiController(buildService, projectService);
+    workspacePropertiesImpl = new WorkspaceProperties();
+    workspacePropertiesImpl.setBaseDir(tempDir);
+    workspaceManagerImpl = new WorkspaceManager(workspacePropertiesImpl);
 
     when(branchPolicy.isTriggerRef(payloadWithHeaders)).thenReturn(true);
     when(buildExecutor.build(project.getBuildTool(), workingDir, javaVersion))
@@ -274,12 +258,12 @@ public class BaseUnit {
         .thenReturn(cloneExecutionResult);
     when(httpServletRequest.getRequestURI()).thenReturn("/api/projects/123");
     when(idempotencyService.isDuplicate("id")).thenReturn(false);
-    when(processExecutor.execute(tempDir, "mvn", "clean", "install"))
+    when(processExecutor.execute(workingDir, "mvn", "clean", "install"))
         .thenReturn(pullExecutionResult);
-    when(processExecutor.execute(tempDir, "gradle", "clean", "build"))
+    when(processExecutor.execute(workingDir, "gradle", "clean", "build"))
         .thenReturn(pullExecutionResult);
-    when(processExecutor.execute(tempDir, "git", "pull")).thenReturn(pullExecutionResult);
-    when(processExecutor.execute(tempDir, "git", "clone", project.getRepositoryUrl(), "."))
+    when(processExecutor.execute(workingDir, "git", "pull")).thenReturn(pullExecutionResult);
+    when(processExecutor.execute(workingDir, "git", "clone", project.getRepositoryUrl(), "."))
         .thenReturn(cloneExecutionResult);
     when(processRunner.start(workingDir, cmd)).thenReturn(process);
     when(projectMapper.toDetailsDto(project)).thenReturn(projectDto);
@@ -303,7 +287,7 @@ public class BaseUnit {
         .thenReturn(true);
     when(webhookService.handle(payloadWithHeaders)).thenReturn(apiResponse);
     when(buildWorkspaceGuard.prepareWorkspaceOrFail(
-        eq(project), eq(build), isA(StringBuilder.class)))
+            eq(project), eq(build), isA(StringBuilder.class)))
         .thenReturn(new ValidationResult(true, workingDir));
 
     RequestContextHolder.resetRequestAttributes();

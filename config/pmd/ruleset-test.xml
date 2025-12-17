@@ -4,6 +4,12 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2_0_0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
 
+  <description>
+    PMD ruleset for main Java sources of the Java Build Automaton application.
+    Covers code quality, security, and maintainability rules for Spring-based code.
+    For tests purpose only.
+  </description>
+
   <rule ref="category/java/errorprone.xml">
     <exclude name="TestClassWithoutTestCases"/>
     <exclude name="AvoidFieldNameMatchingMethodName"/>

@@ -1,6 +1,6 @@
 package io.github.tomaszziola.javabuildautomaton.project;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.tomaszziola.javabuildautomaton.project.exception.ProjectNotFoundException;
